@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+set -eu
+
+# configure doxygen-awesome,
+cmake -S . -B build
+
+# then build the docs themselves.
+cmake --build build --target doc

@@ -1,0 +1,79 @@
+/**
+ * \cond
+ * @author Sean Hobeck
+ * @date 2026-03-18
+ */
+#ifndef TAPI_CAPTURE_H
+#define TAPI_CAPTURE_H
+
+/*! @uses size_t, FILE, tapi_sink_t, ... */
+#include <tapi/sink.h>
+/** \endcond */
+
+/**
+ * @brief a capture structure for redirecting written output data.
+ *
+ * `tapi_capture_t` is a data structure for capturing outputs for various file streams, but most
+ *   often used on either stdout, and or stderr. this allows for quick capturing of what your
+ *   tested function may print to the console and or any expected errors it should throw along
+ *   the way.
+ *
+ * @see tapi_capture_make()
+ * @see tapi_capture_end()
+ * @see tapi_capture_destroy()
+ */
+typedef struct {
+    /** the destination file descriptor (buffer or file). */
+    int dst_fd;
+    /** pipe read(0) & write(1) end for redirection. */
+    int fds[2];
+    /** sink to write data to. */
+    tapi_sink_t* sink;
+    /** the stream to capture. */
+    tapi_stream_t stream;
+} tapi_capture_t;
+
+/**
+ * @brief start capturing data written to a specific stream and re-route to a specified sink.
+ *
+ * @param sink the sink to capture the re-routed data (see @ref<tapi/sink.h>).
+ * @param stream the stream to re-route data from.
+ * @return a pointer to an allocated capture structure.
+ */
+TAPI_EXPORT tapi_capture_t*
+tapi_capture_make(tapi_sink_t* sink, tapi_stream_t stream);
+
+/**
+ * @brief stop capturing data from a stream.
+ *
+ * @param capture the capture to be ended.
+ */
+TAPI_EXPORT void
+tapi_capture_end(tapi_capture_t* capture);
+
+/**
+ * @brief free a capture structure.
+ *
+ * @param capture the capture to be freed.
+ */
+TAPI_EXPORT void
+tapi_capture_destroy(tapi_capture_t* capture);
+
+/** quickly make a capture and sink for a set stream. */
+#define TAPI_CAPTURE(stream, size) \
+    tapi_sink_t* sink = tapi_sink_make(); \
+    tapi_sink_setdbf(sink, size); \
+    tapi_capture_t* capture = tapi_capture_make(sink, stream);
+
+/** quickly stop capturing; use with tapi_quick_capture to make your tests more readable. */
+#define TAPI_END_CAPTURE() \
+    tapi_capture_end(capture);
+
+/**
+ * quickly destroy/ cleanup a capturing stream; use with tapi_quick_capture to make your tests
+ *   more readable.
+ */
+#define TAPI_DESTROY_CAPTURE() \
+    tapi_capture_destroy(capture); \
+    tapi_sink_destroy(sink);
+#endif /* TAPI_CAPTURE_H */

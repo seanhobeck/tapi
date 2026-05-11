@@ -1,0 +1,251 @@
+/*!
+\page usage Usage & Testing
+
+The design of `tapi` is to make testing simple and straightforward. Tests are often split into three
+ categories, general testing, mocking and capturing, each having their own purpose and importance
+ when it comes to testing code. This page describes these categories and how they can be used
+ specifically with `tapi`, first starting with general testing.
+\tableofcontents
+
+\section testing_general General tests and Assertions
+
+In this section we describe the importance of testing and how assertions can be used to make tests
+ more robust. Testing is a fundamental part of any software project and is a fantastic way to ensure
+ that the code you write is working as you should expect it to. There are many design and
+ development patterns that make use of testing, but, `tapi` is often best used with test-after
+ development where code is written first, and then tests are made.
+
+Setting up a test environment is very easy, simply create your test file(s) and use whichever build
+ system you prefer. Then, link your test executable with `tapi` by using the `-ltapi` flag for your
+ favorite compiler, and finally compile your test file(s) with your source file(s) and you are ready
+ to go.
+
+To create a test, simply create a test with the `TAPI_MAKE_TEST` macro, then add it to your test
+ suite with the `TAPI_ADD_TEST` macro,
+
+```c
+/* note: 'my_test' has to follow the tapi_test_func_t signature defined in tapi/tapi.h */
+TAPI_MAKE_TEST(my_test) {
+    /* arrange, act and assert. */
+    ...
+    return E_TAPI_TEST_SUCCESS;
+}
+
+int main() {
+    /* add 'my_test' to your test suite. */
+    TAPI_ADD_TEST("my_test", my_test);
+
+    /* run every test in your test suite. */
+    TAPI_RUN_TESTS();
+    return 0;
+}
+```
+
+Assertions can be used effectively to check and compare results from your test(s), for example,
+
+```c
+/* from above... */
+TAPI_MAKE_TEST(my_test) {
+    /* arrange. */
+    int x = 1;
+
+    /* act. */
+    int y = x + 1;
+
+    /* assert. */
+    TAPI_ASSERT(y == 2); /* this will fail if 'y' is not equal to 2. */
+    return E_TAPI_TEST_SUCCESS;
+}
+```
+
+Checks if the variable `y` is equal to 2 and will result in a failure if the condition is not met.
+Similarly to how we use the macros, we can actually use the library functions to do the exact same
+thing, mainly for preference. For example, we can replicate the above test _not_ using macros.
+
+```c
+/* same tapi_test_func_t signature as above. */
+e_tapi_test_result_t my_test(void) {
+    /* arrange. */
+    int x = 1;
+
+    /* act. */
+    int y = x + 1;
+
+    /* assert. */
+    TAPI_ASSERT(y == 2); /* we can keep this for simplicity. */
+    return E_TAPI_TEST_SUCCESS;
+}
+
+int main() {
+    /* add 'my_test' to your test suite. */
+    tapi_test_t* test = tapi_test_make("my_test", my_test);
+    tapi_test_add(test);
+
+    /* run every test in your test suite. */
+    tapi_test_run();
+    return 0;
+}
+```
+
+\section testing_mocking Test isolation and Mocking
+
+Assertions are great, but they are often not enough to test a functions logic and arithmetic. It
+ is usually the case that a function that is being tested will call plenty of other functions, and
+ if a tested function relies on function(s) that is not within the test, then in order to test our
+ original function properly we must also assume that the called function(s) are working properly.
+ This expectation of called function(s) to work properly can often be recursive, spanning across
+ multiple functions, making test suites very complex, difficult to maintain, and even more
+ unreliable.
+
+One way to solve this problem is to mock the function(s) that are called by the function we are
+ testing. This is done by creating a 'stub' function that will return a expected result instead of
+ the actual function call, isolating the tested function from the called. In `tapi` this is done by
+ using the `TAPI_MOCK_RETURN` macro to create our stub function, we can then add this mock
+ and test to our suite using the `TAPI_ADD_TEST_AND_MOCK` macro (_which only works with a singular
+ mock_).
+
+```c
+/* function being tested. */
+float calculate_total(float amount) {
+    float tax_rate = get_tax_rate(); /* we want to mock this. */
+    return a * tax_rate;
+}
+
+/* create our stub function. */
+TAPI_MOCK_RETURN(mock_get_tax_rate, 1.0f);
+
+/* test using our mock. */
+TAPI_MAKE_TEST(test_calculate_total) {
+    /* arrange & act. */
+    float total = calculate_total(100.0f);
+
+    /* assert. */
+    TAPI_ASSERT(total == 100.0f);
+    return E_TAPI_TEST_SUCCESS;
+}
+
+int main() {
+    /*
+     * add our test and mock to our test suite.
+     * note: the macro defined in tapi/tapi.h requires the format of:
+     * TAPI_ADD_TEST_AND_MOCK(test_name, test_func, func_being_tested, func_to_mock, mock_func);
+     */
+    TAPI_ADD_TEST_AND_MOCK("test_calculate_total", test_calculate_total, \
+        calculate_total, get_tax_rate, mock_get_tax_rate);
+    TAPI_RUN_TESTS();
+    return 0;
+}
+```
+
+What if we want to test a function that calls multiple of the same function, or multiple functions
+ that we also need to mock? In this case, we can use the `tapi_test_add_mock` function to add
+ multiple mocks to one singular test. For example, if we have already created a test using
+ `tapi_test_make` to test our previous `calculate_total` function, we can then add multiple mocks to
+ it using the `tapi_test_add_mock` function.
+
+```c
+/* function being tested. */
+float calculate_total(float amount) {
+    int base_salary = get_base_salary(); /* we want to mock this. */
+    float tax_rate = get_tax_rate(); /* we want to mock this too! */
+    return (float) base_salary + a * tax_rate;
+}
+
+/* create our stub function(s). */
+TAPI_MOCK_RETURN(mock_get_tax_rate, 1.0f);
+TAPI_MOCK_RETURN(mock_get_base_salary, 50000);
+
+/* test using our mock. */
+TAPI_MAKE_TEST(test_calculate_total) {
+    /* arrange & act. */
+    float total = calculate_total(100.0f);
+
+    /* assert. */
+    TAPI_ASSERT(total == 50100.0f);
+    return E_TAPI_TEST_SUCCESS;
+}
+
+int main() {
+    /* create our test and add our mocks to it. */
+    tapi_test_t *test = tapi_test_make("test_calculate_total");
+    tapi_test_add_mock(test, calculate_total, get_tax_rate, mock_get_tax_rate);
+    tapi_test_add_mock(test, calculate_total, get_base_salary, mock_get_base_salary);
+    tapi_test_add(test);
+
+    /* run our test with multiple mocks. */
+    tapi_test_run();
+    return 0;
+}
+```
+
+\section testing_capturing Test output capturing
+
+Another very popular way to test code is to capture the output of a tested function through various
+ streams such as stdout and stderr. Although stdout and stderr are popular ways to capture output,
+ there are many other streams that can be captured as well, such as memory and file streams. In
+ `tapi` this is done by using the `TAPI_CAPTURE`, `TAPI_END_CAPTURE`, and `TAPI_DESTROY_CAPTURE`
+ macros.
+
+```c
+/* function being tested. */
+void calculate_total(float amount) {
+    int base_salary = 10000;
+    float tax_rate = 1.13f;
+    printf("total is %.2f\n", (float) base_salary + amount * tax_rate);
+}
+
+TAPI_MAKE_TEST(test_calculate_total) {
+    /* arrange & act. */
+    TAPI_CAPTURE(stdout, 64); /* capture a max of 64 bytes from stdout. */
+    calculate_total(100.0f);
+    TAPI_END_CAPTURE();
+
+    /* assert. */
+    TAPI_ASSERT(strcmp(sink->buffer.data, "total is 10113.00\n") == 0);
+    TAPI_DESTROY_CAPTURE(); /* free the capture memory (very important!). */
+    return E_TAPI_TEST_SUCCESS;
+}
+
+int main() {
+    TAPI_ADD_TEST("test_calculate_total", test_calculate_total);
+    TAPI_RUN_TESTS();
+    return 0;
+}
+```
+
+Similarly to our general test examples, there are associated functions that these macros use to
+ capture output, displayed below.
+
+```c
+/* function being tested. */
+void calculate_total(float amount) {
+    int base_salary = 10000;
+    float tax_rate = 1.13f;
+    printf("total is %.2f\n", (float) base_salary + amount * tax_rate);
+}
+
+e_tapi_test_result_t test_calculate_total(void) {
+    /* arrange. */
+    tapi_sink_t* sink = tapi_sink_make();
+    tapi_sink_setdbf(sink, 64); /* set our sink to capture to a destination buffer. */
+    tapi_capture_t* capture = tapi_capture_make(sink, stdout);
+
+    /* act. */
+    calculate_total(100.0f);
+    tapi_capture_end(capture);
+
+    /* assert. */
+    TAPI_ASSERT(strcmp(sink->buffer.data, "total is 10113.00\n") == 0);
+    tapi_capture_destroy(capture);
+    tapi_sink_destroy(sink); /* free the capture and sink memory (very important!). */
+    return E_TAPI_TEST_SUCCESS;
+}
+
+int main() {
+    tapi_test_t* test = tapi_test_make("test_calculate_total", test_calculate_total);
+    tapi_test_add(test);
+    tapi_test_run();
+    return 0;
+}
+```
+*/

@@ -1,0 +1,59 @@
+/*!
+\page mocking Mocking and stubs
+
+Mocking within programming languages that have access to reflection is a very common practice,
+especially when it comes to testing, and unit testing frameworks. Although there are many different
+testing frameworks that implement mocking in C(_GoogleTest and CMock_), they all are fairly strict,
+or require a lot of compilation time to run tests; parsing specific binary formats like ELF-only, or
+recompiles your entire source code just to replace a single function, required that you
+build-system is supported, etc.
+
+The entire idea behind this project is to provide a simple and easy to use mocking framework that
+can be used with any build-system, on any POSIX-compliant system, any architecture, and in any
+version greater than C99. Mocking can be simplified using binary-patching and stubs, in the case of
+`tapi`, we use this to our advantage by using runtime-patching to replace call targets with stubs,
+isolating test functions.
+
+For example, on a x86-64 system, we can replace the call to `get_some_value` at address 0x7ff12300
+with a stub `mock_get_some_value` at address 0x7ff45600 returns a fixed value,
+
+```asm
+; get_some_value(int x) {
+push %rbp
+movq %rsp, %rbp
+movq %edi, -0x4(%rbp) ; ~x + 1
+movq -0x4(%rbp), %eax
+neg %eax
+pop %rbp
+ret
+
+; target_function(...) {
+push %rbp
+movq %rsp, %rbp
+; ...
+call get_some_value ; e8 7f f1 23 00 <- this can be replaced with our stub address.
+; ...
+pop %rbp
+ret ; }
+```
+
+Where the relative jump address to `get_some_value` can be replaced with,
+
+```asm
+; target_function(...) {
+push %rbp
+movq %rsp, %rbp
+; ...
+call mock_get_some_value ; e8 7f f4 56 00 <- the address of our stub!
+; ...
+pop %rbp
+ret ; }
+```
+
+In order to make this work, we need to make use of a runtime-disassembler to find the address of
+`target_function`, and then patch the first instruction of `target_function` to call our stub. The
+runtime-disassembler used within this project is `capstone`, a powerful disassembler for any
+modern architecture (_to learn more about capstone, visit
+[https://www.capstone-engine.org/](https://www.capstone-engine.org/)_). This same process can be
+used to replace any function call, across any binary, across any architecture and operating system.
+*/

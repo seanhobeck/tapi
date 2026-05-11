@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -eu
+
+# ---- integration tests ----
+
+# run for each architecture.
+run_per_arch() {
+  local emu="$1"
+  local arch="/usr/$2"
+  local test="bin/$3"
+
+  # run the command and check output.
+  touch "output_$2_$4.txt"
+  "$emu" -L "$arch" "$test" > "output_$2_$4.txt"
+}
+
+# run x86_64 INTEGRATION tests.
+run_per_arch qemu-amd64 x86_64-linux-gnu x86_64/tests/integration/test_capture int_test_capture
+run_per_arch qemu-amd64 x86_64-linux-gnu x86_64/tests/integration/test_mock int_test_mock
+
+# run x86 tests.
+run_per_arch qemu-i386 x86-linux-gnu x86/tests/integration/test_capture int_test_capture
+run_per_arch qemu-i386 x86-linux-gnu x86/tests/integration/test_mock int_test_mock
+
+# run aarch64 tests.
+run_per_arch qemu-aarch64 aarch64-linux-gnu aarch64/tests/integration/test_capture int_test_capture
+run_per_arch qemu-aarch64 aarch64-linux-gnu aarch64/tests/integration/test_mock int_test_mock
+
+# run arm32 tests.
+run_per_arch qemu-arm arm-linux-gnueabihf arm32/tests/integration/test_capture int_test_capture
+run_per_arch qemu-arm arm-linux-gnueabihf arm32/tests/integration/test_mock int_test_mock
+
+# ---- unit tests ----
+
+# run x86_64 UNIT tests.
+run_per_arch qemu-amd64 x86_64-linux-gnu x86_64/tests/unit/test_det unit_test_det
+
+# run x86 tests.
+run_per_arch qemu-i386 x86-linux-gnu x86/tests/unit/test_det unit_test_det
+
+# run aarch64 tests.
+run_per_arch qemu-aarch64 aarch64-linux-gnu aarch64/tests/unit/test_det unit_test_det
+
+# run x86_64 UNIT tests.
+run_per_arch qemu-arm arm-linux-gnueabihf arm32/tests/unit/test_det unit_test_det

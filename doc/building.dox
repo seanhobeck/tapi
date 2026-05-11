@@ -1,0 +1,102 @@
+/*!
+\page building Building
+
+There are several steps to build the project for your platform, firstly you need to \ref
+cloning "clone the repository" itself, then you need to gather all required dependencies, and
+finally you can \ref makefile "build the project" as well as \ref documentation "documentation"
+locally!
+
+\tableofcontents
+
+\section building_cloning Cloning
+
+Firstly, there are some basic dependencies required by the project, such as:
+ - git
+ - cmake
+ - make
+ - binutils
+ - gcc or a modern c compiler with stdc17 support
+ - cross-compiling tools (_optional, only if you want to contribute or test_)
+ - doxygen (_optional, only if you require documentation_)
+ - various other dependencies (_again optional, only if you want to contribute or test_)
+
+Fortunately, many of these dependencies are already readily available on most linux distributions,
+but, if you do not have them already downloaded they can be installed with:
+
+```bash
+sudo ./get-deps
+```
+
+Note that using the command above will install all dependencies, including the ones that are
+considered optional for contribution and testing of the repository. You can then clone the
+repository as well as submodules with:
+
+```bash
+git clone --recurse-submodules https://github.com/Codeca-Labs/tapi.git
+```
+
+If you have already cloned the repository and are having trouble with submodules, or you have
+mistakenly cloned the repository without the ```--recurse-submodules``` flag, you can fix this by running:
+
+```bash
+git submodule update --init --recursive
+```
+
+\section building_makefile Library building/ Makefile
+
+This project uses both make and cmake(_in order to build documentation_) to build the entire library
+. The makefile is located in the root of the repository, and has various targets that can be used
+for various purposes. If you are not familiar with makefiles, and are simply interested in building
+the library, it can be built with:
+
+```bash
+sudo make install
+```
+
+Which will build the library for your native architecture/ platform, and then install it to the
+default location (_not currently supported or configurable for windows_).
+
+We provide a list of all available targets in the makefile, some of which are:
+ - ```make install```, which will build the library for your native architecture/ platform
+ - ```make uninstall```, which will remove the library from the default location
+ - ```make clean```, which will remove all build artifacts and temporary files
+ - ```make test_native```, which will build the library for your native architecture/ platform as
+ well as all tests
+ - ```make test_all_arch```, which will build the library for all supported architectures and
+ platforms, including all tests (_requires optional dependencies_)
+
+All of these targets can be run from the root of the repository. If you are purely interested in
+contributing to the project with newer tests, then you can directly build the tests with the
+makefile within the ```tests``` directory. Some of the targets that can be used for the various
+types of tests are:
+ - ```make all```, which will build all tests
+ - ```make run```, which will run all tests
+ - ```make clean```, which will remove all build artifacts and temporary files
+
+These targets are often used by the makefile within the root project directory and are rarely used
+for individual tests. Running each of the tests individually will only require qemu and optional
+dependencies if you are testing on a different architecture/ platform. For further safety when
+running each test you can set ```use_asan=true``` to enable the linking of your default compilers
+address sanitizer for checking of memory leaks and other memory safety issues (_requires optional
+dependencies_).
+
+\section building_documentation Documentation
+
+Like stated above, this project uses doxygen as well as doxygen-awesome-css(_these require you to
+install doxygen through your pm, this will soon be added to get-deps_) to generate this
+documentation you are reading right now. The documentation can be generated locally with:
+
+```bash
+./get-docs
+
+# or better yet...
+cmake --build build --target doc
+```
+
+Both of these commands will generate doxygen documentation in the ```build/doc``` directory which
+can be opened with your browser of choice:
+
+```bash
+xdg-open ./build/doc/html/index.html
+```
+*/

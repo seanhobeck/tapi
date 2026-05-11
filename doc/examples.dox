@@ -1,0 +1,338 @@
+/*!
+\page examples Examples
+
+This page shows some practical examples of using `tapi` for various testing scenarios. Each
+example demonstrates a specific feature or pattern that you can adapt to your own testing needs.
+
+\tableofcontents
+
+\section example_simple Simple Testing Example
+
+Here is an example of a simple test case applied to a function that adds two numbers together.
+
+```c
+#include <tapi/tapi.h>
+
+/* function being tested. */
+int add(int a, int b) {
+    return a + b;
+}
+
+TAPI_MAKE_TEST(test_add_positive_numbers) {
+    /* arrange. */
+    int x = 5;
+    int y = 3;
+
+    /* act. */
+    int result = add(x, y);
+
+    /* assert. */
+    TAPI_ASSERT(result == 8);
+    return E_TAPI_TEST_RESULT_PASSED;
+}
+
+TAPI_MAKE_TEST(test_add_negative_numbers) {
+    /* arrange. */
+    int x = -10;
+    int y = -5;
+
+    /* act. */
+    int result = add(x, y);
+
+    /* assert. */
+    TAPI_ASSERT(result == -15);
+    return E_TAPI_TEST_RESULT_PASSED;
+}
+
+int main() {
+    /* add test(s) to the tapi test suite. */
+    TAPI_ADD_TEST("test_add_positive_numbers", test_add_positive_numbers);
+    TAPI_ADD_TEST("test_add_negative_numbers", test_add_negative_numbers);
+    TAPI_RUN_TESTS();
+    return 0;
+}
+```
+
+\section examples_mocking_simple Simple Mocking Example
+
+This is an example showing how to mock a single dependency to isolate your tests.
+
+```c
+#include <tapi/tapi.h>
+#include <tapi/mock.h>
+
+/* external dependency we want to mock. */
+float get_exchange_rate() {
+    /* imagine this makes a network call to get current rate. */
+    return 1.0f; /* placeholder. */
+}
+
+/* function being tested. */
+float convert_currency(float amount) {
+    float rate = get_exchange_rate();
+    return amount * rate;
+}
+
+/* create a stub that returns a known value. */
+TAPI_MOCK_RETURN(mock_exchange_rate, float, 1.35f)
+
+TAPI_MAKE_TEST(test_currency_conversion) {
+    /* arrange & act. */
+    float result = convert_currency(100.0f);
+
+    /* assert. */
+    TAPI_ASSERT(result == 135.0f);
+    return E_TAPI_TEST_RESULT_PASSED;
+}
+
+int main() {
+    /* add test(s) to the tapi test suite. */
+    TAPI_ADD_TEST_AND_MOCK("test_currency_conversion", test_currency_conversion, \
+        convert_currency, get_exchange_rate, mock_exchange_rate);
+    TAPI_RUN_TESTS();
+    return 0;
+}
+```
+
+\section examples_mocking_multiple Multiple Mocks Example
+
+This is an example demonstrating how to mock a function that depends on multiple external
+calls. We assume that the function `is_eligible_for_loan` is external (_outside of the test file_),
+and that it depends on two external calls, `get_user_age` and `get_account_balance`.
+
+```c
+#include <tapi/tapi.h>
+#include <tapi/mock.h>
+#include <sqlite3.h>
+
+/* assume this is defined externally as well. */
+sqlite3* database;
+sqlite3_stmt* active_stmt;
+
+/* external dependencies. */
+int get_user_age() {
+    /* would normally query a database (sqlite3). */
+    /* ... */
+    return sqlite3_column_int(active_stmt, 0);
+}
+
+int get_account_balance() {
+    /* would normally query a database (sqlite3). */
+    /* ... */
+    return sqlite3_column_int(active_stmt, 0);
+}
+
+/* function being tested - determines loan eligibility. */
+int is_eligible_for_loan(int requested_amount) {
+    int age = get_user_age();
+    int balance = get_account_balance();
+
+    if (age < 18) return 0;
+    if (balance < requested_amount / 2) return 0;
+    return 1;
+}
+
+/* create stubs for our dependencies. */
+TAPI_MOCK_RETURN(mock_age_25, int, 25)
+TAPI_MOCK_RETURN(mock_balance_5000, int, 5000)
+
+TAPI_MAKE_TEST(test_loan_eligible) {
+    /* arrange & act. */
+    int result = is_eligible_for_loan(8000);
+
+    /* assert. */
+    TAPI_ASSERT(result == 1);
+    return E_TAPI_TEST_RESULT_PASSED;
+}
+
+/* test with different conditions. */
+TAPI_MOCK_RETURN(mock_age_17, int, 17)
+TAPI_MOCK_RETURN(mock_balance_1000, int, 1000)
+
+TAPI_MAKE_TEST(test_loan_ineligible_age) {
+    /* arrange & act. */
+    int result = is_eligible_for_loan(5000);
+
+    /* assert. */
+    TAPI_ASSERT(result == 0);
+    return E_TAPI_TEST_RESULT_PASSED;
+}
+
+int main() {
+    /* test 1: eligible user. */
+    tapi_test_t* test1 = tapi_test_make("test_loan_eligible", test_loan_eligible);
+    tapi_test_add_mock(test1, is_eligible_for_loan, get_user_age, mock_age_25);
+    tapi_test_add_mock(test1, is_eligible_for_loan, get_account_balance, mock_balance_5000);
+    tapi_test_add(test1);
+
+    /* test 2: ineligible due to age. */
+    tapi_test_t* test2 = tapi_test_make("test_loan_ineligible_age", test_loan_ineligible_age);
+    tapi_test_add_mock(test2, is_eligible_for_loan, get_user_age, mock_age_17);
+    tapi_test_add_mock(test2, is_eligible_for_loan, get_account_balance, mock_balance_1000);
+    tapi_test_add(test2);
+
+    TAPI_RUN_TESTS();
+    return 0;
+}
+```
+
+\section examples_capture_stdout Output Capture Example
+
+This is an example which shows you how to capture and verify stdout output from your functions.
+Here, we assume that the function `print_greeting` prints a greeting to stdout, and we are trying to
+ verify that the correct message is printed.
+
+```c
+#include <tapi/tapi.h>
+#include <tapi/capture.h>
+#include <stdio.h>
+#include <string.h>
+
+/* function being tested. */
+void print_greeting(const char* name) {
+    printf("Hello, %s!", name);
+}
+
+TAPI_MAKE_TEST(test_greeting_output) {
+    /* arrange. */
+    TAPI_CAPTURE(stdout, 64);
+
+    /* act. */
+    print_greeting("Alice");
+    TAPI_END_CAPTURE();
+
+    /* assert. */
+    TAPI_ASSERT(strcmp(sink->buffer.data, "Hello, Alice!") == 0);
+    TAPI_DESTROY_CAPTURE();
+    return E_TAPI_TEST_RESULT_PASSED;
+}
+
+int main() {
+    /* add test(s) to the tapi test suite. */
+    TAPI_ADD_TEST("test_greeting_output", test_greeting_output);
+    TAPI_RUN_TESTS();
+    return 0;
+}
+```
+
+\section examples_capture_stderr Error Output Capture
+
+This is an example that demonstrates capturing stderr to verify error messages. In this case,
+we are testing a function `divide` that returns -1 on division by zero, and we are trying to verify
+the correct error message is printed.
+
+```c
+#include <tapi/tapi.h>
+#include <tapi/capture.h>
+#include <stdio.h>
+#include <string.h>
+
+/* function being tested. */
+int divide(int a, int b) {
+    if (b == 0) {
+        fprintf(stderr, "Error: division by zero\n");
+        return -1;
+    }
+    return a / b;
+}
+
+TAPI_MAKE_TEST(test_divide_by_zero_error) {
+    /* arrange. */
+    TAPI_CAPTURE(stderr, 128);
+
+    /* act. */
+    int result = divide(10, 0);
+    TAPI_END_CAPTURE();
+
+    /* assert. */
+    TAPI_ASSERT(result == -1);
+    TAPI_ASSERT(strcmp(sink->buffer.data, "Error: division by zero\n") == 0);
+    TAPI_DESTROY_CAPTURE();
+    return E_TAPI_TEST_RESULT_PASSED;
+}
+
+int main() {
+    /* add test(s) to the tapi test suite. */
+    TAPI_ADD_TEST("test_divide_by_zero_error", test_divide_by_zero_error);
+    TAPI_RUN_TESTS();
+    return 0;
+}
+```
+
+\section examples_combined Combined Mocking and Capturing
+
+This is an example that shows how to use both mocking and output capturing together in one concise
+test. In this case, similarly to the previous example of the multiple mocks, we are testing a
+function `log_user_action` that logs a user action to stdout. This tested function depends on a
+`get_username` function that returns the username of a user from a database.
+
+```c
+#include <tapi/tapi.h>
+#include <tapi/mock.h>
+#include <tapi/capture.h>
+#include <sqlite3.h>
+#include <stdio.h>
+#include <string.h>
+
+/* assume this is defined externally as well. */
+sqlite3* database;
+sqlite3_stmt* active_stmt;
+
+/* external dependency. */
+const char* get_username() {
+    /* would normally query a database (sqlite3). */
+    /* ... */
+    return sqlite3_column_text(active_stmt, 0);
+}
+
+/* function being tested. */
+void log_user_action(const char* action) {
+    const char* username = get_username();
+    printf("[%s] %s\n", username, action);
+}
+
+/* stub for username. */
+TAPI_MOCK_RETURN(mock_username, const char*, "john_doe")
+
+TAPI_MAKE_TEST(test_log_message_format) {
+    /* arrange. */
+    TAPI_CAPTURE(stdout, 128);
+
+    /* act. */
+    log_user_action("logged in");
+    TAPI_END_CAPTURE();
+
+    /* assert. */
+    TAPI_ASSERT(strcmp(sink->buffer.data, "[john_doe] logged in\n") == 0);
+    TAPI_DESTROY_CAPTURE();
+    return E_TAPI_TEST_RESULT_PASSED;
+}
+
+int main() {
+    /* create test(s) with mock(s). */
+    tapi_test_t* test = tapi_test_make("test_log_message_format", test_log_message_format);
+    tapi_test_add_mock(test, log_user_action, get_username, mock_username);
+    /* add test(s) to the tapi test suite. */
+    tapi_test_add(test);
+    TAPI_RUN_TESTS();
+    return 0;
+}
+```
+
+\section examples_tips Best Practices & Tips
+
+When writing tests with `tapi`, consider the following tips and practices:
+
+1. **Always free resources** - Example, use `TAPI_END_CAPTURE()` and `TAPI_DESTROY_CAPTURE()` to
+avoid memory leaks for captured output (*same applies with sinks, but not with mocks*).
+2. **Allocate buffers appropriately** - Allocate enough space for your captured output to prevent
+truncation.
+3. **Use descriptive test names** - Clear and concise names make test failures easier to diagnose.
+4. **Focus on edge cases** - Include tests for null inputs, boundary conditions, incorrect paths/
+inputs, etc...
+5. **Keep tests independent** - Each test should be able to run in isolation without relying on other tests (_unless you are writing some kind of integration test_).
+6. **Prefer multiple smaller mocks** - Use `tapi_test_add_mock()` for better control over complex
+dependencies.
+7. **Follow AAA pattern** - Structure tests as arrange (*create your data for the test*), act
+(*execute the function under test*), assert (*verify the expected outcome and cleanup*).
+*/

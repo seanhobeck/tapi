@@ -1,0 +1,37 @@
+/*!
+\mainpage tapi
+
+\tableofcontents
+
+\section description Description
+
+`tapi` is a small C testing framework focused on simple test
+definitions, runtime-based mocking, clear assertions, and quick integration into existing projects.
+The idea for the framework stemmed from a personal need to write unit tests for some programs that
+were written in C. When looking for a stable testing framework, it became prevalent that none of the
+existing options were quite what was needed (*like GoogleTest,
+CMock, CMocka*). These frameworks were either too heavyweight or implemented mocking in a
+significantly more complicated way. The goal with this framework is to provide a simple,
+easy-to-use, cross-platform testing framework that can be integrated into existing projects, with a
+very simple form of mocking (*stub and patch*). If you want to learn more about the design of the
+framework, you can read more about \ref mocking "mocking, patching" here.
+
+\section modules Quick Start
+
+- \subpage building
+- \subpage usage
+- \subpage mocking
+- \subpage examples
+- \subpage contribution
+
+\section third-party Third-Party Licenses
+
+Please note that this project would not be possible without the following open-source projects:
+
+- [capstone](https://github.com/capstone-engine/capstone): Capstone is a disassembly framework with
+    the target of becoming the ultimate disasm engine for binary analysis and reversing in the
+    security community; License: BSD 3-Clause License (_see
+    vendor/capstone/LICENSES/LICENSE_BSD_3_CLAUSE.txt_).
+- [doxygen-awesome-css](https://github.com/jothepro/doxygen-awesome-css): Doxygen Awesome is a custom
+    CSS theme for Doxygen HTML documentation with many customization options; License: MIT License (_see vendor/doxygen-awesome-css/LICENSE_).
+*/
