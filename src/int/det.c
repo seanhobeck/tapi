@@ -125,8 +125,11 @@ det_function_size(void* address, size_t max_size) {
         if (found_end) {
             /* we scan for nop padding sections. */
             bool is_padding = false;
-            if (architecture.arch == CS_ARCH_X86)
+            if (architecture.arch == CS_ARCH_X86) {
+                /* if we hit CET (endbr64/32) after a ret, that is the end of the function. */
+                if (insn->id == X86_INS_ENDBR64 || insn->id == X86_INS_ENDBR32) break;
                 is_padding = insn->id == X86_INS_NOP || insn->id == X86_INS_INT3;
+            }
             else if (architecture.arch == CS_ARCH_ARM) {
                 /* thumb and arm nops, also mov r0, r0/ mov r8, r8. */
                 is_padding = insn->id == ARM_INS_ALIAS_NOP || (insn->id == ARM_INS_MOV &&
