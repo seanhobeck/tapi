@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-02-21
+ * @date 2026-05-19
  */
 #include "det.h"
 
@@ -18,16 +18,18 @@
 
 /*! @uses arch_t, get_arch. */
 #include "arch.h"
+#include "sig.h"
 
 /**
  * @brief is the instruction specified used to end a function?
  *
  * @param insn the instruction to be inspected.
  * @param handle the capstone handle used.
+ * @param architecture the given architecture.
  * @return if the instruction is a function end type.
  */
 internal bool
-is_end_inst(cs_insn* insn, csh handle) {
+is_end_inst(cs_insn* insn, csh handle, arch_t architecture) {
     /* check by capstone groupings (not accurate). */
     if (cs_insn_group(handle, insn, CS_GRP_RET) || cs_insn_group(handle, insn, CS_GRP_IRET) \
         || cs_insn_group(handle, insn, CS_GRP_BRANCH_RELATIVE)) {
@@ -94,52 +96,82 @@ det_function_size(void* address, size_t max_size) {
 
     /* start iterating. */
     int32_t pad_count = 0;
-    bool found_end = false;
+    bool found_epilogue = false, starting_prologues = true;
     while (cs_disasm_iter(handle, &bytes, &code_size, &iter, insn)) {
+        /* simply check if it is a pro/epilogue-type instruction. */
+        if (architecture.arch == CS_ARCH_ARM) {
+            e_sig_type_t sigt = sig_armhf_chk(insn);
+
+            /* have we gone from the end of a function to the start of a function? */
+            if (found_epilogue && sigt == SIG_ARMHF_PROLOGUE) break;
+            if (found_epilogue && !strcmp("nop", insn->mnemonic)) break;
+            /* capstone has HORRIBLE support for nops in armhf for some reason? */
+            found_epilogue = (sigt == SIG_ARMHF_EPILOGUE); /* o.w. we continue. */
+        }
+        else if (architecture.arch == CS_ARCH_AARCH64) {
+            e_sig_type_t sigt = sig_aarch64_chk(insn);
+
+            /* have we gone from the end of a function to the start of a function? */
+            if (found_epilogue && sigt == SIG_AARCH64_PROLOGUE) break;
+            found_epilogue = (sigt == SIG_AARCH64_EPILOGUE); /* o.w. we continue. */
+        }
+        /* are any of these function end instructions? */
+        else if (is_end_inst(insn, handle, architecture))
+            found_epilogue = !is_tail_call(insn, architecture);
         size += insn->size;
 
-        /* are any of these function end instructions? */
-        if (is_end_inst(insn, handle))
-            found_end = !is_tail_call(insn, architecture);
-
         /* if we aren't at the start of a function, check if we are at a common prologue. */
-        if (size != insn->size || found_end) {
+        if (size != insn->size || found_epilogue) {
             bool is_prologue = false;
             if (architecture.arch == CS_ARCH_ARM) {
                 /* common arm/thumb prologues, push {r7, ...} or push {fp, ...}. */
-                is_prologue = insn->id == ARM_INS_PUSH;
+                is_prologue = sig_armhf_chk(insn) == SIG_ARMHF_PROLOGUE;
             }
             else if (architecture.arch == CS_ARCH_AARCH64) {
                 /* common aarch64 prologues, stp x29, x30, [sp, ...]. */
-                is_prologue = insn->id == AARCH64_INS_STP;
+                is_prologue = sig_aarch64_chk(insn) == SIG_AARCH64_PROLOGUE;
             }
+            /* if we encounter a regular instruction after our starting prologues... */
+            if (starting_prologues && !is_prologue) starting_prologues = false;
 
-            /* if we hit another function prologue, stop before it. */
-            if (is_prologue) {
+            /* albeit this could happen, it is very likely for it to not. */
+            if (is_prologue && !starting_prologues) {
                 size -= insn->size;
                 break;
             }
         }
 
         /* have we already hit a function-ending instruction? */
-        if (found_end) {
+        if (found_epilogue) {
             /* we scan for nop padding sections. */
             bool is_padding = false;
             if (architecture.arch == CS_ARCH_X86) {
                 /* if we hit CET (endbr64/32) after a ret, that is the end of the function. */
-                if (insn->id == X86_INS_ENDBR64 || insn->id == X86_INS_ENDBR32) break;
+                if (insn->id == X86_INS_ENDBR64 || insn->id == X86_INS_ENDBR32) {
+                    size -= insn->size;
+                    break;
+                }
                 is_padding = insn->id == X86_INS_NOP || insn->id == X86_INS_INT3;
             }
             else if (architecture.arch == CS_ARCH_ARM) {
-                /* thumb and arm nops, also mov r0, r0/ mov r8, r8. */
+                /* armhf and aarch64 nops, also mov r0, r0/ mov r8, r8. */
                 is_padding = insn->id == ARM_INS_ALIAS_NOP || (insn->id == ARM_INS_MOV &&
                     insn->detail->arm.operands[0].reg == insn->detail->arm.operands[1].reg);
+
+                /* did we hit a bx lr (ret) after some epilogue or a nop,
+                    then we have found the end of the function, return. */
+                if (sig_compare("bx lr", insn) || insn->id == ARM_INS_ALIAS_NOP) {
+                    size -= insn->size;
+                    break;
+                }
             }
             else if (architecture.arch == CS_ARCH_AARCH64)
                 is_padding = insn->id == AARCH64_INS_ALIAS_NOP;
             /* are we encountering padding? */
             if (is_padding) {
                 pad_count++;
+                /* bruteforce nop pad calculation is unstable, we aren't analyzing the binary,
+                    so this might be phased out, not sure yet. */
                 if (pad_count > 2)
                     break;
             } else {
