@@ -116,8 +116,8 @@ sig_compare(const char* signature, cs_insn* insn) {
 e_sig_type_t
 sig_aarch64_chk(cs_insn* insn) {
     /* create our list of signatures (prologues and epilogues). */
-    const static char* prologues[] = { AARCH64_P1, AARCH64_P2, AARCH64_P3, AARCH64_P4 };
-    const static char* epilogues[] = { AARCH64_E1, AARCH64_E2, AARCH64_E3 };
+    static const char* prologues[] = { AARCH64_P1, AARCH64_P2, AARCH64_P3, AARCH64_P4 };
+    static const char* epilogues[] = { AARCH64_E1, AARCH64_E2, AARCH64_E3 };
 
     /* iterate over our list of signatures. */
     for (size_t i = 0; i < sizeof(prologues) / sizeof(char*); i++) {
@@ -141,13 +141,13 @@ sig_aarch64_chk(cs_insn* insn) {
 e_sig_type_t
 sig_armhf_chk(cs_insn* insn) {
     /* create our list of signatures (prologues and epilogues). */
-    const static char* prologues[] = {
+    static const char* prologues[] = {
         ARMHF_P1, ARMHF_P2, ARMHF_P3, ARMHF_P4, ARMHF_P5,
         ARMHF_P6, ARMHF_P7, ARMHF_P8, ARMHF_P9, ARMHF_P10,
         ARMHF_P11, ARMHF_P12, ARMHF_P13, ARMHF_P14, ARMHF_P15,
         ARMHF_P16, ARMHF_P17, ARMHF_P18
     };
-    const static char* epilogues[] = {
+    static const char* epilogues[] = {
         ARMHF_E1, ARMHF_E2, ARMHF_E3, ARMHF_E4, ARMHF_E5,
         ARMHF_E6, ARMHF_E7, ARMHF_E8, ARMHF_E9, ARMHF_E10,
         ARMHF_E11, ARMHF_E12, ARMHF_E13, ARMHF_E14, ARMHF_E15,

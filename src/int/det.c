@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-05-19
+ * @date 2026-05-20
  */
 #include "det.h"
 
@@ -105,6 +105,10 @@ det_function_size(void* address, size_t max_size) {
             /* have we gone from the end of a function to the start of a function? */
             if (found_epilogue && sigt == SIG_ARMHF_PROLOGUE) break;
             if (found_epilogue && !strcmp("nop", insn->mnemonic)) break;
+            if (found_epilogue && sigt == SIG_UNRECOGNIZED) {
+                /* if we found a epilogue-style 'andeq'/'lsls' padding. */
+                if (sig_compare(ARMHF_EP1, insn)) break;
+            }
             /* capstone has HORRIBLE support for nops in armhf for some reason? */
             found_epilogue = (sigt == SIG_ARMHF_EPILOGUE); /* o.w. we continue. */
         }
@@ -150,6 +154,11 @@ det_function_size(void* address, size_t max_size) {
                 if (insn->id == X86_INS_ENDBR64 || insn->id == X86_INS_ENDBR32) {
                     size -= insn->size;
                     break;
+                }
+                /* dead giveaway for the end of a function. */
+                if (strcmp(insn->mnemonic, "leave") == 0) {
+                    size += 1u; /* leave + ret are two bytes for both i386 and amd64. */
+                    break; /* leave does not occur without a ret right after. */
                 }
                 is_padding = insn->id == X86_INS_NOP || insn->id == X86_INS_INT3;
             }

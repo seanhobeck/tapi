@@ -116,6 +116,8 @@ sig_armhf_chk(cs_insn* insn);
 #define ARMHF_E16 "ldmia sp!, {r??, r??, r??, pc}"
 #define ARMHF_E17 "ldmia sp!, {r??, r??, r??, r??}"
 #define ARMHF_E18 "ldmia sp!, {r??, r??, r??, r??, pc}"
+/* for some reason armhf LOVES to use 'andeq' or 'lsls' as padding after an epilogue like ARMHF_E1-18? */
+#define ARMHF_EP1 "lsls r??, r??, #??????"
 
 /* for any x86 & x86_64 we aren't using any patterns since we can rely on capstones id's with CET. */
 #pragma endregion
