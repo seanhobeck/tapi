@@ -43,14 +43,14 @@ make all release=1 arch=target_architecture # x86_64, x86, arm32, arm64
 make all release=1
 ```
 
----
+[//]: # (Support for C++)
 
-## Roadmap
+[//]: # ()
+[//]: # (Multi-threaded testing using mocks &#40;_ie. mocking an application using multiple threads_&#41;)
 
-Planned improvements:
+[//]: # ()
+[//]: # (Support for even more little-endian architectures &#40;_e.g. POWERPC, and RISC-V for both 32-bit )
 
-- Support for C++
-- Multi-threaded testing using mocks (_ie. mocking an application using multiple threads_)
-- Support for even more little-endian architectures (_e.g. POWERPC, and RISC-V for both 32-bit 
-  and 64-bit_)
+[//]: # ()
+[//]: # (  and 64-bit_&#41;)
 
