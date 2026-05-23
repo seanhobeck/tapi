@@ -121,6 +121,7 @@ guard_create(void* address, size_t length) {
         fprintf_s(stderr, "tapi, guard_create; VirtualProtect failed; could not allocate memory "
                           "for pguard.");
 #endif
+        free(guard);
         return;
     }
 
