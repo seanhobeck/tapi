@@ -4,6 +4,7 @@ cflags := -g -O0 -Wall -Wextra -std=c17 # -fsanitize=address,leak,undefined -fno
 #	non-native architectures being ran in qemu, you can also enable this
 #	by setting use_asan=true, when compiling with this Makefile.
 use_asan := false
+pkg_config := pkg-config
 
 # architecture defs.
 arch ?= $(shell uname -m).
@@ -36,13 +37,19 @@ test_bin_dir := $(bin_dir)/tests/unit
 lib_name := tapi
 lib_file := $(bin_dir)/lib$(lib_name).so
 
+# vendor directories.
+vendor_include := $(root_dir)/vendor/build/$(arch)/include
+vendor_lib := $(root_dir)/vendor/build/$(arch)/lib
+
 # include paths (public headers, but also internal headers too).
 cflags += -I$(bin_dir)/include -I$(root_dir)/src/
+cflags += -I$(vendor_include)
 
 # link flags:
 # -L../../bin/$(arch)/lib so -ltapi finds libtapi.so
 # rpath=$$ORIGIN/../.. so test binaries (in bin/$(arch)/tests/unit/) find libtapi.so (in bin/$(arch)/) at runtime
 ldflags := -L$(bin_dir) -Wl,-rpath,'$$ORIGIN/../..'
+ldflags += -L$(vendor_lib)
 ldlibs  := -l$(lib_name)
 
 # each test .c becomes its own executable in bin/$(arch)/tests/unit/

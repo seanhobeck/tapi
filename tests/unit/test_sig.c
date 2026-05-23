@@ -17,6 +17,9 @@
 /*! @uses printf. */
 #include <stdio.h>
 
+/*! @uses strcpy. */
+#include <string.h>
+
 /*! @uses cs_insn. */
 #include <capstone/capstone.h>
 
@@ -28,7 +31,7 @@ test_strcmp_short(csh handle) {
     /* arrange. */
     char* a = "hello";
     cs_insn* b = cs_malloc(handle);
-    strcpy(b->mnemonic, "hello\0");
+    strcpy(b->mnemonic, "hello");
 
     /* act & assert. */
     assert(sig_compare(a, b));
@@ -44,7 +47,7 @@ test_strcmp_med(csh handle) {
     /* arrange. */
     char* a = "abcdefghijklmnop";
     cs_insn* b = cs_malloc(handle);
-    strcpy(b->mnemonic, "abcdefghijklmnop\0");
+    strcpy(b->mnemonic, "abcdefghijklmnop");
 
     /* act & assert. */
     assert(sig_compare(a, b));
@@ -60,8 +63,8 @@ test_strcmp_med_with_op(csh handle) {
     /* arrange. */
     char* a = "abcdefghijklmnop qrstuvwxyz1234567890";
     cs_insn* b = cs_malloc(handle);
-    strcpy(b->mnemonic, "abcdefghijklmnop\0");
-    strcpy(b->op_str, "qrstuvwxyz1234567890\0");
+    strcpy(b->mnemonic, "abcdefghijklmnop");
+    strcpy(b->op_str, "qrstuvwxyz1234567890");
 
     /* act & assert. */
     assert(sig_compare(a, b));
@@ -94,8 +97,8 @@ test_strcmp_long_with_op(csh handle) {
     /* arrange. */
     char* a = "thisisanotherexamplestringabcde qrstuvwxyz1234567890aaaaaabbbbbbccccccdddddd";
     cs_insn* b = cs_malloc(handle);
-    strcpy(b->mnemonic, "thisisanotherexamplestringabcde\0");
-    strcpy(b->op_str, "qrstuvwxyz1234567890aaaaaabbbbbbccccccdddddd\0");
+    strcpy(b->mnemonic, "thisisanotherexamplestringabcde");
+    strcpy(b->op_str, "qrstuvwxyz1234567890aaaaaabbbbbbccccccdddddd");
 
     /* act & assert. */
     assert(sig_compare(a, b));
@@ -111,8 +114,8 @@ test_strcmp_mnemonic(csh handle) {
     /* arrange. */
     char* a = "abc?? def";
     cs_insn* b = cs_malloc(handle);
-    strcpy(b->mnemonic, "abc11\0");
-    strcpy(b->op_str, "def\0");
+    strcpy(b->mnemonic, "abc11");
+    strcpy(b->op_str, "def");
 
     /* act & assert. */
     assert(sig_compare(a, b));
@@ -128,8 +131,8 @@ test_strcmp_mnemonic_min(csh handle) {
     /* arrange. */
     char* a = "abc???????? def";
     cs_insn* b = cs_malloc(handle);
-    strcpy(b->mnemonic, "abc1\0");
-    strcpy(b->op_str, "def\0");
+    strcpy(b->mnemonic, "abc1");
+    strcpy(b->op_str, "def");
 
     /* act & assert. */
     assert(sig_compare(a, b));
@@ -145,8 +148,8 @@ test_strcmp_mnemonic_max(csh handle) {
     /* arrange. */
     char* a = "abc???????? def";
     cs_insn* b = cs_malloc(handle);
-    strcpy(b->mnemonic, "abc11111111\0");
-    strcpy(b->op_str, "def\0");
+    strcpy(b->mnemonic, "abc11111111");
+    strcpy(b->op_str, "def");
 
     /* act & assert. */
     assert(sig_compare(a, b));
@@ -162,8 +165,8 @@ test_strcmp_op_str(csh handle) {
     /* arrange. */
     char* a = "abc def???";
     cs_insn* b = cs_malloc(handle);
-    strcpy(b->mnemonic, "abc\0");
-    strcpy(b->op_str, "defghi\0");
+    strcpy(b->mnemonic, "abc");
+    strcpy(b->op_str, "defghi");
 
     /* act & assert. */
     assert(sig_compare(a, b));
@@ -179,8 +182,8 @@ test_strcmp_op_str_min(csh handle) {
     /* arrange. */
     char* a = "abc def????????";
     cs_insn* b = cs_malloc(handle);
-    strcpy(b->mnemonic, "abc\0");
-    strcpy(b->op_str, "defg\0");
+    strcpy(b->mnemonic, "abc");
+    strcpy(b->op_str, "defg");
 
     /* act & assert. */
     assert(sig_compare(a, b));
@@ -196,8 +199,8 @@ test_strcmp_op_str_max(csh handle) {
     /* arrange. */
     char* a = "abc def????????";
     cs_insn* b = cs_malloc(handle);
-    strcpy(b->mnemonic, "abc\0");
-    strcpy(b->op_str, "defghijklmn\0");
+    strcpy(b->mnemonic, "abc");
+    strcpy(b->op_str, "defghijklmn");
 
     /* act & assert. */
     assert(sig_compare(a, b));
@@ -643,17 +646,30 @@ test_aarch64_chk_9(csh handle) {
 
 int main(int argc, char** argv) {
     /* open with architecture etc... */
-    arch_t architecture = get_arch();
+    cs_arch arch;
+    cs_mode mode;
+#ifdef __amd64__
+    arch = CS_ARCH_X86; mode = CS_MODE_64;
+#endif
+#ifdef __i386__
+    arch = CS_ARCH_X86; mode = CS_MODE_32;
+#endif
+#ifdef __aarch64__
+    arch = CS_ARCH_AARCH64; mode = CS_MODE_ARM;
+#endif
+#ifdef __arm__
+    arch = CS_ARCH_ARM; mode = CS_MODE_ARM;
+#endif
     csh handle;
 
     /* detect if we need to use thumb based on the thumb bit. */
     void* address = (void*) &main;
-    bool is_thumb = architecture.mode == CS_MODE_ARM && (uintptr_t)address & 1u;
+    bool is_thumb = mode == CS_MODE_ARM && (uintptr_t)address & 1u;
     if (is_thumb) {
         address = (void*)((uintptr_t)address & ~1u);
-        architecture.mode = CS_MODE_THUMB;
+        mode = CS_MODE_THUMB;
     }
-    cs_open(architecture.arch, architecture.mode, &handle);
+    cs_open(arch, mode, &handle);
     cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
 
     /* run tests. */
