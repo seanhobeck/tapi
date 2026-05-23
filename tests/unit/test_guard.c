@@ -113,6 +113,5 @@ int main(int argc, char** argv) {
         else assert("failed, page permissions did not revert(win32)!\n");
     }
 #endif
-
     return 0;
 };
