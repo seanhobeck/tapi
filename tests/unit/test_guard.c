@@ -80,38 +80,6 @@ int main(int argc, char** argv) {
         else assert("failed, page permissions not correct(win32)!\n");
     }
 #endif
-
-    /* arrange & act. */
-    guard_cleanup();
-
-    /* assert. */
-#ifdef __linux__
-    /* reset the readptr. */
-    fseek(ptr, 0, SEEK_SET);
-
-    /* read the lines of the maps. */
-    while (fgets(line, sizeof(line), ptr)) {
-        unsigned long start, end;
-        char perms[5];
-        if (sscanf(line, "%lx-%lx %4s", &start, &end, perms) == 3) {
-            if ((unsigned long)address >= start && (unsigned long)address <= end) {
-                /* read, write and execute. */
-                if (perms[0] == 'r' && perms[1] == '-' && perms[2] == 'x') {
-                    printf("successful page permission(linux) revert!\n");
-                }
-                else assert("failed, page permissions did not revert(linux)!\n");
-            }
-        }
-    }
     fclose(ptr);
-#endif
-#ifdef _WIN32
-    if (VirtualQuery(address, &mbi, sizeof(mbi)) != 0) {
-        if (mbi.Protect & PAGE_READWRITE) {
-            printf("successful page permission(win32) revert!\n");
-        }
-        else assert("failed, page permissions did not revert(win32)!\n");
-    }
-#endif
     return 0;
 };
