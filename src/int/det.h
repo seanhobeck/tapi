@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-02-21
+ * @date 2026-05-25
  */
 #ifndef DET_H
 #define DET_H
@@ -18,7 +18,7 @@
  * @brief find the size of the function in memory.
  *
  * @param address the address of the function to analyze.
- * @param max_size the max size to search.
+ * @param max_size the max size to search (0x200 usually is enough for small to mid-sized functions).
  * @return size of the function in memory.
  */
 size_t
@@ -34,7 +34,7 @@ typedef struct {
     size_t size; /* instruction size. */
     uint8_t bytes[32u]; /* bytes used in the call (max 32). */
     bool is_rel, is_thumb; /* is it a relative address?, are we arm thumb mode? */
-    int32_t offset, orig_off; /* ... */
+    int32_t orig_off; /* ... */
 } det_call_t;
 
 /**
