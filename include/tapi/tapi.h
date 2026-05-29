@@ -1,7 +1,11 @@
+/*
+ * Copyright (C) 2026 Sean C. Hobeck
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-03-24
+ * @date 2026-05-29
  */
 #ifndef TAPI_H
 #define TAPI_H

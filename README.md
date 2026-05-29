@@ -8,18 +8,17 @@ framework that supports unit testing, mocking, and stream capturing for various 
 
 ## Features
 
-- Unit testing
-- Easy logging and debugging
-- Grouping tests into suites
-- POSIX file stream capturing
-- Proper assertion and error handling
-- Runtime mocking by patching call targets
+- Support for both unit, integration, and e2e testing.
+- Easy logging and debugging for fast test-driven development.
+- POSIX file stream capturing for monitoring and debugging outputs.
+- Proper assertion and error handling for each test case.
+- Mocking during runtime by patching call targets.
 
 ---
 
 ### Dependencies
 
-- A compiler with C99 support(_minimum GCC 4.5+, but should support C17 as well_)
+- A compiler with C17 support(_minimum GCC 4.5+, but should support C99 as well_)
 - `libcapstone` (_included as a submodule_)
 
 ---
@@ -43,14 +42,12 @@ make all release=1 arch=target_architecture # x86_64, x86, arm32, arm64
 make all release=1
 ```
 
----
+## Documentation
 
-## Roadmap
-
-Planned improvements:
-
-- Support for C++
-- Multi-threaded testing using mocks (_ie. mocking an application using multiple threads_)
-- Support for even more little-endian architectures (_e.g. POWERPC, and RISC-V for both 32-bit 
-  and 64-bit_)
+To view documentation for `tapi` there are a few options:
+- View via [Github Pages](https://seanhobeck.github.io/tapi).
+- Generate documentation by running `scripts/get-docs` from the cloned repository.
+- Locally view the documentation by either generating it (_see above_) or using the downloaded 
+  tarball from the [releases page](https://github.com/seanhobeck/tapi/releases), and then 
+  opening either `build/doc/html/index.html` or `docs/index.html` with your favorite web browser.
 
