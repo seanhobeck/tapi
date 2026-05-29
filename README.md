@@ -50,4 +50,3 @@ To view documentation for `tapi` there are a few options:
 - Locally view the documentation by either generating it (_see above_) or using the downloaded 
   tarball from the [releases page](https://github.com/seanhobeck/tapi/releases), and then 
   opening either `build/doc/html/index.html` or `docs/index.html` with your favorite web browser.
-
