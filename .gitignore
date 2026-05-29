@@ -59,6 +59,8 @@ dkms.conf
 /build
 /tests/.idea
 /vendor/build
+/release
+tapi-*.tar.gz
 
 # test logs.
 output_*.txt
@@ -66,7 +68,6 @@ output_*.txt
 # docs
 docs/latex
 docs/xml
-cmp/
 /.idea/misc.xml
-.idea/
+/.idea/
 /.run/unit.run.xml

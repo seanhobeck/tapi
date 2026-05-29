@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -eu
+
+# clean everything.
+rm -rf release/
+make clean
+
+# build the docs.
+./scripts/get-docs
+
+# make each release for each architecture.
+make all arch=x86_64 release=1
+make all arch=x86 release=1
+make all arch=arm32 release=1
+make all arch=aarch64 release=1
+
+# we can then package these into a singular tar.gz for uploading to vcpkg.
+pack_into_bundle() {
+  # create the directory release/$arch, copy readme.md, license, headers and lib.
+  mkdir -p "release/$1/include"
+  mkdir "release/$1/lib"
+
+  # copy over readme.md and license.
+  cp README.md "release/$1/README.md"
+  cp LICENSE "release/$1/LICENSE"
+
+  # copy over headers, shared object and pkgconfig info.
+  cp -r "bin/$1/include/"* "release/$1/include"
+  cp -r "bin/$1/lib/"* "release/$1/lib"
+  cp "bin/$1/libtapi.so" "release/$1/lib/libtapi.so"
+
+  # copy over docs.
+  cp -r "build/doc/html"* "release/$1/docs"
+
+  # create a tarball for each.
+  tar -czf "release/tapi-$2-linux-$1.tar.gz" -C "release/$1" .
+}
+
+# per architecture...
+pack_into_bundle x86_64 v1.0
+pack_into_bundle x86 v1.0
+pack_into_bundle arm32 v1.0
+pack_into_bundle aarch64 v1.0

@@ -4,7 +4,7 @@ cp := cp
 mkdir := mkdir -p
 pkg_config := pkg-config
 
-# architecture defs.
+# architecture defs. todo; update for non-linux architectures
 arch ?= $(shell uname -m)
 ifeq ($(arch),aarch64)
   cc := aarch64-linux-gnu-gcc
@@ -16,7 +16,7 @@ ifeq ($(arch),x86)
   cc := i686-linux-gnu-gcc
 endif
 ifeq ($(arch),x86_64)
-  cc := gcc
+  cc := x86_64-linux-gnu-gcc
 endif
 
 # compilation, release, and asan flags.
@@ -128,8 +128,8 @@ $(pc_file): $(lib_file)
 	@printf "libdir=%s\n" "$(libdir)" >> $(pc_file)
 	@printf "\n" >> $(pc_file)
 	@printf "name: %s\n" "$(lib_name)" >> $(pc_file)
-	@printf "description: tapi shared library\n" >> $(pc_file)
-	@printf "version: 0\n" >> $(pc_file)
+	@printf "description: A testing framework in C17 with runtime-based mocking for various architectures. \n" >> $(pc_file)
+	@printf "version: v1.0\n" >> $(pc_file)
 	@printf "cflags: -I$${includedir}\n" >> $(pc_file)
 	@printf "libs: -L$${libdir} -l%s\n" "$(lib_name)" >> $(pc_file)
 
