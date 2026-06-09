@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-03-24
+ * @date 2026-06-09
  */
 #include <tapi/tapi.h>
 
@@ -179,16 +179,17 @@ TAPI_MAKE_TEST(test_capture_whitespace) {
 }
 
 int main() {
-    TAPI_ADD_TEST("test_empty", test_capture_empty);
-    TAPI_ADD_TEST("test_single_line", test_capture_single_line);
-    TAPI_ADD_TEST("test_multiline", test_capture_multiline);
-    TAPI_ADD_TEST("test_stderr", test_capture_stderr);
-    TAPI_ADD_TEST("test_both_streams", test_capture_both_streams);
-    TAPI_ADD_TEST("test_large_output", test_capture_large_output);
-    TAPI_ADD_TEST("test_overflow", test_capture_overflow);
-    TAPI_ADD_TEST("test_formats", test_capture_formats);
-    TAPI_ADD_TEST("test_special_chars", test_capture_special_chars);
-    TAPI_ADD_TEST("test_whitespace", test_capture_whitespace);
-    TAPI_RUN_TESTS();
+    tapi_context_t* context = tapi_init();
+    TAPI_ADD_TEST(context, "test_empty", test_capture_empty);
+    TAPI_ADD_TEST(context, "test_single_line", test_capture_single_line);
+    TAPI_ADD_TEST(context, "test_multiline", test_capture_multiline);
+    TAPI_ADD_TEST(context, "test_stderr", test_capture_stderr);
+    TAPI_ADD_TEST(context, "test_both_streams", test_capture_both_streams);
+    TAPI_ADD_TEST(context, "test_large_output", test_capture_large_output);
+    TAPI_ADD_TEST(context, "test_overflow", test_capture_overflow);
+    TAPI_ADD_TEST(context, "test_formats", test_capture_formats);
+    TAPI_ADD_TEST(context, "test_special_chars", test_capture_special_chars);
+    TAPI_ADD_TEST(context, "test_whitespace", test_capture_whitespace);
+    TAPI_RUN_TESTS(context);
     return 0;
 }

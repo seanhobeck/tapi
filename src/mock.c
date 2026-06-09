@@ -42,10 +42,11 @@ tapi_mock_create(void* orig, void* target, void* mocked) {
  * @brief apply the mocks patch in memory; write stub to route to
  *  the given mocked function pointer.
  *
+ * @param context the context of tapi to be used.
  * @param mock the mock to be applied.
  */
 void
-tapi_mock_apply(tapi_mock_t* mock) {
+tapi_mock_apply(tapi_context_t* context, tapi_mock_t* mock) {
     /* determine call info. */
     det_call_t* call = det_call_target(mock->orig, mock->target);
     if (call == 0x0) {
@@ -59,8 +60,8 @@ tapi_mock_apply(tapi_mock_t* mock) {
     /* NOLINTNEXTLINE */
     memcpy(mock->orig_bytes, call->bytes, mock->size);
 
-    /* apply the patch to the call. */
-    patch_call_target(call, mock->mocked);
+    /* apply the patch to the call, given the context. */
+    patch_call_target(context, call, mock->mocked);
 
     /* we read the new bytes and store. */
     /* NOLINTNEXTLINE */
@@ -71,10 +72,11 @@ tapi_mock_apply(tapi_mock_t* mock) {
 /**
  * @brief restore the contents of a function and free the mock.
  *
+ * @param context the context of tapi to be used.
  * @param mock the mock structure to be freed and restored.
  */
 void
-tapi_mock_restore(tapi_mock_t* mock) {
+tapi_mock_restore(tapi_context_t* context, tapi_mock_t* mock) {
     /* we can't restore a mock that hasn't been applied... */
     if (mock->call == 0x0) {
         /* NOLINTNEXTLINE */
@@ -84,7 +86,7 @@ tapi_mock_restore(tapi_mock_t* mock) {
 
     /* we then have to restore the bytes for future tests that could call that same function. */
     det_call_t* call = det_call_target(mock->orig, mock->mocked);
-    patch_call_target(call, mock->target);
+    patch_call_target(context, call, mock->target);
     free(call);
     free(mock);
 };

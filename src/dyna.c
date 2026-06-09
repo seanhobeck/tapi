@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-03-09
+ * @date 2026-06-07
  */
 #include <tapi/dyna.h>
 
@@ -30,6 +30,9 @@ tapi_dyna_create() {
     array->data = 0x0;
     array->length = 0u;
     array->capacity = 0u;
+#ifdef TAPI_THREAD_SAFE
+    pthread_rwlock_init(&array->lock, 0x0);
+#endif
     return array;
 }
 
@@ -42,6 +45,9 @@ void
 tapi_dyna_free(tapi_dyna_t* array) {
     /* assert if the array is 0x0. */
     assert(array != 0x0);
+#ifdef TAPI_THREAD_SAFE
+    pthread_rwlock_destroy(&array->lock);
+#endif
 
     /* free. */
     free(array->data);
@@ -58,6 +64,9 @@ void
 tapi_dyna_push(tapi_dyna_t* array, void* data) {
     /* assert if the array or data == 0x0. */
     assert(array != 0x0 && data != 0x0);
+#ifdef TAPI_THREAD_SAFE
+    pthread_rwlock_wrlock(&array->lock);
+#endif
 
     /* compare length and capacity. */
     if (array->length == array->capacity) {
@@ -72,6 +81,9 @@ tapi_dyna_push(tapi_dyna_t* array, void* data) {
         array->capacity = _capacity;
     }
     array->data[array->length++] = data;
+#ifdef TAPI_THREAD_SAFE
+    pthread_rwlock_unlock(&array->lock);
+#endif
 }
 
 /**
@@ -88,8 +100,15 @@ void*
 tapi_dyna_pop(tapi_dyna_t* array, size_t index) {
     /* assert if the array == 0x0. */
     assert(array != 0x0);
-    if (index >= array->length)
+#ifdef TAPI_THREAD_SAFE
+    pthread_rwlock_wrlock(&array->lock);
+#endif
+    if (index >= array->length) {
+#ifdef TAPI_THREAD_SAFE
+        pthread_rwlock_unlock(&array->lock);
+#endif
         return 0x0;
+    }
 
     /* capture the element */
     void* item = array->data[index];
@@ -98,6 +117,9 @@ tapi_dyna_pop(tapi_dyna_t* array, size_t index) {
     for (size_t i = index + 1u; i < array->length; i++)
         array->data[i - 1u] = array->data[i];
     array->length--;
+#ifdef TAPI_THREAD_SAFE
+    pthread_rwlock_unlock(&array->lock);
+#endif
     return item;
 }
 
@@ -113,10 +135,16 @@ void*
 tapi_dyna_get(tapi_dyna_t* array, size_t index) {
     /* assert if the array == 0x0. */
     assert(array != 0x0);
+#ifdef TAPI_THREAD_SAFE
+    pthread_rwlock_rdlock(&array->lock);
+#endif
 
     /* if the index is out of bounds. */
     if (index >= array->length)
         return 0x0;
+#ifdef TAPI_THREAD_SAFE
+    pthread_rwlock_unlock(&array->lock);
+#endif
     return array->data[index];
 }
 
@@ -129,6 +157,9 @@ void
 tapi_dyna_shrink(tapi_dyna_t* array) {
     /* assert if the array == 0x0. */
     assert(array != 0x0);
+#ifdef TAPI_THREAD_SAFE
+    pthread_rwlock_wrlock(&array->lock);
+#endif
 
     /* do a realloc down where capacity = length. */
     void** _data = realloc(array->data, sizeof(void*) * array->length);
@@ -139,6 +170,9 @@ tapi_dyna_shrink(tapi_dyna_t* array) {
     }
     array->data = _data;
     array->capacity = array->length;
+#ifdef TAPI_THREAD_SAFE
+    pthread_rwlock_unlock(&array->lock);
+#endif
 }
 
 /**
@@ -155,6 +189,9 @@ tapi_dyna_make(void** data, size_t length) {
     array->data = calloc(length, sizeof(void*));
     array->length = length;
     array->capacity = length;
+#ifdef TAPI_THREAD_SAFE
+    pthread_rwlock_init(&array->lock, 0x0);
+#endif
 
     /* copy and return. */
     /* NOLINTNEXTLINE */

@@ -1,6 +1,6 @@
 /**
 * @author Sean Hobeck
- * @date 2026-05-28
+ * @date 2026-06-09
  */
 /*! @uses int. module to be tested. */
 #include "int/patch.h"
@@ -106,11 +106,12 @@ void
 test_f1_success() {
     /* arrange. */
     det_call_t* call = det_call_target(&function, &add);
+    tapi_context_t* context = tapi_init();
 
     /* act. */
-    int32_t result = patch_call_target(call, &add_stub);
+    int32_t result = patch_call_target(context, call, &add_stub);
 
-    /* arrange. */
+    /* assert. */
     det_call_t* call2 = det_call_target(&function, &add);
     det_call_t* call3 = det_call_target(&function, &add_stub);
     assert(result == 0x1);
@@ -118,6 +119,7 @@ test_f1_success() {
     assert(call3 != 0x0);
     free(call);
     free(call3);
+    free(context);
     printf("successfully replaced a singular call!\n");
 }
 
@@ -128,13 +130,14 @@ void
 test_f2_success() {
     /* arrange. */
     det_call_t* call = det_call_target(&function2, &add);
+    tapi_context_t* context = tapi_init();
 
     /* act. */
-    int32_t result = patch_call_target(call, &add_stub);
+    int32_t result = patch_call_target(context, call, &add_stub);
     det_call_t* call2 = det_call_target(&function2, &add);
-    int32_t result2 = patch_call_target(call2, &add_stub);
+    int32_t result2 = patch_call_target(context, call2, &add_stub);
 
-    /* arrange. */
+    /* assert. */
     det_call_t* call3 = det_call_target(&function2, &add);
     det_call_t* call4 = det_call_target(&function2, &add_stub);
     det_call_t* call5 = det_call_target(&function2, &add_stub);
@@ -147,6 +150,7 @@ test_f2_success() {
     free(call2);
     free(call4);
     free(call5);
+    free(context);
     printf("successfully replaced two calls!\n");
 }
 
@@ -157,11 +161,12 @@ void
 test_f3_success() {
     /* arrange. */
     det_call_t* call = det_call_target(&function3, &add);
+    tapi_context_t* context = tapi_init();
 
     /* act. */
-    int32_t result = patch_call_target(call, &add_stub);
+    int32_t result = patch_call_target(context, call, &add_stub);
 
-    /* arrange. */
+    /* assert. */
     det_call_t* call2 = det_call_target(&function3, &add);
     det_call_t* call3 = det_call_target(&function3, &add_stub);
     assert(result == 0x1);
@@ -169,10 +174,11 @@ test_f3_success() {
     assert(call3 != 0x0);
     free(call);
     free(call3);
+    free(context);
     printf("successfully replaced a singular call within a inline assembly function!\n");
 }
 
-int main(int argc, char** argv) {
+int main() {
 #ifdef __amd64__
     printf("----src/int/patch.c: 'patch_call_target'(amd64) partial tests----\n");
 #endif

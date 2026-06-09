@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-03-24
+ * @date 2026-06-09
  */
 #include <tapi/tapi.h>
 
@@ -185,30 +185,31 @@ TAPI_MAKE_TEST(test_conditional_mock){
 }
 #pragma endregion
 
-int main(){
+int main() {
     /* basic test. */
-    TAPI_ADD_TEST_AND_MOCK("test_basic_mock", test_basic_mock, function, \
+    tapi_context_t* context = tapi_init();
+    TAPI_ADD_TEST_AND_MOCK(context, "test_basic_mock", test_basic_mock, function, \
         target_function, tested_function_target);
 
     /* architecture-specific tests. */
 #if defined(__x86_64__) || defined(__i386__)
-    TAPI_ADD_TEST_AND_MOCK("test_asm_x86_mock", test_asm_x86_mock, asm_caller_x86, \
+    TAPI_ADD_TEST_AND_MOCK(context, "test_asm_x86_mock", test_asm_x86_mock, asm_caller_x86, \
         asm_target_x86, mock_asm_target_x86);
 #elif defined(__aarch64__)
-    TAPI_ADD_TEST_AND_MOCK("test_asm_aarch64_mock", test_asm_aarch64_mock, \
+    TAPI_ADD_TEST_AND_MOCK(context, "test_asm_aarch64_mock", test_asm_aarch64_mock, \
         asm_caller_aarch64, asm_target_aarch64, mock_asm_target_aarch64);
 #elif defined(__arm__)
-    TAPI_ADD_TEST_AND_MOCK("test_asm_arm32_mock", test_asm_arm32_mock, \
+    TAPI_ADD_TEST_AND_MOCK(context, "test_asm_arm32_mock", test_asm_arm32_mock, \
         asm_caller_arm32, asm_target_arm32, mock_asm_target_arm32);
-    TAPI_ADD_TEST_AND_MOCK("test_asm_thumb_mock", test_asm_thumb_mock, \
+    TAPI_ADD_TEST_AND_MOCK(context, "test_asm_thumb_mock", test_asm_thumb_mock, \
         asm_caller_thumb, asm_target_thumb, mock_asm_target_thumb);
 #endif
-    TAPI_ADD_TEST_AND_MOCK("test_nested_mock", test_nested_mock, nested_middle, \
+    TAPI_ADD_TEST_AND_MOCK(context, "test_nested_mock", test_nested_mock, nested_middle, \
         nested_target, mock_nested_target);
-    TAPI_ADD_TEST_AND_MOCK("test_conditional", test_conditional_mock, conditional_caller, \
+    TAPI_ADD_TEST_AND_MOCK(context, "test_conditional", test_conditional_mock, conditional_caller, \
         conditional_target, mock_conditional_target);
 
     /* setup test array and run. */
-    TAPI_RUN_TESTS();
+    TAPI_RUN_TESTS(context);
     return 0;
 }
