@@ -1,15 +1,21 @@
 /**
  * @author Sean Hobeck
- * @date 2026-05-23
+ * @date 2026-06-09
  */
 /*! @uses int. module to be tested. */
 #include "int/guard.h"
+
+/*! @uses tapi_context_t. */
+#include <tapi/tapi.h>
 
 /*! @uses assert. */
 #include <assert.h>
 
 /*! @uses size_t. */
 #include <stddef.h>
+
+/*! @uses calloc, free. */
+#include <stdlib.h>
 
 /*! @uses printf. */
 #include <stdio.h>
@@ -32,22 +38,26 @@
 long
 some_function(int a, short b, char** c) {
     long d = a + b * **c;
-    printf("this is the result of this function, %d\n", d);
+    printf("this is the result of this function, %ld\n", d);
     short e = d * a;
     long f = (long)e - (long)&(*c);
     return f;
 };
 
-int main(int argc, char** argv) {
+int main() {
     /* guard_create unit tests. */
     printf("----src/int/guard.c: 'guard_create' unit tests----\n");
+    tapi_context_t* context = calloc(1u, sizeof *context);
+    context->guards = tapi_dyna_create();
 
     /* arrange & act. */
     void* address = &some_function;
-    guard_create(address, 0xf0);
+    guard_create(context, address, 0xf0);
 
     /* assert. */
 #ifdef __linux__
+    assert(context->guards->length == 1u);
+
     /* open this processes maps. */
     FILE* ptr = fopen("/proc/self/maps", "r");
     if (!ptr) {

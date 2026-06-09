@@ -5,13 +5,17 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-05-29
+ * @date 2026-06-04
  */
 #ifndef TAPI_DYNA_H
 #define TAPI_DYNA_H
 
 /*! @uses size_t. */
 #include <stddef.h>
+
+/*! @uses pthread_rwlock. */
+#define _XOPEN_SOURCE 600u /* enables POSIX.1-2001 */
+#include <pthread.h>
 
 /* for functions that are exported by tapi. */
 #if (defined(__GNUC__) || defined(__IBMC__))
@@ -46,6 +50,10 @@ typedef struct {
     void** data;
     /** length (count) and capacity of the dynamic array. */
     size_t length, capacity;
+#ifdef TAPI_THREAD_SAFE
+    /** a read-write access lock to data (only one thread writes at a time). */
+    pthread_rwlock_t lock;
+#endif
 } tapi_dyna_t;
 
 /**
@@ -118,6 +126,37 @@ tapi_dyna_make(void** data, size_t length);
 /* a get operation. */
 #define DYNA_GET(array, type, index) ((type) tapi_dyna_get(array, index))
 
+/*! if we are compiling with the thread-safe flag. */
+#ifdef TAPI_THREAD_SAFE
+/* starting an iteration. */
+#define DYNA_FOREACH_IT(array, type, var, iter) \
+    pthread_rwlock_rdlock(&(array)->lock); \
+    for (size_t iter = 0; iter < (array)->length; iter++) { \
+        type var = DYNA_GET(array, type, iter);
+
+/* starting an iteration. */
+#define DYNA_FOREACH(array, type, var) \
+    pthread_rwlock_rdlock(&(array)->lock); \
+    for (size_t i = 0; i < (array)->length; i++) { \
+        type var = DYNA_GET(array, type, i);
+
+/* starting an iteration, backwards. */
+#define DYNA_INV_FOREACH(array, type, var) \
+    pthread_rwlock_rdlock(&(array)->lock); \
+    for (size_t i = (array)->length; i != 0; i--) { \
+        type var = DYNA_GET(array, type, i - 1);
+
+/* starting an iteration, backwards. */
+#define DYNA_INV_FOREACH_IT(array, type, var, iter) \
+    pthread_rwlock_rdlock(&(array)->lock); \
+    for (size_t iter = (array)->length; iter != 0; iter--) { \
+        type var = DYNA_GET(array, type, iter - 1);
+
+/* ending an iteration. */
+#define DYNA_ENDFOREACH(array) \
+        pthread_rwlock_unlock(&(array)->lock); \
+    }
+#else
 /* starting an iteration. */
 #define DYNA_FOREACH_IT(array, type, var, iter) \
     for (size_t iter = 0; iter < (array)->length; iter++) { \
@@ -139,5 +178,6 @@ tapi_dyna_make(void** data, size_t length);
         type var = DYNA_GET(array, type, iter - 1);
 
 /* ending an iteration. */
-#define DYNA_ENDFOREACH }
+#define DYNA_ENDFOREACH(array) }
+#endif /* TAPI_THREAD_SAFE */
 #endif /* TAPI_DYNA_H */

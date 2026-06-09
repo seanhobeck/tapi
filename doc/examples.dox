@@ -45,10 +45,11 @@ TAPI_MAKE_TEST(test_add_negative_numbers) {
 }
 
 int main() {
-    /* add test(s) to the tapi test suite. */
-    TAPI_ADD_TEST("test_add_positive_numbers", test_add_positive_numbers);
-    TAPI_ADD_TEST("test_add_negative_numbers", test_add_negative_numbers);
-    TAPI_RUN_TESTS();
+    /* add test(s) to the tapi test suite/context. */
+    tapi_context_t* context = tapi_init();
+    TAPI_ADD_TEST(context, "test_add_positive_numbers", test_add_positive_numbers);
+    TAPI_ADD_TEST(context, "test_add_negative_numbers", test_add_negative_numbers);
+    TAPI_RUN_TESTS(context);
     return 0;
 }
 ```
@@ -86,10 +87,12 @@ TAPI_MAKE_TEST(test_currency_conversion) {
 }
 
 int main() {
-    /* add test(s) to the tapi test suite. */
-    TAPI_ADD_TEST_AND_MOCK("test_currency_conversion", test_currency_conversion, \
-        convert_currency, get_exchange_rate, mock_exchange_rate);
-    TAPI_RUN_TESTS();
+    /* add test(s) to the tapi test suite/context. */
+    tapi_context_t* context = tapi_init();
+    TAPI_ADD_TEST_AND_MOCK(context, "test_currency_conversion", \
+        test_currency_conversion, convert_currency, get_exchange_rate, \
+        mock_exchange_rate);
+    TAPI_RUN_TESTS(context);
     return 0;
 }
 ```
@@ -160,18 +163,18 @@ TAPI_MAKE_TEST(test_loan_ineligible_age) {
 
 int main() {
     /* test 1: eligible user. */
+    tapi_context_t* context = tapi_init();
     tapi_test_t* test1 = tapi_test_make("test_loan_eligible", test_loan_eligible);
     tapi_test_add_mock(test1, is_eligible_for_loan, get_user_age, mock_age_25);
     tapi_test_add_mock(test1, is_eligible_for_loan, get_account_balance, mock_balance_5000);
-    tapi_test_add(test1);
+    tapi_test_add(context, test1);
 
     /* test 2: ineligible due to age. */
     tapi_test_t* test2 = tapi_test_make("test_loan_ineligible_age", test_loan_ineligible_age);
     tapi_test_add_mock(test2, is_eligible_for_loan, get_user_age, mock_age_17);
     tapi_test_add_mock(test2, is_eligible_for_loan, get_account_balance, mock_balance_1000);
-    tapi_test_add(test2);
-
-    TAPI_RUN_TESTS();
+    tapi_test_add(context, test2);
+    TAPI_RUN_TESTS(context);
     return 0;
 }
 ```
@@ -208,9 +211,10 @@ TAPI_MAKE_TEST(test_greeting_output) {
 }
 
 int main() {
-    /* add test(s) to the tapi test suite. */
-    TAPI_ADD_TEST("test_greeting_output", test_greeting_output);
-    TAPI_RUN_TESTS();
+    /* add test(s) to the tapi test suite/context. */
+    tapi_context_t* context = tapi_init();
+    TAPI_ADD_TEST(context, "test_greeting_output", test_greeting_output);
+    TAPI_RUN_TESTS(context);
     return 0;
 }
 ```
@@ -252,9 +256,10 @@ TAPI_MAKE_TEST(test_divide_by_zero_error) {
 }
 
 int main() {
-    /* add test(s) to the tapi test suite. */
-    TAPI_ADD_TEST("test_divide_by_zero_error", test_divide_by_zero_error);
-    TAPI_RUN_TESTS();
+    /* add test(s) to the tapi test suite/context. */
+    tapi_context_t* context = tapi_init();
+    TAPI_ADD_TEST(context, "test_divide_by_zero_error", test_divide_by_zero_error);
+    TAPI_RUN_TESTS(context);
     return 0;
 }
 ```
@@ -310,11 +315,12 @@ TAPI_MAKE_TEST(test_log_message_format) {
 
 int main() {
     /* create test(s) with mock(s). */
+    tapi_context_t* context = tapi_init();
     tapi_test_t* test = tapi_test_make("test_log_message_format", test_log_message_format);
     tapi_test_add_mock(test, log_user_action, get_username, mock_username);
-    /* add test(s) to the tapi test suite. */
-    tapi_test_add(test);
-    TAPI_RUN_TESTS();
+    /* add test(s) to the tapi test suite/context. */
+    tapi_test_add(context, test);
+    TAPI_RUN_TESTS(context);
     return 0;
 }
 ```

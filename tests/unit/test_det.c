@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-05-20
+ * @date 2026-06-07
  */
 /*! @uses int. module to be tested. */
 #include "int/det.h"
@@ -13,6 +13,9 @@
 
 /*! @uses printf. */
 #include <stdio.h>
+
+/*! @uses MAYBE_UNUSED. */
+#include "ptc.h"
 
 /*!
  * this is just a random function that performs some computations and file i/o.
@@ -33,7 +36,7 @@ general_function(long a, short b, int c) {
  * int negate_plus_one(int x) { return ~x + 1; }
  */
 int
-inline_fun(int x) {
+inline_fun(MAYBE_UNUSED int x) {
     __asm(
 #ifdef __amd64__
     "\tmov -0x4(%rbp), %eax\n"
@@ -132,7 +135,7 @@ test_fs_general(void) {
 #ifdef __arm__
     assert(size == 0xca);
 #endif
-    printf("correctly determined a general functions size: 0x%x!\n", size);
+    printf("correctly determined a general functions size: 0x%lx!\n", size);
 }
 
 /**
@@ -155,7 +158,7 @@ test_fs_inline(void) {
 #ifdef __arm__
     assert(size == 0x1a);
 #endif
-    printf("correctly determined an inline asm. function size: 0x%x!\n", size);
+    printf("correctly determined an inline asm. function size: 0x%lx!\n", size);
 }
 
 /**
@@ -178,7 +181,7 @@ test_fs_recursive(void) {
 #ifdef __arm__
     assert(size == 0x3e);
 #endif
-    printf("correctly determined a recursive functions size: 0x%x!\n", size);
+    printf("correctly determined a recursive functions size: 0x%lx!\n", size);
 }
 
 /**
@@ -201,7 +204,7 @@ test_fs_random(void) {
 #ifdef __arm__
     assert(size == 0x64);
 #endif
-    printf("correctly determined a function with a set of random calls size: 0x%x!\n", size);
+    printf("correctly determined a function with a set of random calls size: 0x%lx!\n", size);
 }
 
 /**
@@ -224,7 +227,7 @@ test_fs_intrinsic(void) {
 #ifdef __arm__
     assert(size == 0x18);
 #endif
-    printf("correctly determined a function with intrinsics size: 0x%x!\n", size);
+    printf("correctly determined a function with intrinsics size: 0x%lx!\n", size);
 }
 
 /**
@@ -242,7 +245,7 @@ test_ct_random_calls_general(void) {
 #ifndef __arm__
     assert(target->dest == general_function);
 #endif
-    printf("correctly determined a relative call to another function at: 0x%x!\n", target->call);
+    printf("correctly determined a relative call to another function at: 0x%p!\n", target->call);
 }
 
 /**
@@ -258,7 +261,7 @@ test_ct_random_calls_inline(void) {
 #ifndef __arm__
     assert(target->dest == inline_fun);
 #endif
-    printf("correctly determined a relative call to a inline function at: 0x%x!\n", target->call);
+    printf("correctly determined a relative call to a inline function at: 0x%p!\n", target->call);
 }
 
 /**
@@ -274,7 +277,7 @@ test_ct_random_calls_recursive(void) {
 #ifndef __arm__
     assert(target->dest == recursive_fibonacci);
 #endif
-    printf("correctly determined a relative call to a recursive function at: 0x%x!\n", target->call);
+    printf("correctly determined a relative call to a recursive function at: 0x%p!\n", target->call);
 }
 
 /**
@@ -302,10 +305,10 @@ test_ct_recursive_itself(void) {
 #ifndef __arm__
     assert(target->dest == recursive_fibonacci);
 #endif
-    printf("correctly determined a relative call to self at: 0x%x!\n", target->call);
+    printf("correctly determined a relative call to self at: 0x%p!\n", target->call);
 }
 
-int main(int argc, char** argv) {
+int main() {
     /* det_function_size unit tests (some arch rely on src/int/sig). */
     printf("----src/int/det.c: 'det_function_size' unit tests----\n");
     test_fs_general();

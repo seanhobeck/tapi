@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-05-29
+ * @date 2026-06-09
  */
 #ifndef TAPI_H
 #define TAPI_H
@@ -26,6 +26,20 @@ typedef e_tapi_test_result_t (*tapi_test_func_t)(void);
 
 /** a function pointer type for setup and teardown functions. */
 typedef void (*tapi_gen_func_t)(void);
+
+/**
+ * @brief a context for tapi; a thread-safe state of execution for tapi to use.
+ *
+ * `tapi_context_t` is a data structure for storing data for tapi to use as a saved state of
+ *  execution. this contains a list of tests, as well as a list of active memory guards that are
+ *  currently in use.
+ */
+typedef struct {
+    /** dynamic array of test pointers. */
+    tapi_dyna_t* tests;
+    /** dynamic array of guard structs (internal use only). */
+    tapi_dyna_t* guards;
+} tapi_context_t;
 
 /**
  * @brief a singular test within a test suite.
@@ -54,25 +68,39 @@ typedef struct {
 } tapi_test_t;
 
 /**
+ * @brief initialize a new context instance for tapi.
+ *
+ * @return a new tapi_context_t structure.
+ */
+TAPI_EXPORT tapi_context_t*
+tapi_init(void);
+
+/**
  * @brief set up many tests to be run in concession.
  *
+ * @param context the tapi context to be used.
  * @param tests the array of tests to be set up for a test file.
  * @param count the number of tests to be set up.
  */
 TAPI_EXPORT void
-tapi_test_setup(tapi_test_t** tests, size_t count);
+tapi_test_setup(tapi_context_t* context, tapi_test_t** tests, size_t count);
 
 /**
  * @brief add a test to your testing suite.
  *
+ * @param context the tapi context to be used.
  * @param test the test to be added.
  */
 TAPI_EXPORT void
-tapi_test_add(tapi_test_t* test);
+tapi_test_add(tapi_context_t* context, tapi_test_t* test);
 
-/** @brief run all the tests set up in concession. */
+/**
+ * @brief run all the tests setup in the context in order.
+ *
+ * @param context the tapi context to be used.
+ */
 TAPI_EXPORT void
-tapi_test_run(void);
+tapi_test_run(tapi_context_t* context);
 
 /**
  * @brief make a new test given minimal information.
@@ -95,13 +123,12 @@ TAPI_EXPORT void
 tapi_test_add_mock(tapi_test_t* test, void* tested, void* target, void* mocked);
 
 /**
- * @brief free and destroy a list of tests after they have been ran.
+ * @brief free and clean up a context after the tests have been ran.
  *
- * @param tests the tests to be freed (this also frees all of its elements, including mocks).
- * @param length the number of tests to be freed.
+ * @param context the tapi context containing all the data to be freed (this will be freed).
  */
 TAPI_EXPORT void
-tapi_test_destroy(tapi_test_t** tests, size_t length);
+tapi_test_cleanup(tapi_context_t* context);
 
 /** concatenation implementation. */
 #define TAPI_CONCAT_IMPL(a, b) a##b
@@ -115,24 +142,25 @@ tapi_test_destroy(tapi_test_t** tests, size_t length);
     e_tapi_test_result_t name(void)
 
 /** quickly add a test to the test suite. */
-#define TAPI_ADD_TEST(name, function) \
-    tapi_test_add(tapi_test_make(name, function));
+#define TAPI_ADD_TEST(context, name, function) \
+    tapi_test_add(context, tapi_test_make(name, function));
 
 /** quickly add a test with a mock value to the test suite. */
-#define TAPI_ADD_TEST_AND_MOCK(name, test_function, tested_function, target_function, \
+#define TAPI_ADD_TEST_AND_MOCK(context, name, test_function, tested_function, target_function, \
     stub_function) \
     do { \
         tapi_test_t* TAPI_CONCAT(_gentest_, __LINE__) = tapi_test_make(name, test_function); \
-        tapi_test_add_mock(TAPI_CONCAT(_gentest_, __LINE__), tested_function, target_function, \
-        stub_function); \
-        tapi_test_add(TAPI_CONCAT(_gentest_, __LINE__)); \
+        tapi_test_add_mock(TAPI_CONCAT(_gentest_, __LINE__), tested_function, \
+            target_function, stub_function); \
+        tapi_test_add(context, TAPI_CONCAT(_gentest_, __LINE__)); \
     } while(0);
 
 /**
- * quickly create a test suite; variable arguments should be used with tapi_quick_test and
- *    tapi_quick_test_and_mock.
+ * quickly run the tapi context and cleanup; variable arguments should be used
+ *  with TAPI_ADD_TEST and TAPI_ADD_TEST_AND_MOCK.
  */
-#define TAPI_RUN_TESTS(...) \
+#define TAPI_RUN_TESTS(context, ...) \
     __VA_ARGS__; \
-    tapi_test_run();
+    tapi_test_run(context); \
+    tapi_test_cleanup(context);
 #endif /* TAPI_H */

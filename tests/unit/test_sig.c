@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-05-23
+ * @date 2026-06-07
  */
 /*! @uses int. module to be tested. */
 #include "int/sig.h"
@@ -644,7 +644,7 @@ test_aarch64_chk_9(csh handle) {
     printf("correctly checked aarch64 (autiasp) instruction!\n");
 };
 
-int main(int argc, char** argv) {
+int main() {
     /* open with architecture etc... */
     cs_arch arch;
     cs_mode mode;

@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-03-18
+ * @date 2026-06-09
  */
 #include <tapi/tapi.h>
 
@@ -21,78 +21,95 @@
 #include "guard.h"
 /** \endcond */
 
-/* local testing suite. */
-static tapi_dyna_t* l_tests;
+/**
+ * @brief initialize a new context instance for tapi.
+ *
+ * @return a new tapi_context_t structure.
+ */
+tapi_context_t*
+tapi_init(void) {
+    /* allocate the tapi context, set a new list for the guards, but none for the tests. */
+    tapi_context_t* context = calloc(1u, sizeof *context);
+    context->guards = tapi_dyna_create();
+    context->tests = 0x0;
+    return context;
+};
 
 /**
  * @brief set up many tests to be run in concession.
  *
+ * @param context the tapi context to be used.
  * @param tests the array of tests to be set up for a test file.
  * @param count the number of tests to be set up.
  */
 void
-tapi_test_setup(tapi_test_t** tests, size_t count) {
+tapi_test_setup(tapi_context_t* context, tapi_test_t** tests, size_t count) {
     /* if we already have tests. */
-    if (l_tests != 0x0) {
+    if (context->tests != 0x0) {
         /* NOLINTNEXTLINE */
         fprintf(stderr, "tapi, setup_tests; tests != null; refer to tapi_add_test().\n");
         return;
     }
 
     /* and we are done. */
-    l_tests = tapi_dyna_create();
+    context->tests = tapi_dyna_create();
     for (size_t i = 0u; i < count; i++)
-        tapi_dyna_push(l_tests, tests[i]);
+        tapi_dyna_push(context->tests, tests[i]);
 }
 
 /**
  * @brief add a test to your testing suite.
  *
+ * @param context the tapi context to be used.
  * @param test the test to be added.
  */
 void
-tapi_test_add(tapi_test_t* test) {
+tapi_test_add(tapi_context_t* context, tapi_test_t* test) {
     /* if we don't have tests. */
-    if (l_tests == 0x0)
-        l_tests = tapi_dyna_create();
-    tapi_dyna_push(l_tests, test); /* very simple push. */
+    if (context->tests == 0x0)
+        context->tests = tapi_dyna_create();
+    tapi_dyna_push(context->tests, test); /* very simple push. */
 };
 
-/** @brief run all the tests set up in concession. */
+/**
+ * @brief run all the tests setup in the context in order.
+ *
+ * @param context the tapi context to be used.
+ */
 void
-tapi_test_run(void) {
+tapi_test_run(tapi_context_t* context) {
     /* iterate through each test, */
     size_t passed = 0u;
-    DYNA_FOREACH_IT(l_tests, tapi_test_t*, test, i)
+    DYNA_FOREACH_IT(context->tests, tapi_test_t*, test, i)
         /* call setup, apply the mocks, */
         if (test->setup != 0x0) test->setup();
         DYNA_FOREACH_IT(test->mocks, tapi_mock_t*, mock, j)
-            tapi_mock_apply(mock);
-        DYNA_ENDFOREACH;
+            tapi_mock_apply(context, mock);
+        DYNA_ENDFOREACH(test->mocks);
 
         /* call the test, */
         test->result = test->function();
         if (test->result == E_TAPI_TEST_RESULT_PASSED) {
             passed++;
-            printf("[%zu/%zu] tapi: %s, passed.\n", passed, l_tests->length, test->name);
+            printf("[%zu/%zu] tapi: %s, passed.\n", passed, context->tests->length, test->name);
         }
         else if (test->result == E_TAPI_TEST_RESULT_SKIPPED) {
-            printf("[%zu/%zu] tapi: %s, skipped.\n", passed, l_tests->length, test->name);
+            printf("[%zu/%zu] tapi: %s, skipped.\n", passed, context->tests->length, test->name);
         }
         else {
-            printf("[%zu/%zu] tapi: %s, failed.\n", passed, l_tests->length, test->name);
+            printf("[%zu/%zu] tapi: %s, failed.\n", passed, context->tests->length, test->name);
         }
 
         /* then call teardown and restore mocks. */
         DYNA_FOREACH_IT(test->mocks, tapi_mock_t*, mock, j)
-            tapi_mock_restore(mock);
-        DYNA_ENDFOREACH;
+            tapi_mock_restore(context, mock);
+        DYNA_ENDFOREACH(test->mocks);
         if (test->teardown != 0x0) test->teardown();
-    DYNA_ENDFOREACH;
+    DYNA_ENDFOREACH(context->tests);
 
     /* on exit, we clean up the internal guard list. */
-    guard_cleanup();
-    printf("tapi; total tests passed: [%zu/%zu].\n", passed, l_tests->length);
+    guard_cleanup(context);
+    printf("tapi; total tests passed: [%zu/%zu].\n", passed, context->tests->length);
 };
 
 /**
@@ -104,7 +121,7 @@ tapi_test_run(void) {
 tapi_test_t*
 tapi_test_make(const char* name, tapi_test_func_t function) {
     /* allocate and make the structure. */
-    tapi_test_t* test = calloc(2, sizeof *test);
+    tapi_test_t* test = calloc(1u, sizeof *test);
     size_t length = strlen(name);
     test->name = calloc(1u, length + 1u);
     /* NOLINTNEXTLINE */
@@ -123,7 +140,7 @@ tapi_test_make(const char* name, tapi_test_func_t function) {
  * @param target the target address to redirect to mock.
  * @param mocked the mocked result to be redirected to.
  */
-void
+TAPI_EXPORT void
 tapi_test_add_mock(tapi_test_t* test, void* tested, void* target, void* mocked) {
     /* create a dynamic array if it doesn't already exist. */
     if (test->mocks == 0x0)
@@ -135,17 +152,18 @@ tapi_test_add_mock(tapi_test_t* test, void* tested, void* target, void* mocked) 
 }
 
 /**
- * @brief free and destroy a list of tests after they have been ran.
+ * @brief free and clean up a context after the tests have been ran.
  *
- * @param tests the tests to be freed (this also frees all of its elements, including mocks).
- * @param length the number of tests to be freed.
+ * @param context the tapi context containing all the data to be freed (this will be freed).
  */
 void
-tapi_test_destroy(tapi_test_t** tests, size_t length) {
+tapi_test_cleanup(tapi_context_t* context) {
     /* free each test but not the list itself, that isn't ours. */
-    for (size_t i = 0; i < length; i++) {
-        tapi_dyna_free(tests[i]->mocks);
-        free(tests[i]->name);
-        free(tests[i]);
+    for (size_t i = 0; i < context->tests->length; i++) {
+        tapi_test_t* test = DYNA_GET(context->tests, tapi_test_t*, i);
+        tapi_dyna_free(test->mocks);
+        free(test->name);
+        free(test);
     }
+    free(context);
 };

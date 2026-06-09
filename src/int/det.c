@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-05-20
+ * @date 2026-06-07
  */
 #include "det.h"
 
@@ -25,11 +25,10 @@
  *
  * @param insn the instruction to be inspected.
  * @param handle the capstone handle used.
- * @param architecture the given architecture.
  * @return if the instruction is a function end type.
  */
 internal bool
-is_end_inst(cs_insn* insn, csh handle, arch_t architecture) {
+is_end_inst(cs_insn* insn, csh handle) {
     /* check by capstone groupings (not accurate). */
     if (cs_insn_group(handle, insn, CS_GRP_RET) || cs_insn_group(handle, insn, CS_GRP_IRET) \
         || cs_insn_group(handle, insn, CS_GRP_BRANCH_RELATIVE)) {
@@ -120,7 +119,7 @@ det_function_size(void* address, size_t max_size) {
             found_epilogue = (sigt == SIG_AARCH64_EPILOGUE); /* o.w. we continue. */
         }
         /* are any of these function end instructions? */
-        else if (is_end_inst(insn, handle, architecture))
+        else if (is_end_inst(insn, handle))
             found_epilogue = !is_tail_call(insn, architecture);
         size += insn->size;
 

@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-03-18
+ * @date 2026-06-09
  */
 #include "guard.h"
 
@@ -28,9 +28,6 @@
 
 /*! @uses dyna_t, etc... */
 #include "dyna.h"
-
-/* internal list of guards. */
-internal tapi_dyna_t* guards = 0x0;
 
 /** @return page size on the given architecture, winapi and posix. */
 internal size_t
@@ -81,21 +78,19 @@ guard_close(guard_t* guard) {
 /**
  * @brief create a write-protect guard for an address in memory.
  *
+ * @param context the tapi context to be used.
  * @param address the address to be given write protection in memory.
  * @param length the length of bytes to be protected.
  */
 void
-guard_create(void* address, size_t length) {
-    /* if we do not already have a list of guards. */
-    if (!guards) guards = tapi_dyna_create();
-
-    /* check if it already exists in our list of guards. */
-    DYNA_FOREACH(guards, guard_t*, guard)
+guard_create(tapi_context_t* context, void* address, size_t length) {
+    /* check if it already exists in our context list of guards. */
+    DYNA_FOREACH(context->guards, guard_t*, guard)
         if (guard->address == address && guard->length == length) {
             guard->ref_count++;
             return;
         }
-    DYNA_ENDFOREACH
+    DYNA_ENDFOREACH(context->guards);
 
     /* if not found, then allocate. */
     guard_t* guard = calloc(1, sizeof *guard);
@@ -125,21 +120,25 @@ guard_create(void* address, size_t length) {
         return;
     }
 
-    /* push into our internal list, and return. */
-    tapi_dyna_push(guards, guard);
+    /* push into our context list and return. */
+    tapi_dyna_push(context->guards, guard);
 }
 
-/** @brief clean up the internal guard list. */
+/**
+ * @brief clean up the guard list in the tapi context.
+ *
+ * @param context the tapi context to be used.
+ */
 void
-guard_cleanup() {
-    /* if a internal guard list was not made, don't worry about it! */
-    if (!guards) return;
+guard_cleanup(tapi_context_t* context) {
+    /* if an internal guard list was not made, don't worry about it! */
+    if (!context->guards) return;
 
     /* iterate and return each guard. */
-    DYNA_FOREACH(guards, guard_t*, guard)
+    DYNA_FOREACH(context->guards, guard_t*, guard)
         guard_close(guard);
         free(guard);
-    DYNA_ENDFOREACH
-    free(guards->data);
-    free(guards);
+    DYNA_ENDFOREACH(context->guards);
+    free(context->guards->data);
+    free(context->guards);
 };

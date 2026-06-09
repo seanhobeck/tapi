@@ -5,12 +5,12 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-05-29
+ * @date 2026-06-09
  */
 #ifndef TAPI_MOCK_H
 #define TAPI_MOCK_H
 
-/*! @uses TAPI_EXPORT. */
+/*! @uses TAPI_EXPORT, tapi_context_t. */
 #include <tapi/tapi.h>
 
 /*! @uses size_t. */
@@ -58,18 +58,20 @@ tapi_mock_create(void* orig, void* target, void* mocked);
  * @brief apply the mocks patch in memory; write stub to route to
  *  the given mocked function pointer.
  *
+ * @param context the context of tapi to be used.
  * @param mock the mock to be applied.
  */
 TAPI_EXPORT void
-tapi_mock_apply(tapi_mock_t* mock);
+tapi_mock_apply(tapi_context_t* context, tapi_mock_t* mock);
 
 /**
  * @brief restore the contents of a function and free the mock.
  *
+ * @param context the context of tapi to be used.
  * @param mock the mock structure to be freed and restored.
  */
 TAPI_EXPORT void
-tapi_mock_restore(tapi_mock_t* mock);
+tapi_mock_restore(tapi_context_t* context, tapi_mock_t* mock);
 
 /** create a simple mock to return a given value. */
 #define TAPI_MOCK_RETURN(func_name, return_type, return_value) \
