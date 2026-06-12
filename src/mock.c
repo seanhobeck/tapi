@@ -11,6 +11,9 @@
 /*! @uses memcpy. */
 #include <string.h>
 
+/*! @uses errno. */
+#include <errno.h>
+
 /*! @uses det_function_size. */
 #include "det.h"
 
@@ -27,17 +30,20 @@ internal tapi_autostub_t autostub_table[3u] = {
     { /* malloc. */
         .action = 0x0,
         .stub = tapi_stub_malloc,
-        .name = "malloc",
+        .address = malloc,
+        .set_errno = false,
     },
     { /* calloc. */
         .action = 0x0,
         .stub = tapi_stub_calloc,
-        .name = "calloc",
+        .address = calloc,
+        .set_errno = false,
     },
     { /* free. */
         .action = 0x0,
         .stub = tapi_stub_free,
-        .name = "free",
+        .address = free,
+        .set_errno = false,
     }
 };
 
@@ -49,7 +55,8 @@ tapi_stub_malloc(size_t size) {
         /* if there exists an action, we call it and from there check the result. */
         e_tapi_action_result_t result = autostub.action(0x0, size);
         if (result == E_TAPI_ACTION_RESULT_FAIL) {
-            /* regular fail on malloc, does NOT set errno. todo; add support for setting errno. */
+            /* regular fail on malloc, if set_errno then ENOMEM. */
+            if (autostub.set_errno) errno = ENOMEM;
             return 0x0;
         }
     }
@@ -65,7 +72,8 @@ tapi_stub_calloc(size_t nmemb, size_t size) {
         /* if there exists an action, we call it and from there check the result. */
         e_tapi_action_result_t result = autostub.action(0x0, nmemb, size);
         if (result == E_TAPI_ACTION_RESULT_FAIL) {
-            /* regular fail on calloc... */
+            /* regular fail on calloc, if set_errno then ENOMEM... */
+            if (autostub.set_errno) errno = ENOMEM;
             return 0x0;
         }
     }
@@ -76,12 +84,12 @@ tapi_stub_calloc(size_t nmemb, size_t size) {
 /** @brief free autostub used by tapi. */
 void
 tapi_stub_free(void* ptr) {
-    tapi_autostub_t autostub = autostub_table[1u]; /* get the free autostub. */
+    tapi_autostub_t autostub = autostub_table[2u]; /* get the free autostub. */
     if (autostub.action != 0x0) {
         /* if there exists an action, we call it and from there check the result. */
         e_tapi_action_result_t result = autostub.action(0x0, ptr);
         if (result == E_TAPI_ACTION_RESULT_FAIL) {
-            /* regular fail on calloc... */
+            /* regular fail on free... */
             return;
         }
     }
@@ -107,11 +115,11 @@ tapi_mock_create(void* orig, void* target, void* mocked) {
     mock->target = target;
     mock->mocked = mocked;
     mock->fun_size = det_function_size(orig, TAPI_MAX_DET_DEPTH);
+    /* we are using a max of 4096 bytes (by default). */
     mock->is_special = false;
 #ifdef TAPI_AUTOSTUB
     mock->autostub = 0x0;
 #endif
-    /* we are using a max of 4096 bytes (by default). */
     return mock;
 };
 
@@ -126,17 +134,36 @@ tapi_mock_create(void* orig, void* target, void* mocked) {
  *  compliant function would take a ridiculous amount of space,
  *  you occasionally would have to treat this as a regular mock
  *  and still provide a mocked stub address, otherwise if it is
- *  in the table specified above @see { special_table }, then no
- *  address is required (0x0).
+ *  in the table specified above, then no address is required.
  * @param action the action/ condition function that allows the
  *  mock to either pass or fail based on certain conditions.
  *
  * @return an allocated mock structure ready to be applied.
  */
-tapi_mock_t*
+TAPI_EXPORT tapi_mock_t*
 tapi_special_mock_create(void* orig, void* target, \
     void* mocked, tapi_action_t action) {
-    return 0x0;
+    /* allocate the structure. */
+    tapi_mock_t* mock = calloc(1u, sizeof *mock);
+    mock->orig = orig;
+    mock->target = target;
+    mock->mocked = mocked;
+    mock->fun_size = det_function_size(orig, TAPI_MAX_DET_DEPTH);
+    /* we are using a max of 4096 bytes (by default). */
+    mock->is_special = true;
+#ifdef TAPI_AUTOSTUB
+    mock->autostub = 0x0;
+    for (size_t i = 0u; i < sizeof(autostub_table)/sizeof(tapi_autostub_t); i++) {
+        if (autostub_table[i].address == target) {
+            mock->autostub = &autostub_table[i];
+            mock->autostub->action = action;
+            /* we automatically set the stub if none is provided. */
+            if (mocked == 0x0) mock->mocked = mock->autostub->stub;
+            break;
+        }
+    }
+#endif
+    return mock;
 };
 
 /**
@@ -148,26 +175,51 @@ tapi_special_mock_create(void* orig, void* target, \
  */
 void
 tapi_mock_apply(tapi_context_t* context, tapi_mock_t* mock) {
-    /* determine call info. */
-    det_call_t* call = det_call_target(mock->orig, mock->target);
-    if (call == 0x0) {
-        /* NOLINTNEXTLINE */
-        fprintf(stderr, "tapi, mock_apply; cannot find target call in function.\n");
-        return;
+    if (mock->is_special) {
+        /* if this is a 'special mock' we need to find ALL occurrences of this call target. */
+        for (size_t i = 0u; i < mock->fun_size; i++) {
+            det_call_t* call = det_call_target(mock->orig, mock->target);
+            if (call == 0x0) break;
+
+            /* if this is the first occurrence, we set the size and length of the call (they
+             * shouldn't change since they are identical for multiple occurrences). */
+            if (i == 0u) {
+                mock->call = call->call;
+                mock->size = call->size;
+            }
+            /* NOLINTNEXTLINE */
+            memcpy(mock->orig_bytes, call->bytes, mock->size);
+
+            /* apply the patch to the call, given the context. */
+            patch_call_target(context, call, mock->mocked);
+
+            /* we read the new bytes and store. */
+            /* NOLINTNEXTLINE */
+            memcpy(mock->mocked_bytes, mock->call, mock->size);
+            free(call);
+        }
     }
+    else {
+        /* determine call info. */
+        det_call_t* call = det_call_target(mock->orig, mock->target);
+        if (call == 0x0) {
+            /* NOLINTNEXTLINE */
+            fprintf(stderr, "tapi, mock_apply; cannot find target call in function.\n");
+            return;
+        }
+        mock->call = call->call;
+        mock->size = call->size;
+        /* NOLINTNEXTLINE */
+        memcpy(mock->orig_bytes, call->bytes, mock->size);
 
-    mock->call = call->call;
-    mock->size = call->size;
-    /* NOLINTNEXTLINE */
-    memcpy(mock->orig_bytes, call->bytes, mock->size);
+        /* apply the patch to the call, given the context. */
+        patch_call_target(context, call, mock->mocked);
 
-    /* apply the patch to the call, given the context. */
-    patch_call_target(context, call, mock->mocked);
-
-    /* we read the new bytes and store. */
-    /* NOLINTNEXTLINE */
-    memcpy(mock->mocked_bytes, mock->call, mock->size);
-    free(call);
+        /* we read the new bytes and store. */
+        /* NOLINTNEXTLINE */
+        memcpy(mock->mocked_bytes, mock->call, mock->size);
+        free(call);
+    }
 };
 
 /**
@@ -185,9 +237,29 @@ tapi_mock_restore(tapi_context_t* context, tapi_mock_t* mock) {
         return;
     }
 
-    /* we then have to restore the bytes for future tests that could call that same function. */
-    det_call_t* call = det_call_target(mock->orig, mock->mocked);
-    patch_call_target(context, call, mock->target);
-    free(call);
-    free(mock);
+    /* is this a 'special mock', if so we have to replace every occurrence. */
+    if (mock->is_special) {
+        for (size_t i = 0u; i < mock->fun_size; i++) {
+            det_call_t* call = det_call_target(mock->orig, mock->target);
+            if (call == 0x0) break;
+
+            /* otherwise we re-patch it with the correct call. */
+            patch_call_target(context, call, mock->mocked);
+            free(call);
+        }
+
+        /* reset the autostub. */
+        if (mock->autostub != 0x0) {
+            mock->autostub->action = 0x0;
+            mock->autostub->set_errno = false;
+        }
+        free(mock);
+    }
+    else {
+        /* we then have to restore the bytes for future tests that could call that same function. */
+        det_call_t* call = det_call_target(mock->orig, mock->mocked);
+        patch_call_target(context, call, mock->target);
+        free(call);
+        free(mock);
+    }
 };

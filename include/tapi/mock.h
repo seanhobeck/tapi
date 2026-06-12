@@ -20,17 +20,10 @@
 #include <stdbool.h>
 /** \endcond */
 
-/**
- * @note to use an implementation of tapi that does not contain automatic stubbing
- *  for very common special mocks (ie. malloc, free, fopen, fclose, etc...) you can
- *  #undef TAPI_AUTOSTUB, but please note that you will have to specify a target
- *  stub that you will have to make for some of the functions listed below.
- */
-#define TAPI_AUTOSTUB
-#ifdef TAPI_AUTOSTUB
+/** an enum for different results from an action. */
 typedef enum {
     E_TAPI_ACTION_RESULT_ALLOW = 0x0, /* allow the mock to proceed as usual. */
-    E_TAPI_ACTION_RESULT_FAIL, /* force the autostub mock to fail. */
+    E_TAPI_ACTION_RESULT_FAIL, /* force the mock to fail. */
 } e_tapi_action_result_t;
 
 /** a function pointer for an action/ condition that is checked
@@ -40,6 +33,14 @@ typedef enum {
  *  as well. */
 typedef e_tapi_action_result_t (*tapi_action_t)(void* blank, ...);
 
+/**
+ * @note to use an implementation of tapi that does not contain automatic stubbing
+ *  for very common special mocks (ie. malloc, free, fopen, fclose, etc...) you can
+ *  #undef TAPI_AUTOSTUB, but please note that you will have to specify a target
+ *  stub that you will have to make for some of the functions listed below.
+ */
+#define TAPI_AUTOSTUB
+#ifdef TAPI_AUTOSTUB
 /**
  * @brief a structure to keep track of special mocks that can be automatically stubbed with
  *  pre-built stubs for ease of use.
@@ -54,8 +55,10 @@ typedef struct {
     void* stub;
     /** pointer to an action */
     tapi_action_t action;
-    /** the name of the special function (library or syscall). */
-    char* name;
+    /** the address of the special function (library or syscall). */
+    void* address;
+    /** should we be setting errno on failure for this action? */
+    bool set_errno;
 } tapi_autostub_t;
 
 /** @brief malloc autostub used by tapi. */
@@ -95,7 +98,7 @@ typedef struct {
     /** first 32 bytes of the mocked function. */
     unsigned char mocked_bytes[32u];
     /** is this a special kind of mock; library or system \
-      * call (from plt/got or iat on windows). */
+      * call (from plt/got/iat on windows). */
     bool is_special;
 #ifdef TAPI_AUTOSTUB
     /** a pointer to an autostub structure if found in tapi's internal table (see above). */
@@ -126,8 +129,7 @@ tapi_mock_create(void* orig, void* target, void* mocked);
  *  compliant function would take a ridiculous amount of space,
  *  you occasionally would have to treat this as a regular mock
  *  and still provide a mocked stub address, otherwise if it is
- *  in the table specified above @see { special_table }, then no
- *  address is required (0x0).
+ *  in the table specified above, then no address is required.
  * @param action the action/ condition function that allows the
  *  mock to either pass or fail based on certain conditions.
  *
