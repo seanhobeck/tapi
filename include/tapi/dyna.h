@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-04
+ * @date 2026-06-11
  */
 #ifndef TAPI_DYNA_H
 #define TAPI_DYNA_H
@@ -20,12 +20,15 @@
 /* for functions that are exported by tapi. */
 #if (defined(__GNUC__) || defined(__IBMC__))
 #define TAPI_EXPORT __attribute__((visibility("default")))
+#define TAPI_HIDDEN __attribute__((visibility("hidden")))
 #else
 /* if we are using msvc toolchain (winapi). */
 #if (defined(_MSC_VER))
 #define TAPI_EXPORT __declspec(dllexport)
+#define TAPI_HIDDEN
 #else
 #define TAPI_EXPORT
+#define TAPI_HIDDEN
 #endif
 #endif
 /** \endcond */

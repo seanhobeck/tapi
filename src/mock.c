@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-03-09
+ * @date 2026-06-12
  */
 #include <tapi/mock.h>
 
@@ -16,7 +16,79 @@
 
 /*! @uses patch_call_target. */
 #include "patch.h"
+
+/*! @uses internal. */
+#include "int/intt.h"
 /** \endcond */
+
+/* see tapi/mock.h for more info... */
+#ifdef TAPI_AUTOSTUB
+internal tapi_autostub_t autostub_table[3u] = {
+    { /* malloc. */
+        .action = 0x0,
+        .stub = tapi_stub_malloc,
+        .name = "malloc",
+    },
+    { /* calloc. */
+        .action = 0x0,
+        .stub = tapi_stub_calloc,
+        .name = "calloc",
+    },
+    { /* free. */
+        .action = 0x0,
+        .stub = tapi_stub_free,
+        .name = "free",
+    }
+};
+
+/** @brief malloc autostub used by tapi. */
+void*
+tapi_stub_malloc(size_t size) {
+    tapi_autostub_t autostub = autostub_table[0u]; /* get the malloc autostub. */
+    if (autostub.action != 0x0) {
+        /* if there exists an action, we call it and from there check the result. */
+        e_tapi_action_result_t result = autostub.action(0x0, size);
+        if (result == E_TAPI_ACTION_RESULT_FAIL) {
+            /* regular fail on malloc, does NOT set errno. todo; add support for setting errno. */
+            return 0x0;
+        }
+    }
+    /* proceed as per usual. */
+    return malloc(size);
+};
+
+/** @brief calloc autostub used by tapi. */
+void*
+tapi_stub_calloc(size_t nmemb, size_t size) {
+    tapi_autostub_t autostub = autostub_table[1u]; /* get the calloc autostub. */
+    if (autostub.action != 0x0) {
+        /* if there exists an action, we call it and from there check the result. */
+        e_tapi_action_result_t result = autostub.action(0x0, nmemb, size);
+        if (result == E_TAPI_ACTION_RESULT_FAIL) {
+            /* regular fail on calloc... */
+            return 0x0;
+        }
+    }
+    /* proceed as per usual. */
+    return calloc(nmemb, size);
+};
+
+/** @brief free autostub used by tapi. */
+void
+tapi_stub_free(void* ptr) {
+    tapi_autostub_t autostub = autostub_table[1u]; /* get the free autostub. */
+    if (autostub.action != 0x0) {
+        /* if there exists an action, we call it and from there check the result. */
+        e_tapi_action_result_t result = autostub.action(0x0, ptr);
+        if (result == E_TAPI_ACTION_RESULT_FAIL) {
+            /* regular fail on calloc... */
+            return;
+        }
+    }
+    /* proceed as per usual. */
+    free(ptr);
+};
+#endif
 
 /**
  * @brief mock the first call occurrence to a target with a call
@@ -25,7 +97,7 @@
  * @param orig the original function to search for target in.
  * @param target the target address to be replaced.
  * @param mocked the function to replace the target call with.
- * @return an allocated mock structure with all data, ready to be applied.
+ * @return an allocated mock structure ready to be applied.
  */
 tapi_mock_t*
 tapi_mock_create(void* orig, void* target, void* mocked) {
@@ -34,8 +106,37 @@ tapi_mock_create(void* orig, void* target, void* mocked) {
     mock->orig = orig;
     mock->target = target;
     mock->mocked = mocked;
-    mock->fun_size = det_function_size(orig, 0x1000); /* we are using a max of 4096 bytes. */
+    mock->fun_size = det_function_size(orig, TAPI_MAX_DET_DEPTH);
+    mock->is_special = false;
+#ifdef TAPI_AUTOSTUB
+    mock->autostub = 0x0;
+#endif
+    /* we are using a max of 4096 bytes (by default). */
     return mock;
+};
+
+/**
+ * @brief mock all call occurrences to a target with a call to
+ *  a mocked function instead, if specified.
+ *
+ * @param orig the original function to search for target in.
+ * @param target the target address to be replaced.
+ * @param mocked the function to replace the target call with,
+ *  please note that since re-creating a mock for every POSIX
+ *  compliant function would take a ridiculous amount of space,
+ *  you occasionally would have to treat this as a regular mock
+ *  and still provide a mocked stub address, otherwise if it is
+ *  in the table specified above @see { special_table }, then no
+ *  address is required (0x0).
+ * @param action the action/ condition function that allows the
+ *  mock to either pass or fail based on certain conditions.
+ *
+ * @return an allocated mock structure ready to be applied.
+ */
+tapi_mock_t*
+tapi_special_mock_create(void* orig, void* target, \
+    void* mocked, tapi_action_t action) {
+    return 0x0;
 };
 
 /**

@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-09
+ * @date 2026-06-12
  */
 #ifndef TAPI_MOCK_H
 #define TAPI_MOCK_H
@@ -15,7 +15,61 @@
 
 /*! @uses size_t. */
 #include <stddef.h>
+
+/*! @uses bool, true, false. */
+#include <stdbool.h>
 /** \endcond */
+
+/**
+ * @note to use an implementation of tapi that does not contain automatic stubbing
+ *  for very common special mocks (ie. malloc, free, fopen, fclose, etc...) you can
+ *  #undef TAPI_AUTOSTUB, but please note that you will have to specify a target
+ *  stub that you will have to make for some of the functions listed below.
+ */
+#define TAPI_AUTOSTUB
+#ifdef TAPI_AUTOSTUB
+typedef enum {
+    E_TAPI_ACTION_RESULT_ALLOW = 0x0, /* allow the mock to proceed as usual. */
+    E_TAPI_ACTION_RESULT_FAIL, /* force the autostub mock to fail. */
+} e_tapi_action_result_t;
+
+/** a function pointer for an action/ condition that is checked
+ *  at the start of every autostub implemented by tapi. if an action
+ *  returns true, the autostub will trigger a failure, and henceforth
+ *  the tested function will receive a failure from this special mock
+ *  as well. */
+typedef e_tapi_action_result_t (*tapi_action_t)(void* blank, ...);
+
+/**
+ * @brief a structure to keep track of special mocks that can be automatically stubbed with
+ *  pre-built stubs for ease of use.
+ *
+ * `tapi_autostub_t` is a data structure for representing the data required internally by tapi to
+ *  automatically stub commonly used special mocks, ie. malloc, free, calloc, fopen, etc... these
+ *  functions can then be conditioned to fail under certain conditions, allowing testers to test
+ *  for failures.
+ */
+typedef struct {
+    /** pointer to the stub itself. */
+    void* stub;
+    /** pointer to an action */
+    tapi_action_t action;
+    /** the name of the special function (library or syscall). */
+    char* name;
+} tapi_autostub_t;
+
+/** @brief malloc autostub used by tapi. */
+TAPI_HIDDEN void*
+tapi_stub_malloc(size_t size);
+
+/** @brief calloc autostub used by tapi. */
+TAPI_HIDDEN void*
+tapi_stub_calloc(size_t nmemb, size_t size);
+
+/** @brief free autostub used by tapi. */
+TAPI_HIDDEN void
+tapi_stub_free(void* ptr);
+#endif
 
 /**
  * @brief a patch-based runtime mock for redirecting calls within a tested function.
@@ -40,6 +94,13 @@ typedef struct {
     unsigned char orig_bytes[32u];
     /** first 32 bytes of the mocked function. */
     unsigned char mocked_bytes[32u];
+    /** is this a special kind of mock; library or system \
+      * call (from plt/got or iat on windows). */
+    bool is_special;
+#ifdef TAPI_AUTOSTUB
+    /** a pointer to an autostub structure if found in tapi's internal table (see above). */
+    tapi_autostub_t* autostub;
+#endif
 } tapi_mock_t;
 
 /**
@@ -49,10 +110,43 @@ typedef struct {
  * @param orig the original function to search for target in.
  * @param target the target address to be replaced.
  * @param mocked the function to replace the target call with.
- * @return an allocated mock structure with all data, ready to be applied.
+ * @return an allocated mock structure ready to be applied.
  */
 TAPI_EXPORT tapi_mock_t*
 tapi_mock_create(void* orig, void* target, void* mocked);
+
+/**
+ * @brief mock all call occurrences to a target with a call to
+ *  a mocked function instead, if specified.
+ *
+ * @param orig the original function to search for target in.
+ * @param target the target address to be replaced.
+ * @param mocked the function to replace the target call with,
+ *  please note that since re-creating a mock for every POSIX
+ *  compliant function would take a ridiculous amount of space,
+ *  you occasionally would have to treat this as a regular mock
+ *  and still provide a mocked stub address, otherwise if it is
+ *  in the table specified above @see { special_table }, then no
+ *  address is required (0x0).
+ * @param action the action/ condition function that allows the
+ *  mock to either pass or fail based on certain conditions.
+ *
+ * @return an allocated mock structure ready to be applied.
+ */
+TAPI_EXPORT tapi_mock_t*
+tapi_special_mock_create(void* orig, void* target, \
+    void* mocked, tapi_action_t action);
+
+/** @note this means that we are using a maximum search len of 4096 bytes for determining a
+ * functions size; we only iterate through 4096 bytes worth of possible opcodes (every
+ * architecture varies in opcode size). this can be overwritten like so,
+ *
+ * ...
+ * #undef TAPI_MAX_DET_DEPTH
+ * #define TAPI_MAX_DET_DEPTH (your_value)
+ * ...
+ */
+#define TAPI_MAX_DET_DEPTH 0x1000
 
 /**
  * @brief apply the mocks patch in memory; write stub to route to
