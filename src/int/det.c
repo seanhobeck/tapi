@@ -101,6 +101,16 @@ det_function_size(void* address, size_t max_size) {
         if (architecture.arch == CS_ARCH_ARM) {
             e_sig_type_t sigt = sig_armhf_chk(insn);
 
+            /* when testing with qemu-arm v8.2.2, the gnueabihf cross compiler had `pop {r7}` as
+             * ldr.w ... which is correct (but as 4 bytes? super wierd). the way we detect `bx
+             * lr` after an epilogue wasn't wrong, we can simply do it earlier. here we simply
+             * check if there was an epilogue before updating and do a simple signature comparison,
+             * easy fix. */
+            if (sig_compare("bx lr", insn) && found_epilogue) {
+                size += insn->size;
+                break; /* do NOT update found_epilogue, we are done. */
+            }
+
             /* have we gone from the end of a function to the start of a function? */
             if (found_epilogue && sigt == SIG_ARMHF_PROLOGUE) break;
             if (found_epilogue && !strcmp("nop", insn->mnemonic)) break;
@@ -165,13 +175,6 @@ det_function_size(void* address, size_t max_size) {
                 /* armhf and aarch64 nops, also mov r0, r0/ mov r8, r8. */
                 is_padding = insn->id == ARM_INS_ALIAS_NOP || (insn->id == ARM_INS_MOV &&
                     insn->detail->arm.operands[0].reg == insn->detail->arm.operands[1].reg);
-
-                /* did we hit a bx lr (ret) after some epilogue or a nop,
-                    then we have found the end of the function, return. */
-                if (sig_compare("bx lr", insn) || insn->id == ARM_INS_ALIAS_NOP) {
-                    size -= insn->size;
-                    break;
-                }
             }
             else if (architecture.arch == CS_ARCH_AARCH64)
                 is_padding = insn->id == AARCH64_INS_ALIAS_NOP;
