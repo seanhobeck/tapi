@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-12
+ * @date 2026-06-16
  */
 #ifndef TAPI_MOCK_H
 #define TAPI_MOCK_H
@@ -116,7 +116,7 @@ typedef struct {
  * @return an allocated mock structure ready to be applied.
  */
 TAPI_EXPORT tapi_mock_t*
-tapi_mock_create(void* orig, void* target, void* mocked);
+tapi_make_mock(void* orig, void* target, void* mocked);
 
 /**
  * @brief mock all call occurrences to a target with a call to
@@ -136,7 +136,7 @@ tapi_mock_create(void* orig, void* target, void* mocked);
  * @return an allocated mock structure ready to be applied.
  */
 TAPI_EXPORT tapi_mock_t*
-tapi_special_mock_create(void* orig, void* target, \
+tapi_make_special_mock(void* orig, void* target, \
     void* mocked, tapi_action_t action);
 
 /** @note this means that we are using a maximum search len of 4096 bytes for determining a
@@ -158,7 +158,7 @@ tapi_special_mock_create(void* orig, void* target, \
  * @param mock the mock to be applied.
  */
 TAPI_EXPORT void
-tapi_mock_apply(tapi_context_t* context, tapi_mock_t* mock);
+tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock);
 
 /**
  * @brief restore the contents of a function and free the mock.
@@ -167,25 +167,25 @@ tapi_mock_apply(tapi_context_t* context, tapi_mock_t* mock);
  * @param mock the mock structure to be freed and restored.
  */
 TAPI_EXPORT void
-tapi_mock_restore(tapi_context_t* context, tapi_mock_t* mock);
+tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock);
 
-/** create a simple mock to return a given value. */
-#define TAPI_MOCK_RETURN(func_name, return_type, return_value) \
+/** create a simple stub to return a given value. */
+#define TAPI_STUB_RETURN(func_name, return_type, return_value) \
     return_type func_name() { return return_value; }
 
-/** create a mock to return a given integer. */
-#define TAPI_MOCK_RETURN_INT(func_name, return_value) \
-    TAPI_MOCK_RETURN(func_name, int, return_value)
+/** create a stub to return a given integer. */
+#define TAPI_STUB_RETURN_INT(func_name, return_value) \
+    TAPI_STUB_RETURN(func_name, int, return_value)
 
-/** create a mock to return a given pointer. */
-#define TAPI_MOCK_RETURN_PTR(func_name, return_value) \
-    TAPI_MOCK_RETURN(func_name, void*, return_value)
+/** create a stub to return a given pointer. */
+#define TAPI_STUB_RETURN_PTR(func_name, return_value) \
+    TAPI_STUB_RETURN(func_name, void*, return_value)
 
-/** create a mock to return null. */
-#define TAPI_MOCK_RETURN_NULL(func_name) \
-    TAPI_MOCK_RETURN(func_name, void*, null)
+/** create a stub to return null. */
+#define TAPI_STUB_RETURN_NULL(func_name) \
+    TAPI_STUB_RETURN(func_name, void*, null)
 
-/** create a mock to return a string/ string literal. */
-#define TAPI_MOCK_RETURN_STRL(func_name, return_value) \
-    TAPI_MOCK_RETURN(func_name, char*, return_value)
+/** create a stub to return a string/ string literal. */
+#define TAPI_STUB_RETURN_STRL(func_name, return_value) \
+    TAPI_STUB_RETURN(func_name, char*, return_value)
 #endif /* TAPI_MOCK_H */

@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-12
+ * @date 2026-06-16
  */
 #include <tapi/mock.h>
 
@@ -108,7 +108,7 @@ tapi_stub_free(void* ptr) {
  * @return an allocated mock structure ready to be applied.
  */
 tapi_mock_t*
-tapi_mock_create(void* orig, void* target, void* mocked) {
+tapi_make_mock(void* orig, void* target, void* mocked) {
     /* allocate the structure. */
     tapi_mock_t* mock = calloc(1u, sizeof *mock);
     mock->orig = orig;
@@ -141,7 +141,7 @@ tapi_mock_create(void* orig, void* target, void* mocked) {
  * @return an allocated mock structure ready to be applied.
  */
 TAPI_EXPORT tapi_mock_t*
-tapi_special_mock_create(void* orig, void* target, \
+tapi_make_special_mock(void* orig, void* target, \
     void* mocked, tapi_action_t action) {
     /* allocate the structure. */
     tapi_mock_t* mock = calloc(1u, sizeof *mock);
@@ -174,7 +174,7 @@ tapi_special_mock_create(void* orig, void* target, \
  * @param mock the mock to be applied.
  */
 void
-tapi_mock_apply(tapi_context_t* context, tapi_mock_t* mock) {
+tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock) {
     if (mock->is_special) {
         /* if this is a 'special mock' we need to find ALL occurrences of this call target. */
         for (size_t i = 0u; i < mock->fun_size; i++) {
@@ -229,7 +229,7 @@ tapi_mock_apply(tapi_context_t* context, tapi_mock_t* mock) {
  * @param mock the mock structure to be freed and restored.
  */
 void
-tapi_mock_restore(tapi_context_t* context, tapi_mock_t* mock) {
+tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock) {
     /* we can't restore a mock that hasn't been applied... */
     if (mock->call == 0x0) {
         /* NOLINTNEXTLINE */

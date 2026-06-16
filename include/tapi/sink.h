@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-07
+ * @date 2026-06-16
  */
 #ifndef TAPI_SINK_H
 #define TAPI_SINK_H
@@ -30,10 +30,10 @@ typedef FILE* tapi_stream_t;
  *   stream into another pre-allocated user stream. sinks are used in two types, log file streams
  *   (think something like output_test_####.log), and memory streams like buffers.
  *
- * @see tapi_sink_create()
- * @see tapi_sink_setdbf()
- * @see tapi_sink_setdfp()
- * @see tapi_sink_destroy()
+ * @see tapi_make_sink()
+ * @see tapi_setdbf_sink()
+ * @see tapi_setdfp_sink()
+ * @see tapi_cleanup_sink()
  */
 typedef struct {
     /** a pre-allocated buffer. */
@@ -60,7 +60,7 @@ typedef struct {
  * @return a pointer to an allocated sink.
  */
 TAPI_EXPORT tapi_sink_t*
-tapi_sink_make();
+tapi_make_sink();
 
 /**
  * @brief set a pre-allocated buffer to the destination of the sink.
@@ -69,7 +69,7 @@ tapi_sink_make();
  * @param length the size of the pre-allocated buffer.
  */
 TAPI_EXPORT void
-tapi_sink_setdbf(tapi_sink_t* sink, size_t length);
+tapi_setdbf_sink(tapi_sink_t* sink, size_t length);
 
 /**
  * @brief set a pre-allocated stream to the destination of the sink.
@@ -78,7 +78,7 @@ tapi_sink_setdbf(tapi_sink_t* sink, size_t length);
  * @param stream the pre-allocated or opened stream.
  */
 TAPI_EXPORT void
-tapi_sink_setdfp(tapi_sink_t* sink, tapi_stream_t stream);
+tapi_setdfp_sink(tapi_sink_t* sink, tapi_stream_t stream);
 
 /**
  * @brief free a sink.
@@ -86,5 +86,5 @@ tapi_sink_setdfp(tapi_sink_t* sink, tapi_stream_t stream);
  * @param sink the sink to be freed.
  */
 TAPI_EXPORT void
-tapi_sink_destroy(tapi_sink_t* sink);
+tapi_cleanup_sink(tapi_sink_t* sink);
 #endif /* TAPI_SINK_H */

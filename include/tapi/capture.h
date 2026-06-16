@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-05-29
+ * @date 2026-06-16
  */
 #ifndef TAPI_CAPTURE_H
 #define TAPI_CAPTURE_H
@@ -45,7 +45,7 @@ typedef struct {
  * @return a pointer to an allocated capture structure.
  */
 TAPI_EXPORT tapi_capture_t*
-tapi_capture_make(tapi_sink_t* sink, tapi_stream_t stream);
+tapi_make_capture(tapi_sink_t* sink, tapi_stream_t stream);
 
 /**
  * @brief stop capturing data from a stream.
@@ -53,7 +53,7 @@ tapi_capture_make(tapi_sink_t* sink, tapi_stream_t stream);
  * @param capture the capture to be ended.
  */
 TAPI_EXPORT void
-tapi_capture_end(tapi_capture_t* capture);
+tapi_stop_capture(tapi_capture_t* capture);
 
 /**
  * @brief free a capture structure.
@@ -61,23 +61,23 @@ tapi_capture_end(tapi_capture_t* capture);
  * @param capture the capture to be freed.
  */
 TAPI_EXPORT void
-tapi_capture_destroy(tapi_capture_t* capture);
+tapi_cleanup_capture(tapi_capture_t* capture);
 
 /** quickly make a capture and sink for a set stream. */
 #define TAPI_CAPTURE(stream, size) \
-    tapi_sink_t* sink = tapi_sink_make(); \
-    tapi_sink_setdbf(sink, size); \
-    tapi_capture_t* capture = tapi_capture_make(sink, stream);
+    tapi_sink_t* sink = tapi_make_sink(); \
+    tapi_setdbf_sink(sink, size); \
+    tapi_capture_t* capture = tapi_make_capture(sink, stream);
 
 /** quickly stop capturing; use with tapi_quick_capture to make your tests more readable. */
 #define TAPI_END_CAPTURE() \
-    tapi_capture_end(capture);
+    tapi_end_capture(capture);
 
 /**
  * quickly destroy/ cleanup a capturing stream; use with tapi_quick_capture to make your tests
  *   more readable.
  */
-#define TAPI_DESTROY_CAPTURE() \
-    tapi_capture_destroy(capture); \
-    tapi_sink_destroy(sink);
+#define TAPI_CLEANUP_CAPTURE() \
+    tapi_cleanup_capture(capture); \
+    tapi_cleanup_sink(sink);
 #endif /* TAPI_CAPTURE_H */

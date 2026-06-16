@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-09
+ * @date 2026-06-16
  */
 #include <tapi/tapi.h>
 
@@ -31,7 +31,7 @@ tapi_init(void) {
     /* allocate the tapi context, set a new list for the guards, but none for the tests. */
     tapi_context_t* context = calloc(1u, sizeof *context);
     context->guards = tapi_dyna_create();
-    context->tests = 0x0;
+    context->tests = tapi_dyna_create();
     return context;
 };
 
@@ -44,32 +44,10 @@ tapi_init(void) {
  */
 void
 tapi_test_setup(tapi_context_t* context, tapi_test_t** tests, size_t count) {
-    /* if we already have tests. */
-    if (context->tests != 0x0) {
-        /* NOLINTNEXTLINE */
-        fprintf(stderr, "tapi, setup_tests; tests != null; refer to tapi_add_test().\n");
-        return;
-    }
-
     /* and we are done. */
-    context->tests = tapi_dyna_create();
     for (size_t i = 0u; i < count; i++)
         tapi_dyna_push(context->tests, tests[i]);
 }
-
-/**
- * @brief add a test to your testing suite.
- *
- * @param context the tapi context to be used.
- * @param test the test to be added.
- */
-void
-tapi_test_add(tapi_context_t* context, tapi_test_t* test) {
-    /* if we don't have tests. */
-    if (context->tests == 0x0)
-        context->tests = tapi_dyna_create();
-    tapi_dyna_push(context->tests, test); /* very simple push. */
-};
 
 /**
  * @brief run all the tests setup in the context in order.
@@ -77,14 +55,14 @@ tapi_test_add(tapi_context_t* context, tapi_test_t* test) {
  * @param context the tapi context to be used.
  */
 void
-tapi_test_run(tapi_context_t* context) {
+tapi_run_tests(tapi_context_t* context) {
     /* iterate through each test, */
     size_t passed = 0u;
     DYNA_FOREACH_IT(context->tests, tapi_test_t*, test, i)
         /* call setup, apply the mocks, */
         if (test->setup != 0x0) test->setup();
         DYNA_FOREACH_IT(test->mocks, tapi_mock_t*, mock, j)
-            tapi_mock_apply(context, mock);
+            tapi_apply_mock(context, mock);
         DYNA_ENDFOREACH(test->mocks);
 
         /* call the test, */
@@ -102,7 +80,7 @@ tapi_test_run(tapi_context_t* context) {
 
         /* then call teardown and restore mocks. */
         DYNA_FOREACH_IT(test->mocks, tapi_mock_t*, mock, j)
-            tapi_mock_restore(context, mock);
+            tapi_cleanup_mock(context, mock);
         DYNA_ENDFOREACH(test->mocks);
         if (test->teardown != 0x0) test->teardown();
     DYNA_ENDFOREACH(context->tests);
@@ -119,7 +97,7 @@ tapi_test_run(tapi_context_t* context) {
  * @param function the test function to be used.
  */
 tapi_test_t*
-tapi_test_make(const char* name, tapi_test_func_t function) {
+tapi_make_test(const char* name, tapi_test_func_t function) {
     /* allocate and make the structure. */
     tapi_test_t* test = calloc(1u, sizeof *test);
     size_t length = strlen(name);
@@ -142,12 +120,8 @@ tapi_test_make(const char* name, tapi_test_func_t function) {
  */
 TAPI_EXPORT void
 tapi_test_add_mock(tapi_test_t* test, void* tested, void* target, void* mocked) {
-    /* create a dynamic array if it doesn't already exist. */
-    if (test->mocks == 0x0)
-        test->mocks = tapi_dyna_create();
-
     /* create the mock ptr and push it onto the dynamic array. */
-    tapi_mock_t* mock = tapi_mock_create(tested, target, mocked);
+    tapi_mock_t* mock = tapi_make_mock(tested, target, mocked);
     tapi_dyna_push(test->mocks, mock);
 }
 
@@ -157,7 +131,7 @@ tapi_test_add_mock(tapi_test_t* test, void* tested, void* target, void* mocked) 
  * @param context the tapi context containing all the data to be freed (this will be freed).
  */
 void
-tapi_test_cleanup(tapi_context_t* context) {
+tapi_cleanup(tapi_context_t* context) {
     /* free each test but not the list itself, that isn't ours. */
     for (size_t i = 0; i < context->tests->length; i++) {
         tapi_test_t* test = DYNA_GET(context->tests, tapi_test_t*, i);

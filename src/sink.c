@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-03-09
+ * @date 2026-06-16
  */
 #include <tapi/sink.h>
 
@@ -18,7 +18,7 @@
  * @return a pointer to an allocated sink.
  */
 tapi_sink_t*
-tapi_sink_make() {
+tapi_make_sink() {
     /* allocate and return. */
     tapi_sink_t* sink = calloc(1u, sizeof *sink);
     return sink;
@@ -31,7 +31,7 @@ tapi_sink_make() {
  * @param length the size of the pre-allocated buffer.
  */
 void
-tapi_sink_setdbf(tapi_sink_t* sink, size_t length) {
+tapi_setdbf_sink(tapi_sink_t* sink, size_t length) {
     /* set the type and then the buffer. */
     sink->buffer.data = calloc(1u, length + 1u);
     sink->buffer.length = 0u;
@@ -56,7 +56,7 @@ tapi_sink_setdbf(tapi_sink_t* sink, size_t length) {
  * @param stream the pre-allocated or opened stream.
  */
 void
-tapi_sink_setdfp(tapi_sink_t* sink, tapi_stream_t stream) {
+tapi_setdfp_sink(tapi_sink_t* sink, tapi_stream_t stream) {
     /* set the type and then the stream, and we are done. */
     sink->stream = stream;
     sink->type = E_TAPI_SINK_TYPE_STR;
@@ -68,7 +68,7 @@ tapi_sink_setdfp(tapi_sink_t* sink, tapi_stream_t stream) {
  * @param sink the sink to be freed.
  */
 void
-tapi_sink_destroy(tapi_sink_t* sink) {
+tapi_cleanup_sink(tapi_sink_t* sink) {
     if (sink->type == E_TAPI_SINK_TYPE_BUF)
         free(sink->buffer.data);
     free(sink);
