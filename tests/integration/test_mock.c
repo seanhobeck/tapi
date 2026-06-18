@@ -1,10 +1,10 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-09
+ * @date 2026-06-18
  */
 #include <tapi/tapi.h>
 
-/*! @uses TAPI_MOCK_RETURN. */
+/*! @uses tapi_stub_return. */
 #include <tapi/mock.h>
 
 /* region for all of the test call targets and assembly specific fuctions. */
@@ -118,69 +118,69 @@ int conditional_caller(int use_target) {
 
 /* region for all of the setups and mock return values. */
 #pragma region mock return values
-TAPI_MOCK_RETURN(tested_function_target, int, 0u);
+tapi_stub_return(tested_function_target, int, 0u);
 #if defined(__x86_64__) || defined(__i386__)
-TAPI_MOCK_RETURN(mock_asm_target_x86, int, 0x100);
+tapi_stub_return(mock_asm_target_x86, int, 0x100);
 #elif defined(__aarch64__)
-TAPI_MOCK_RETURN(mock_asm_target_aarch64, int, 0x100);
+tapi_stub_return(mock_asm_target_aarch64, int, 0x100);
 #elif defined(__arm__)
-TAPI_MOCK_RETURN(mock_asm_target_arm32, int, 0x100);
-TAPI_MOCK_RETURN(mock_asm_target_thumb, int, 0x100);
+tapi_stub_return(mock_asm_target_arm32, int, 0x100);
+tapi_stub_return(mock_asm_target_thumb, int, 0x100);
 #endif
-TAPI_MOCK_RETURN(mock_nested_target, int, 42);
-TAPI_MOCK_RETURN(mock_conditional_target, int, 999);
+tapi_stub_return(mock_nested_target, int, 42);
+tapi_stub_return(mock_conditional_target, int, 999);
 #pragma endregion
 
 /* region for all of the tests. */
 #pragma region tests
-TAPI_MAKE_TEST(test_basic_mock){
+tapi_test(test_basic_mock){
     /* act & assert. */
     int result = function();
-    TAPI_ASSERT(result == 1u);
+    tapi_assert(result == 1u);
     return E_TAPI_TEST_RESULT_PASSED;
 }
 
 #if defined(__x86_64__) || defined(__i386__)
-TAPI_MAKE_TEST(test_asm_x86_mock){
+tapi_test(test_asm_x86_mock){
     /* act & assert. */
     int result = asm_caller_x86();
-    TAPI_ASSERT(result == 0x101);
+    tapi_assert(result == 0x101);
     return E_TAPI_TEST_RESULT_PASSED;
 }
 #elif defined(__aarch64__)
-TAPI_MAKE_TEST(test_asm_aarch64_mock){
+tapi_test(test_asm_aarch64_mock){
     /* act & assert. */
     int result = asm_caller_aarch64();
-    TAPI_ASSERT(result == 0x101);
+    tapi_assert(result == 0x101);
     return E_TAPI_TEST_RESULT_PASSED;
 }
 #elif defined(__arm__)
-TAPI_MAKE_TEST(test_asm_arm32_mock){
+tapi_test(test_asm_arm32_mock){
     /* act & assert. */
     int result = asm_caller_arm32();
-    TAPI_ASSERT(result == 0x101);
+    tapi_assert(result == 0x101);
     return E_TAPI_TEST_RESULT_PASSED;
 }
 
-TAPI_MAKE_TEST(test_asm_thumb_mock){
+tapi_test(test_asm_thumb_mock){
     /* act & assert. */
     int result = asm_caller_thumb();
-    TAPI_ASSERT(result == 0x101);
+    tapi_assert(result == 0x101);
     return E_TAPI_TEST_RESULT_PASSED;
 }
 #endif
 
-TAPI_MAKE_TEST(test_nested_mock){
+tapi_test(test_nested_mock){
     /* act & assert. */
     int result = nested_caller();
-    TAPI_ASSERT(result == 47);
+    tapi_assert(result == 47);
     return E_TAPI_TEST_RESULT_PASSED;
 }
 
-TAPI_MAKE_TEST(test_conditional_mock){
+tapi_test(test_conditional_mock){
     /* act & assert. */
     int result = conditional_caller(1);
-    TAPI_ASSERT(result == 999);
+    tapi_assert(result == 999);
     return E_TAPI_TEST_RESULT_PASSED;
 }
 #pragma endregion
@@ -188,28 +188,28 @@ TAPI_MAKE_TEST(test_conditional_mock){
 int main() {
     /* basic test. */
     tapi_context_t* context = tapi_init();
-    TAPI_ADD_TEST_AND_MOCK(context, "test_basic_mock", test_basic_mock, function, \
+    tapi_add_test_and_mock(context, "test_basic_mock", test_basic_mock, function, \
         target_function, tested_function_target);
 
     /* architecture-specific tests. */
 #if defined(__x86_64__) || defined(__i386__)
-    TAPI_ADD_TEST_AND_MOCK(context, "test_asm_x86_mock", test_asm_x86_mock, asm_caller_x86, \
+    tapi_add_test_and_mock(context, "test_asm_x86_mock", test_asm_x86_mock, asm_caller_x86, \
         asm_target_x86, mock_asm_target_x86);
 #elif defined(__aarch64__)
-    TAPI_ADD_TEST_AND_MOCK(context, "test_asm_aarch64_mock", test_asm_aarch64_mock, \
+    tapi_add_test_and_mock(context, "test_asm_aarch64_mock", test_asm_aarch64_mock, \
         asm_caller_aarch64, asm_target_aarch64, mock_asm_target_aarch64);
 #elif defined(__arm__)
-    TAPI_ADD_TEST_AND_MOCK(context, "test_asm_arm32_mock", test_asm_arm32_mock, \
+    tapi_add_test_and_mock(context, "test_asm_arm32_mock", test_asm_arm32_mock, \
         asm_caller_arm32, asm_target_arm32, mock_asm_target_arm32);
-    TAPI_ADD_TEST_AND_MOCK(context, "test_asm_thumb_mock", test_asm_thumb_mock, \
+    tapi_add_test_and_mock(context, "test_asm_thumb_mock", test_asm_thumb_mock, \
         asm_caller_thumb, asm_target_thumb, mock_asm_target_thumb);
 #endif
-    TAPI_ADD_TEST_AND_MOCK(context, "test_nested_mock", test_nested_mock, nested_middle, \
+    tapi_add_test_and_mock(context, "test_nested_mock", test_nested_mock, nested_middle, \
         nested_target, mock_nested_target);
-    TAPI_ADD_TEST_AND_MOCK(context, "test_conditional", test_conditional_mock, conditional_caller, \
+    tapi_add_test_and_mock(context, "test_conditional", test_conditional_mock, conditional_caller, \
         conditional_target, mock_conditional_target);
 
     /* setup test array and run. */
-    TAPI_RUN_TESTS(context);
+    tapi_run_context(context);
     return 0;
 }

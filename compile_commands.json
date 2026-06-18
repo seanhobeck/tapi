@@ -1,7 +1,7 @@
 [
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/bin/x86_64-linux-gnu-gcc",
       "-std=c99",
       "-Wall",
       "-Wextra",
@@ -27,7 +27,7 @@
   },
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/bin/x86_64-linux-gnu-gcc",
       "-std=c99",
       "-Wall",
       "-Wextra",
@@ -53,7 +53,7 @@
   },
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/bin/x86_64-linux-gnu-gcc",
       "-std=c99",
       "-Wall",
       "-Wextra",
@@ -79,7 +79,7 @@
   },
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/bin/x86_64-linux-gnu-gcc",
       "-std=c99",
       "-Wall",
       "-Wextra",
@@ -105,7 +105,7 @@
   },
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/bin/x86_64-linux-gnu-gcc",
       "-std=c99",
       "-Wall",
       "-Wextra",
@@ -131,7 +131,7 @@
   },
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/bin/x86_64-linux-gnu-gcc",
       "-std=c99",
       "-Wall",
       "-Wextra",
@@ -157,7 +157,33 @@
   },
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/bin/x86_64-linux-gnu-gcc",
+      "-std=c99",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-O0",
+      "-fPIC",
+      "-Iinclude",
+      "-Iinclude",
+      "-Iinclude/tapi",
+      "-Isrc",
+      "-Isrc/int",
+      "-Ivendor/build/x86_64/include",
+      "-I/usr/local/include",
+      "-I/usr/local/include/capstone",
+      "-c",
+      "-o",
+      "build/x86_64/int/sig.o",
+      "src/int/sig.c"
+    ],
+    "directory": "/home/sean-desktop/Work/tapi",
+    "file": "/home/sean-desktop/Work/tapi/src/int/sig.c",
+    "output": "/home/sean-desktop/Work/tapi/build/x86_64/int/sig.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/x86_64-linux-gnu-gcc",
       "-std=c99",
       "-Wall",
       "-Wextra",
@@ -183,7 +209,7 @@
   },
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/bin/x86_64-linux-gnu-gcc",
       "-std=c99",
       "-Wall",
       "-Wextra",
@@ -209,7 +235,7 @@
   },
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/bin/x86_64-linux-gnu-gcc",
       "-std=c99",
       "-Wall",
       "-Wextra",
@@ -235,7 +261,7 @@
   },
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/bin/x86_64-linux-gnu-gcc",
       "-std=c99",
       "-Wall",
       "-Wextra",

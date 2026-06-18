@@ -42,7 +42,8 @@ install_apt() {
     flawfinder \
     valgrind \
     cmake \
-    ninja-build
+    ninja-build \
+    libelf-dev
 
   # qemu + cross-compilers.
   apt-get install \
@@ -66,7 +67,8 @@ install_dnf() {
     flawfinder \
     valgrind \
     cmake \
-    ninja-build
+    ninja-build \
+    elfutils-libelf-devel
 
   # qemu + cross-compilers
   dnf install \
@@ -86,7 +88,8 @@ install_pacman() {
     flawfinder \
     valgrind \
     cmake \
-    ninja-build
+    ninja-build \
+    libelf
 
   # qemu + cross-compilers
   pacman -Sy --noconfirm \
@@ -109,7 +112,8 @@ install_zypper() {
     clang-tidy \
     valgrind \
     cmake \
-    ninja-build
+    ninja-build \
+    libelf-devel
 
   # qemu + cross-compilers
   zypper install \

@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-09
+ * @date 2026-06-18
  */
 #include "guard.h"
 
@@ -85,12 +85,12 @@ guard_close(guard_t* guard) {
 void
 guard_create(tapi_context_t* context, void* address, size_t length) {
     /* check if it already exists in our context list of guards. */
-    DYNA_FOREACH(context->guards, guard_t*, guard)
+    dyna_foreach(context->guards, guard_t*, guard)
         if (guard->address == address && guard->length == length) {
             guard->ref_count++;
             return;
         }
-    DYNA_ENDFOREACH(context->guards);
+    dyna_endforeach(context->guards);
 
     /* if not found, then allocate. */
     guard_t* guard = calloc(1, sizeof *guard);
@@ -135,10 +135,10 @@ guard_cleanup(tapi_context_t* context) {
     if (!context->guards) return;
 
     /* iterate and return each guard. */
-    DYNA_FOREACH(context->guards, guard_t*, guard)
+    dyna_foreach(context->guards, guard_t*, guard)
         guard_close(guard);
         free(guard);
-    DYNA_ENDFOREACH(context->guards);
+    dyna_endforeach(context->guards);
     free(context->guards->data);
     free(context->guards);
 };

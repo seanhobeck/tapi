@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-16
+ * @date 2026-06-18
  */
 #include <tapi/mock.h>
 
@@ -99,8 +99,9 @@ tapi_stub_free(void* ptr) {
 #endif
 
 /**
- * @brief mock the first call occurrence to a target with a call
- *  to a mocked function instead.
+ * @brief mock the first call occurrence to a target with a call to a mocked function instead.
+ *  this will automatically allocate the mock structure ready to be applied whenever and wherever
+ *  required.
  *
  * @param orig the original function to search for target in.
  * @param target the target address to be replaced.
@@ -124,8 +125,10 @@ tapi_make_mock(void* orig, void* target, void* mocked) {
 };
 
 /**
- * @brief mock all call occurrences to a target with a call to
- *  a mocked function instead, if specified.
+ * @brief mock all call occurrences to a target with a call to a mocked function instead, if
+ *  specified. tapi considers a special mock a type of mock that requires every call to be mocked
+ *  within a specified function, special mocks that have 'autostubs' are usually very common POSIX
+ *  libc or system calls.
  *
  * @param orig the original function to search for target in.
  * @param target the target address to be replaced.
@@ -167,8 +170,9 @@ tapi_make_special_mock(void* orig, void* target, \
 };
 
 /**
- * @brief apply the mocks patch in memory; write stub to route to
- *  the given mocked function pointer.
+ * @brief apply a call target (or multiple) patch in memory to route to the given stub by the
+ * mock. this is usually performed by `tapi_run_tests`, but can be used under special
+ * circumstances if required.
  *
  * @param context the context of tapi to be used.
  * @param mock the mock to be applied.
@@ -223,7 +227,9 @@ tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock) {
 };
 
 /**
- * @brief restore the contents of a function and free the mock.
+ * @brief restore the contents of a function and free the mock. this frees all the data held by
+ *  the mock, the pointer itself and the guard held within the context. 'mock' should not be used
+ *  after this is called, either copy the data required before this call or create a new mock.
  *
  * @param context the context of tapi to be used.
  * @param mock the mock structure to be freed and restored.
