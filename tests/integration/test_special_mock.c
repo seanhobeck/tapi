@@ -1,22 +1,22 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-18
+ * @date 2026-06-26
  */
 #include <tapi/tapi.h>
 
-/*! @uses TAPI_ADD_TEST_AND_MOCK, etc... */
+/*! uses TAPI_ADD_TEST_AND_MOCK, etc... */
 #include <tapi/mock.h>
 
-/*! @uses TAPI_CAPTURE. */
+/*! uses TAPI_CAPTURE. */
 #include <tapi/capture.h>
 
-/*! @uses free, calloc, malloc. */
+/*! uses free, calloc, malloc. */
 #include <stdlib.h>
 
-/*! @uses strcmp. */
+/*! uses strcmp. */
 #include <string.h>
 
-/*! @uses snprintf. */
+/*! uses snprintf. */
 #include <stdio.h>
 
 /* region for all tested functions. */

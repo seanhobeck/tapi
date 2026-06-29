@@ -1,29 +1,29 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-09
+ * @date 2026-06-26
  */
-/*! @uses int. module to be tested. */
+/*! uses int. module to be tested. */
 #include "int/guard.h"
 
-/*! @uses tapi_context_t. */
+/*! uses tapi_context_t. */
 #include <tapi/tapi.h>
 
-/*! @uses assert. */
+/*! uses assert. */
 #include <assert.h>
 
-/*! @uses size_t. */
+/*! uses size_t. */
 #include <stddef.h>
 
-/*! @uses calloc, free. */
+/*! uses calloc, free. */
 #include <stdlib.h>
 
-/*! @uses printf. */
+/*! uses printf. */
 #include <stdio.h>
 
-/*! @uses strcpy. */
+/*! uses strcpy. */
 #include <string.h>
 
-/*! @uses VirtualQuery for windows. */
+/*! uses VirtualQuery for windows. */
 #ifdef _WIN32
 #include <windows.h>
 #endif

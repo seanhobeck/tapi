@@ -5,12 +5,12 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-18
+ * @date 2026-06-26
  */
 #ifndef TAPI_H
 #define TAPI_H
 
-/*! @uses tapi_dyna_t. */
+/*! uses tapi_dyna_t. */
 #include <tapi/dyna.h>
 /** \endcond */
 

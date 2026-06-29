@@ -1,10 +1,10 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-18
+ * @date 2026-06-26
  */
 #include <tapi/tapi.h>
 
-/*! @uses tapi_stub_return. */
+/*! uses tapi_stub_return. */
 #include <tapi/mock.h>
 
 /* region for all of the test call targets and assembly specific fuctions. */

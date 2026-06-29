@@ -1,20 +1,20 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-07
+ * @date 2026-06-26
  */
 #include <tapi/dyna.h>
 
-/*! @uses assert. */
+/*! uses assert. */
 #include <assert.h>
 
-/*! @uses fprintf. */
+/*! uses fprintf. */
 #include <stdio.h>
 
-/*! @uses calloc, realloc, free, exit. */
+/*! uses calloc, realloc, free, exit. */
 #include <stdlib.h>
 
-/*! @uses memcpy. */
+/*! uses memcpy. */
 #include <string.h>
 /** \endcond */
 

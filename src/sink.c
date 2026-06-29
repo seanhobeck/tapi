@@ -1,14 +1,14 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-16
+ * @date 2026-06-26
  */
 #include <tapi/sink.h>
 
-/*! @uses calloc, free. */
+/*! uses calloc, free. */
 #include <stdlib.h>
 
-/*! @uses errno. */
+/*! uses errno. */
 #include <errno.h>
 /** \endcond */
 

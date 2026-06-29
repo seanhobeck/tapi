@@ -1,23 +1,25 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-07
+ * @date 2026-06-26
  */
 #include "det.h"
 
-/*! @uses bool, true, false. */
+/*! uses bool, true, false. */
 #include <stdbool.h>
 
-/*! @uses memcpy. */
+/*! uses memcpy. */
 #include <string.h>
 
-/*! @uses cs_insn, csh, cs_open. */
+/*! uses cs_insn, csh, cs_open. */
 #include <capstone/capstone.h>
 
-/*! @uses internal. */
+/*! uses internal. */
 #include "intt.h"
 
-/*! @uses arch_t, get_arch. */
+/*! uses arch_t, get_arch. */
 #include "arch.h"
+
+/*! uses sig_compare. */
 #include "sig.h"
 
 /**

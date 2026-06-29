@@ -5,15 +5,15 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-18
+ * @date 2026-06-26
  */
 #ifndef TAPI_DYNA_H
 #define TAPI_DYNA_H
 
-/*! @uses size_t. */
+/*! uses size_t. */
 #include <stddef.h>
 
-/*! @uses pthread_rwlock. */
+/*! uses pthread_rwlock. */
 #define _XOPEN_SOURCE 600u /* enables POSIX.1-2001 */
 #include <pthread.h>
 

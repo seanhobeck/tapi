@@ -1,23 +1,23 @@
 /**
-* @author Sean Hobeck
- * @date 2026-06-09
+ * @author Sean Hobeck
+ * @date 2026-06-26
  */
-/*! @uses int. module to be tested. */
+/*! uses int. module to be tested. */
 #include "int/patch.h"
 
-/*! @uses arch_t, get_arch. */
+/*! uses arch_t, get_arch. */
 #include "int/arch.h"
 
-/*! @uses assert. */
+/*! uses assert. */
 #include <assert.h>
 
-/*! @uses int32_t. */
+/*! uses int32_t. */
 #include <stdint.h>
 
-/*! @uses printf. */
+/*! uses printf. */
 #include <stdio.h>
 
-/*! @uses free. */
+/*! uses free. */
 #include <stdlib.h>
 
 /*! function we search for. */

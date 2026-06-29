@@ -5,15 +5,15 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-18
+ * @date 2026-06-26
  */
 #ifndef TAPI_CAPTURE_H
 #define TAPI_CAPTURE_H
 
-/*! @uses size_t, FILE, tapi_sink_t, ... */
+/*! uses size_t, FILE, tapi_sink_t, ... */
 #include <tapi/sink.h>
 
-/*! @uses strcmp. */
+/*! uses strcmp. */
 #include <string.h>
 /** \endcond */
 

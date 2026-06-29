@@ -1,23 +1,23 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-18
+ * @date 2026-06-26
  */
 #include <tapi/tapi.h>
 
-/*! @uses fprintf, stderr. */
+/*! uses fprintf, stderr. */
 #include <stdio.h>
 
-/*! @uses calloc, free. */
+/*! uses calloc, free. */
 #include <stdlib.h>
 
-/*! @uses strlen, memcpy. */
+/*! uses strlen, memcpy. */
 #include <string.h>
 
-/*! @uses tapi_mock_t, tapi_apply_mock. */
+/*! uses tapi_mock_t, tapi_apply_mock. */
 #include <tapi/mock.h>
 
-/*! @uses guard_cleanup. */
+/*! uses guard_cleanup. */
 #include "guard.h"
 /** \endcond */
 

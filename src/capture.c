@@ -1,20 +1,20 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-18
+ * @date 2026-06-26
  */
 #include <tapi/capture.h>
 
-/*! @uses calloc, close. */
+/*! uses calloc, close. */
 #include <stdlib.h>
 
-/*! @uses pipe, dup, dup2. */
+/*! uses pipe, dup, dup2. */
 #include <unistd.h>
 
-/*! @uses errno. */
+/*! uses errno. */
 #include <errno.h>
 
-/*! @uses strncpy. */
+/*! uses strncpy. */
 #include <string.h>
 /** \endcond */
 

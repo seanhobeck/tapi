@@ -1,32 +1,32 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-18
+ * @date 2026-06-26
  */
 #include "guard.h"
 
-/*! @uses calloc. */
+/*! uses calloc. */
 #include <stdlib.h>
 
-/*! @uses uintptr_t. */
+/*! uses uintptr_t. */
 #include <stdint.h>
 
-/*! @uses sysconf, _SC_PAGE_SIZE. */
+/*! uses sysconf, _SC_PAGE_SIZE. */
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <unistd.h>
 #endif
 
-/*! @uses mprotect. */
+/*! uses mprotect. */
 #include <sys/mman.h>
 
-/*! @uses fprintf, stderr. */
+/*! uses fprintf, stderr. */
 #include <stdio.h>
 
-/*! @uses internal, etc... */
+/*! uses internal, etc... */
 #include "intt.h"
 
-/*! @uses dyna_t, etc... */
+/*! uses dyna_t, etc... */
 #include "dyna.h"
 
 /** @return page size on the given architecture, winapi and posix. */

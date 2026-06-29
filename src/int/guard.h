@@ -1,17 +1,17 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-09
+ * @date 2026-06-26
  */
 #ifndef PGUARD_H
 #define PGUARD_H
 
-/*! @uses size_t. */
+/*! uses size_t. */
 #include <stddef.h>
 
-/*! @uses atomic_size_t. */
+/*! uses atomic_size_t. */
 #include <stdatomic.h>
 
-/*! @uses tapi_context_t. */
+/*! uses tapi_context_t. */
 #include <tapi/tapi.h>
 
 /** a data structure for a memory protection guard. */

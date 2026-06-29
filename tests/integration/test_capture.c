@@ -1,22 +1,22 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-18
+ * @date 2026-06-26
  */
 #include <tapi/tapi.h>
 
-/*! @uses tapi_capture_t, etc... */
+/*! uses tapi_capture_t, etc... */
 #include <tapi/capture.h>
 
-/*! @uses tapi_sink_t, etc... */
+/*! uses tapi_sink_t, etc... */
 #include <tapi/sink.h>
 
-/*! @uses printf. */
+/*! uses printf. */
 #include <stdio.h>
 
-/*! @uses strcmp, strlen. */
+/*! uses strcmp, strlen. */
 #include <string.h>
 
-/*! @uses calloc, free. */
+/*! uses calloc, free. */
 #include <stdlib.h>
 
 tapi_test(test_capture_empty) {

@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-16
+ * @date 2026-06-26
  */
 #ifndef TAPI_SINK_H
 #define TAPI_SINK_H
@@ -13,10 +13,10 @@
 /* we have to define this to use fileno(), as stream->_fileno is not universal across differing libc. */
 #define _GNU_SOURCE 200809L
 
-/*! @uses TAPI_EXPORT. */
+/*! uses TAPI_EXPORT. */
 #include <tapi/tapi.h>
 
-/*! @uses FILE, struct _IO_FILE. */
+/*! uses FILE, struct _IO_FILE. */
 #include <stdio.h>
 /** \endcond */
 
