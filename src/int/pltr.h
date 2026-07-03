@@ -2,18 +2,18 @@
  * @author Sean Hobeck
  * @date 2026-06-25
  */
-#ifndef PLT_H
-#define PLT_H
+#ifndef PLTR_H
+#define PLTR_H
 
 /** @brief ... */
 typedef struct {
     char* name; /* name of the plt stub. */
     void* address; /* address of the stub. */
-} plt_entry_t;
+} pltr_asc_t;
 
 /** @brief fill the hashmap corresponding a name of a procedure to its stub within the plt. */
 void
-plt_init(void);
+pltr_init(void);
 
 /**
  * @brief resolve a library/system call's plt stub address. this is done via searching through
@@ -23,5 +23,5 @@ plt_init(void);
  * @return an address corresponding to the plt stub function, or 0x0 o.w.
  */
 void*
-plt_resolve_by_name(const char* name);
-#endif /* PLT_H */
+pltr_resolve(const char* name);
+#endif /* PLTR_H */

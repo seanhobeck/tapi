@@ -5,7 +5,6 @@
 #ifndef ELF_H
 #define ELF_H
 #ifdef __gnu_linux__
-
 /*! uses uint8_t, uint16_t, uint32_t, uint64_t. */
 #include <stdint.h>
 
@@ -14,9 +13,6 @@
 
 /*! uses tapi_dyna_t. */
 #include <tapi/dyna.h>
-
-/*! uses alot... */
-#include <linux/elf.h>
 
 /** @brief enum for the elf class. */
 typedef enum {
@@ -132,6 +128,20 @@ typedef struct {
     uint64_t st_size;   /* associated symbol size. */
 } __attribute__((packed)) elf64_sym_t;
 
+/** @brief an elf32 rela? */
+typedef struct {
+    uint32_t r_offset;  /* location at which to apply the action. */
+    uint32_t r_info;    /* index and type of relocation. */
+    int32_t r_addend;   /* constant addend used to compute value. */
+} __attribute__((packed)) elf32_rela_t;
+
+/** @brief an elf64 rela? */
+typedef struct {
+    uint64_t r_offset;  /* location at which to apply the action. */
+    uint64_t r_info;    /* index and type of relocation. */
+    int64_t r_addend;   /* constant addend used to compute value. */
+} __attribute__((packed)) elf64_rela_t;
+
 /** @brief a structure for an elf file that has been parsed. */
 typedef struct {
     elf_class_t class; /* 32 or 64 bit. */
@@ -177,5 +187,5 @@ elf_free(elf_t* elf);
  */
 const char*
 elf_shdr_name(elf_t* elf, elf_shdr_t* shdr);
-#endif /* __linux__ */
-#endif /* TAPI_ELF_H */
+#endif /* __gnu_linux__ */
+#endif /* ELF_H */

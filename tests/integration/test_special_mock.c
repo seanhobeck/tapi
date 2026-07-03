@@ -51,6 +51,7 @@ tapi_test(test_target_add) {
 }
 
 int main() {
+    void* a = calloc(1u, 800);
     tapi_context_t* context = tapi_init();
     tapi_add_test_and_special_mock(context, "test_target_add", \
         test_target_add, target_function, add, stub_add, 0x0);

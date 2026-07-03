@@ -4,14 +4,14 @@
  * @date 2026-06-28
  */
 /*! uses plt_init. */
-#include "int/plt.h"
+#include "int/pltr.h"
 
 /** @brief library entry point. */
 #ifdef __gnu_linux__
 __attribute__((constructor))
 #endif
 void lt_entry() {
-    plt_init();
+    pltr_init();
 }
 
 /** @brief library exit point. */

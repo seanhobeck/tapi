@@ -43,12 +43,12 @@ install_apt() {
     valgrind \
     cmake \
     ninja-build \
+    pkg-config \
     libelf-dev
 
   # qemu + cross-compilers.
   apt-get install \
     qemu-user \
-    qemu-user-static \
     binfmt-support \
     gcc-aarch64-linux-gnu \
     gcc-arm-linux-gnueabihf \
@@ -68,6 +68,7 @@ install_dnf() {
     valgrind \
     cmake \
     ninja-build \
+    pkgconf-pkg-config \
     elfutils-libelf-devel
 
   # qemu + cross-compilers
@@ -88,6 +89,7 @@ install_pacman() {
     flawfinder \
     valgrind \
     cmake \
+    pkg-config \
     ninja-build \
     libelf
 
@@ -113,6 +115,7 @@ install_zypper() {
     valgrind \
     cmake \
     ninja-build \
+    pkg-config \
     libelf-devel
 
   # qemu + cross-compilers
