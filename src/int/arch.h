@@ -1,11 +1,11 @@
 /**
  * @author Sean Hobeck
- * @date 2026-01-21
+ * @date 2026-06-26
  */
 #ifndef ARCH_H
 #define ARCH_H
 
-/*! @uses cs_open. */
+/*! uses cs_open. */
 #include <capstone/capstone.h>
 
 /** a data structure for pairing the cs_arch and cs_mode. */

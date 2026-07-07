@@ -5,27 +5,30 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-04
+ * @date 2026-06-26
  */
 #ifndef TAPI_DYNA_H
 #define TAPI_DYNA_H
 
-/*! @uses size_t. */
+/*! uses size_t. */
 #include <stddef.h>
 
-/*! @uses pthread_rwlock. */
+/*! uses pthread_rwlock. */
 #define _XOPEN_SOURCE 600u /* enables POSIX.1-2001 */
 #include <pthread.h>
 
 /* for functions that are exported by tapi. */
 #if (defined(__GNUC__) || defined(__IBMC__))
 #define TAPI_EXPORT __attribute__((visibility("default")))
+#define TAPI_HIDDEN __attribute__((visibility("hidden")))
 #else
 /* if we are using msvc toolchain (winapi). */
 #if (defined(_MSC_VER))
 #define TAPI_EXPORT __declspec(dllexport)
+#define TAPI_HIDDEN
 #else
 #define TAPI_EXPORT
+#define TAPI_HIDDEN
 #endif
 #endif
 /** \endcond */
@@ -124,60 +127,60 @@ TAPI_EXPORT tapi_dyna_t*
 tapi_dyna_make(void** data, size_t length);
 
 /* a get operation. */
-#define DYNA_GET(array, type, index) ((type) tapi_dyna_get(array, index))
+#define dyna_get(array, type, index) ((type) tapi_dyna_get(array, index))
 
 /*! if we are compiling with the thread-safe flag. */
 #ifdef TAPI_THREAD_SAFE
 /* starting an iteration. */
-#define DYNA_FOREACH_IT(array, type, var, iter) \
+#define dyna_foreach_it(array, type, var, iter) \
     pthread_rwlock_rdlock(&(array)->lock); \
     for (size_t iter = 0; iter < (array)->length; iter++) { \
-        type var = DYNA_GET(array, type, iter);
+        type var = dyna_get(array, type, iter);
 
 /* starting an iteration. */
-#define DYNA_FOREACH(array, type, var) \
+#define dyna_foreach(array, type, var) \
     pthread_rwlock_rdlock(&(array)->lock); \
     for (size_t i = 0; i < (array)->length; i++) { \
-        type var = DYNA_GET(array, type, i);
+        type var = dyna_get(array, type, i);
 
 /* starting an iteration, backwards. */
-#define DYNA_INV_FOREACH(array, type, var) \
+#define dyna_inv_foreach(array, type, var) \
     pthread_rwlock_rdlock(&(array)->lock); \
     for (size_t i = (array)->length; i != 0; i--) { \
-        type var = DYNA_GET(array, type, i - 1);
+        type var = dyna_get(array, type, i - 1);
 
 /* starting an iteration, backwards. */
-#define DYNA_INV_FOREACH_IT(array, type, var, iter) \
+#define dyna_inv_foreach_it(array, type, var, iter) \
     pthread_rwlock_rdlock(&(array)->lock); \
     for (size_t iter = (array)->length; iter != 0; iter--) { \
-        type var = DYNA_GET(array, type, iter - 1);
+        type var = dyna_get(array, type, iter - 1);
 
 /* ending an iteration. */
-#define DYNA_ENDFOREACH(array) \
+#define dyna_endforeach(array) \
         pthread_rwlock_unlock(&(array)->lock); \
     }
 #else
 /* starting an iteration. */
-#define DYNA_FOREACH_IT(array, type, var, iter) \
+#define dyna_foreach_it(array, type, var, iter) \
     for (size_t iter = 0; iter < (array)->length; iter++) { \
-        type var = DYNA_GET(array, type, iter);
+        type var = dyna_get(array, type, iter);
 
 /* starting an iteration. */
-#define DYNA_FOREACH(array, type, var) \
+#define dyna_foreach(array, type, var) \
     for (size_t i = 0; i < (array)->length; i++) { \
-        type var = DYNA_GET(array, type, i);
+        type var = dyna_get(array, type, i);
 
 /* starting an iteration, backwards. */
-#define DYNA_INV_FOREACH(array, type, var) \
+#define dyna_inv_foreach(array, type, var) \
     for (size_t i = (array)->length; i != 0; i--) { \
-        type var = DYNA_GET(array, type, i - 1);
+        type var = dyna_get(array, type, i - 1);
 
 /* starting an iteration, backwards. */
-#define DYNA_INV_FOREACH_IT(array, type, var, iter) \
+#define dyna_inv_foreach_it(array, type, var, iter) \
     for (size_t iter = (array)->length; iter != 0; iter--) { \
-        type var = DYNA_GET(array, type, iter - 1);
+        type var = dyna_get(array, type, iter - 1);
 
 /* ending an iteration. */
-#define DYNA_ENDFOREACH(array) }
+#define dyna_endforeach(array) }
 #endif /* TAPI_THREAD_SAFE */
 #endif /* TAPI_DYNA_H */

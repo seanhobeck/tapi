@@ -1,14 +1,14 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-09
+ * @date 2026-06-26
  */
 #ifndef PATCH_H
 #define PATCH_H
 
-/*! @uses det_call_t. */
+/*! uses det_call_t. */
 #include "det.h"
 
-/*! @uses tapi_context_t. */
+/*! uses tapi_context_t. */
 #include <tapi/tapi.h>
 
 /**

@@ -1,19 +1,19 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-09
+ * @date 2026-06-26
  */
 #include "patch.h"
 
-/*! @uses fprintf, stderr. */
+/*! uses fprintf, stderr. */
 #include <stdio.h>
 
-/*! @uses arch_t, get_arch. */
+/*! uses arch_t, get_arch. */
 #include "arch.h"
 
-/*! @uses guard_create, guard_close. */
+/*! uses guard_create, guard_close. */
 #include "guard.h"
 
-/*! @uses internal. */
+/*! uses internal. */
 #include "intt.h"
 
 /**

@@ -5,17 +5,67 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-09
+ * @date 2026-06-26
  */
 #ifndef TAPI_MOCK_H
 #define TAPI_MOCK_H
 
-/*! @uses TAPI_EXPORT, tapi_context_t. */
+/*! uses TAPI_EXPORT, tapi_context_t. */
 #include <tapi/tapi.h>
 
-/*! @uses size_t. */
+/*! uses size_t. */
 #include <stddef.h>
+
+/*! uses bool, true, false. */
+#include <stdbool.h>
 /** \endcond */
+
+/** an enum for different results from an action. */
+typedef enum {
+    E_TAPI_ACTION_RESULT_ALLOW = 0x0, /* allow the mock to proceed as usual. */
+    E_TAPI_ACTION_RESULT_FAIL, /* force the mock to fail. */
+} e_tapi_action_result_t;
+
+/** a function pointer for an action/ condition that is checked
+ *  at the start of every autostub implemented by tapi. if an action
+ *  returns true, the autostub will trigger a failure, and henceforth
+ *  the tested function will receive a failure from this special mock
+ *  as well. */
+typedef e_tapi_action_result_t (*tapi_action_t)(void* blank, ...);
+
+/**
+ * @brief enum for differentiating different types of mocks.
+ *
+ *  'regular mock': replace the very first found call to <target> within the original function.
+ *  'special mock': replace all calls to <target> within the original function.
+ *  'auto mock': this is a library/system call where the address needs to be resolved, treated like
+ *      a 'special mock' where stubs can be provided automatically if the function is commonly used.
+ */
+typedef enum {
+    E_TAPI_MOCK_REGULAR = 0x1, /* the very first occurrence of the call target is replaced. */
+    E_TAPI_MOCK_SPECIAL, /* all occurrences of the call target are replaced. */
+    E_TAPI_MOCK_AUTO, /* possibly autostub the mock, this is reserved for library/system calls. */
+} e_tapi_mock_type_t;
+
+/**
+ * @brief a structure to keep track of special mocks that can be automatically stubbed with
+ *  pre-built stubs for ease of use.
+ *
+ * `tapi_autostub_t` is a data structure for representing the data required internally by tapi to
+ *  automatically stub commonly used special mocks, ie. malloc, free, calloc, fopen, etc... these
+ *  functions can then be conditioned to fail under certain conditions, allowing testers to test
+ *  for failures.
+ */
+typedef struct {
+    /** pointer to the stub itself. */
+    void* stub;
+    /** pointer to an action */
+    tapi_action_t action;
+    /** the name of the special function (library/system call). */
+    char* name;
+    /** should we be setting errno on failure for this action? */
+    bool set_errno;
+} tapi_autostub_t;
 
 /**
  * @brief a patch-based runtime mock for redirecting calls within a tested function.
@@ -25,9 +75,10 @@
  *   arithmetic, and functionality. mocks/ stub functions can be as simple as returning a
  *   value, or as complex as you need them to be; complexity is completely left up to the user.
  *
- * @see tapi_mock_create()
- * @see tapi_mock_apply()
- * @see tapi_mock_restore()
+ * @see tapi_make_mock()
+ * @see tapi_make_special_mock()
+ * @see tapi_apply_mock()
+ * @see tapi_cleanup_mocK()
  */
 typedef struct {
     /** original, mocked, and target functions. */
@@ -40,56 +91,98 @@ typedef struct {
     unsigned char orig_bytes[32u];
     /** first 32 bytes of the mocked function. */
     unsigned char mocked_bytes[32u];
+    /** is this a special kind of mock, ie. does it need to all possible call targets? */
+    e_tapi_mock_type_t type;
+    /** a pointer to an autostub structure if found in tapi's internal table (see above). */
+    tapi_autostub_t* autostub;
 } tapi_mock_t;
 
 /**
- * @brief mock the first call occurrence to a target with a call
- *  to a mocked function instead.
+ * @brief mock the first/all call occurrence(s) to a target with a call to a mocked function
+ *  instead. this will automatically allocate the mock structure ready to be applied whenever and
+ *  wherever required.
  *
  * @param orig the original function to search for target in.
  * @param target the target address to be replaced.
  * @param mocked the function to replace the target call with.
- * @return an allocated mock structure with all data, ready to be applied.
+ * @param is_special the mock should replace all call targets within the target function.
+ * @return an allocated mock structure ready to be applied.
  */
-TAPI_EXPORT tapi_mock_t*
-tapi_mock_create(void* orig, void* target, void* mocked);
+tapi_mock_t*
+tapi_make_mock(void* orig, void* target, void* mocked, bool is_special);
+
+/** @note this means that we are using a maximum search len of 4096 bytes for determining a
+ * functions size; we only iterate through 4096 bytes worth of possible opcodes (every
+ * architecture varies in opcode size). this can be overwritten like so,
+ *
+ * ...
+ * #undef TAPI_MAX_DET_DEPTH
+ * #define TAPI_MAX_DET_DEPTH (your_value)
+ * ...
+ */
+#define TAPI_MAX_DET_DEPTH 0x1000
 
 /**
- * @brief apply the mocks patch in memory; write stub to route to
- *  the given mocked function pointer.
+ * @brief apply a call target (or multiple) patch in memory to route to the given stub by the
+ * mock. this is usually performed by `tapi_run_tests`, but can be used under special
+ * circumstances if required.
  *
  * @param context the context of tapi to be used.
  * @param mock the mock to be applied.
  */
 TAPI_EXPORT void
-tapi_mock_apply(tapi_context_t* context, tapi_mock_t* mock);
+tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock);
 
 /**
- * @brief restore the contents of a function and free the mock.
+ * @brief restore the contents of a function and free the mock. this frees all the data held by
+ *  the mock, the pointer itself and the guard held within the context. 'mock' should not be used
+ *  after this is called, either copy the data required before this call or create a new mock.
  *
  * @param context the context of tapi to be used.
  * @param mock the mock structure to be freed and restored.
  */
 TAPI_EXPORT void
-tapi_mock_restore(tapi_context_t* context, tapi_mock_t* mock);
+tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock);
 
-/** create a simple mock to return a given value. */
-#define TAPI_MOCK_RETURN(func_name, return_type, return_value) \
+/** quickly create an action function to be used in an autostub. */
+#define tapi_action(action_name, ...) \
+    e_tapi_action_result_t action_name(void* blank, __VA_ARGS__)
+
+/** quickly create a simple stub to return a given value. */
+#define tapi_stub_return(func_name, return_type, return_value) \
     return_type func_name() { return return_value; }
 
-/** create a mock to return a given integer. */
-#define TAPI_MOCK_RETURN_INT(func_name, return_value) \
-    TAPI_MOCK_RETURN(func_name, int, return_value)
+/** quickly create a stub to return a given integer. */
+#define tapi_stub_return_int(func_name, return_value) \
+    tapi_stub_return(func_name, int, return_value)
 
-/** create a mock to return a given pointer. */
-#define TAPI_MOCK_RETURN_PTR(func_name, return_value) \
-    TAPI_MOCK_RETURN(func_name, void*, return_value)
+/** quickly create a stub to return a given pointer. */
+#define tapi_stub_return_ptr(func_name, return_value) \
+    tapi_stub_return(func_name, void*, return_value)
 
-/** create a mock to return null. */
-#define TAPI_MOCK_RETURN_NULL(func_name) \
-    TAPI_MOCK_RETURN(func_name, void*, null)
+/** quickly create a stub to return null. */
+#define tapi_stub_return_null(func_name) \
+    tapi_stub_return(func_name, void*, null)
 
-/** create a mock to return a string/ string literal. */
-#define TAPI_MOCK_RETURN_STRL(func_name, return_value) \
-    TAPI_MOCK_RETURN(func_name, char*, return_value)
+/** quickly create a stub to return a string/ string literal. */
+#define tapi_stub_return_strl(func_name, return_value) \
+    tapi_stub_return(func_name, char*, return_value)
+
+/** quickly add a test with a mock value to the test suite. */
+#define tapi_add_test_and_mock(context, name, test_function, tested_function, target_function, \
+    stub_function) \
+    tapi_test_t* TAPI_CONCAT(_gentest_, __LINE__) = tapi_make_test(name, test_function); \
+    tapi_mock_t* TAPI_CONCAT(_genmock_, __LINE__) = tapi_make_mock(tested_function, \
+        target_function, stub_function, false); \
+    tapi_dyna_push(TAPI_CONCAT(_gentest_, __LINE__)->mocks, TAPI_CONCAT(_genmock_, __LINE__)); \
+    tapi_dyna_push(context->tests, TAPI_CONCAT(_gentest_, __LINE__));
+
+/** quickly add a test with a mock value to the test suite. */
+#define tapi_add_test_and_special_mock(context, name, test_function, tested_function, \
+    target_function, stub_function, action) \
+    tapi_test_t* TAPI_CONCAT(_gentest_, __LINE__) = tapi_make_test(name, test_function); \
+    tapi_mock_t* TAPI_CONCAT(_genmock_, __LINE__) = tapi_make_mock(tested_function, \
+        target_function, stub_function, true); \
+    tapi_dyna_push(TAPI_CONCAT(_gentest_, __LINE__)->mocks, TAPI_CONCAT(_genmock_, __LINE__)); \
+    tapi_dyna_push(context->tests, TAPI_CONCAT(_gentest_, __LINE__));
 #endif /* TAPI_MOCK_H */

@@ -1,26 +1,26 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-07
+ * @date 2026-06-26
  */
-/*! @uses int. module to be tested. */
+/*! uses int. module to be tested. */
 #include "int/sig.h"
 
-/*! @uses arch_t, get_arch. */
+/*! uses arch_t, get_arch. */
 #include "int/arch.h"
 
-/*! @uses assert. */
+/*! uses assert. */
 #include <assert.h>
 
-/*! @uses size_t. */
+/*! uses size_t. */
 #include <stddef.h>
 
-/*! @uses printf. */
+/*! uses printf. */
 #include <stdio.h>
 
-/*! @uses strcpy. */
+/*! uses strcpy. */
 #include <string.h>
 
-/*! @uses cs_insn. */
+/*! uses cs_insn. */
 #include <capstone/capstone.h>
 
 /**

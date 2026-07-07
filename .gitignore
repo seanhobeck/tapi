@@ -71,3 +71,5 @@ docs/xml
 /.idea/misc.xml
 /.idea/
 /.run/unit.run.xml
+/.todo
+/inp/

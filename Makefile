@@ -46,11 +46,19 @@ vendor_lib := vendor/build/$(arch)/lib
 lib_name := tapi
 lib_file := $(bin_dir)/lib$(lib_name).so
 
-# vendor flags.
+# vendor flags. prefer pkg-config (a system-wide capstone install), otherwise
+# fall back to the vendored static libcapstone.a built by scripts/get-deps. this
+# removes the hard dependency on pkg-config being installed on the build host.
 capstone_cflags := $(shell $(pkg_config) --cflags capstone 2>/dev/null)
 capstone_libs   := $(shell $(pkg_config) --libs   capstone 2>/dev/null)
 have_capstone := 0
 ifneq ($(strip $(capstone_libs)),)
+  have_capstone := 1
+else ifneq ($(wildcard $(vendor_lib)/libcapstone.a),)
+  # no pkg-config / no system capstone; link the vendored static archive in
+  # (it is built -fPIC, so it folds cleanly into the shared lib_file).
+  capstone_cflags := -I$(vendor_include) -I$(vendor_include)/capstone
+  capstone_libs   := -L$(vendor_lib) -l:libcapstone.a
   have_capstone := 1
 endif
 

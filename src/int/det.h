@@ -1,17 +1,17 @@
 /**
  * @author Sean Hobeck
- * @date 2026-05-25
+ * @date 2026-06-26
  */
 #ifndef DET_H
 #define DET_H
 
-/*! @uses size_t. */
+/*! uses size_t. */
 #include <stddef.h>
 
-/*! @uses uint8_t. */
+/*! uses uint8_t. */
 #include <stdint.h>
 
-/*! @uses bool, true, false. */
+/*! uses bool, true, false. */
 #include <stdbool.h>
 
 /**

@@ -1,20 +1,20 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-03-09
+ * @date 2026-06-26
  */
 #include <tapi/capture.h>
 
-/*! @uses calloc, close. */
+/*! uses calloc, close. */
 #include <stdlib.h>
 
-/*! @uses pipe, dup, dup2. */
+/*! uses pipe, dup, dup2. */
 #include <unistd.h>
 
-/*! @uses errno. */
+/*! uses errno. */
 #include <errno.h>
 
-/*! @uses strncpy. */
+/*! uses strncpy. */
 #include <string.h>
 /** \endcond */
 
@@ -26,7 +26,7 @@
  * @return a pointer to an allocated capture structure.
  */
 tapi_capture_t*
-tapi_capture_make(tapi_sink_t* sink, tapi_stream_t stream) {
+tapi_make_capture(tapi_sink_t* sink, tapi_stream_t stream) {
     /* allocate the structure. */
     tapi_capture_t* capture = calloc(1u, sizeof *capture);
     capture->sink = sink;
@@ -68,7 +68,7 @@ tapi_capture_make(tapi_sink_t* sink, tapi_stream_t stream) {
  * @param capture the capture to be ended.
  */
 void
-tapi_capture_end(tapi_capture_t* capture) {
+tapi_stop_capture(tapi_capture_t* capture) {
     /* flush the stream which we capture from. */
     fflush(capture->stream);
     if (dup2(capture->dst_fd, fileno(capture->stream)) == -1) {
@@ -115,6 +115,6 @@ tapi_capture_end(tapi_capture_t* capture) {
  * @param capture the capture to be freed.
  */
 void
-tapi_capture_destroy(tapi_capture_t* capture) {
+tapi_cleanup_capture(tapi_capture_t* capture) {
     free(capture);
 }

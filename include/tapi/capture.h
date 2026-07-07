@@ -5,13 +5,16 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-05-29
+ * @date 2026-06-26
  */
 #ifndef TAPI_CAPTURE_H
 #define TAPI_CAPTURE_H
 
-/*! @uses size_t, FILE, tapi_sink_t, ... */
+/*! uses size_t, FILE, tapi_sink_t, ... */
 #include <tapi/sink.h>
+
+/*! uses strcmp. */
+#include <string.h>
 /** \endcond */
 
 /**
@@ -22,9 +25,9 @@
  *   tested function may print to the console and or any expected errors it should throw along
  *   the way.
  *
- * @see tapi_capture_make()
- * @see tapi_capture_end()
- * @see tapi_capture_destroy()
+ * @see tapi_make_capture()
+ * @see tapi_stop_capture()
+ * @see tapi_cleanup_capture()
  */
 typedef struct {
     /** the destination file descriptor (buffer or file). */
@@ -45,7 +48,7 @@ typedef struct {
  * @return a pointer to an allocated capture structure.
  */
 TAPI_EXPORT tapi_capture_t*
-tapi_capture_make(tapi_sink_t* sink, tapi_stream_t stream);
+tapi_make_capture(tapi_sink_t* sink, tapi_stream_t stream);
 
 /**
  * @brief stop capturing data from a stream.
@@ -53,7 +56,7 @@ tapi_capture_make(tapi_sink_t* sink, tapi_stream_t stream);
  * @param capture the capture to be ended.
  */
 TAPI_EXPORT void
-tapi_capture_end(tapi_capture_t* capture);
+tapi_stop_capture(tapi_capture_t* capture);
 
 /**
  * @brief free a capture structure.
@@ -61,23 +64,9 @@ tapi_capture_end(tapi_capture_t* capture);
  * @param capture the capture to be freed.
  */
 TAPI_EXPORT void
-tapi_capture_destroy(tapi_capture_t* capture);
+tapi_cleanup_capture(tapi_capture_t* capture);
 
-/** quickly make a capture and sink for a set stream. */
-#define TAPI_CAPTURE(stream, size) \
-    tapi_sink_t* sink = tapi_sink_make(); \
-    tapi_sink_setdbf(sink, size); \
-    tapi_capture_t* capture = tapi_capture_make(sink, stream);
-
-/** quickly stop capturing; use with tapi_quick_capture to make your tests more readable. */
-#define TAPI_END_CAPTURE() \
-    tapi_capture_end(capture);
-
-/**
- * quickly destroy/ cleanup a capturing stream; use with tapi_quick_capture to make your tests
- *   more readable.
- */
-#define TAPI_DESTROY_CAPTURE() \
-    tapi_capture_destroy(capture); \
-    tapi_sink_destroy(sink);
+/** assert on a string stored within a sink. */
+#define tapi_assert_sink(sink, string) \
+    TAPI_ASSERT(!strcmp(sink->buffer.data, string));
 #endif /* TAPI_CAPTURE_H */
