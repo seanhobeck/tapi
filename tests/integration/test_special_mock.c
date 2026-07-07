@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-26
+ * @date 2026-07-07
  */
 #include <tapi/tapi.h>
 
@@ -31,6 +31,7 @@ int sub(int a, int b) {
 
 int
 target_function() {
+    void* a = calloc(1u, 800);
     int c = add(12, 13);
     int d = add(c, 14);
     c = sub(c, 4);
@@ -51,7 +52,6 @@ tapi_test(test_target_add) {
 }
 
 int main() {
-    void* a = calloc(1u, 800);
     tapi_context_t* context = tapi_init();
     tapi_add_test_and_special_mock(context, "test_target_add", \
         test_target_add, target_function, add, stub_add, 0x0);

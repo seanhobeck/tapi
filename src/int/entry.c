@@ -1,17 +1,17 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-28
+ * @date 2026-07-07
  */
 /*! uses plt_init. */
-#include "int/pltr.h"
+#include "int/plt.h"
 
 /** @brief library entry point. */
 #ifdef __gnu_linux__
 __attribute__((constructor))
 #endif
 void lt_entry() {
-    pltr_init();
+    plt_init();
 }
 
 /** @brief library exit point. */
