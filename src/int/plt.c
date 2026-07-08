@@ -38,7 +38,8 @@ internal uintptr_t elf_address;
 
 /* first object enumerated is the main program; dlpi_addr is its load bias. */
 internal int
-elf_baddr_callback(struct dl_phdr_info* info, size_t size, void* data) {
+elf_baddr_callback(struct dl_phdr_info* info, __attribute__((unused)) size_t size, \
+    __attribute__((unused))  void* data) {
     elf_address = info->dlpi_addr;
     return 1u; /* stop after the first. */
 }
