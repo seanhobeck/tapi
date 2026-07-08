@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-07
+ * @date 2026-07-08
  */
 #define _GNU_SOURCE /*! needed for dl_iterate_phdr. */
 #include "plt.h"
@@ -38,7 +38,8 @@ internal uintptr_t elf_address;
 
 /* first object enumerated is the main program; dlpi_addr is its load bias. */
 internal int
-elf_baddr_callback(struct dl_phdr_info* info, size_t size, void* data) {
+elf_baddr_callback(struct dl_phdr_info* info, __attribute__((unused)) size_t size, \
+    __attribute__((unused))  void* data) {
     elf_address = info->dlpi_addr;
     return 1u; /* stop after the first. */
 }
@@ -54,17 +55,25 @@ plt_init(void) {
     plt_table = tapi_dyna_create();
 
     /* find the .dynstr, .dynsym, etc... section header locations and read them. */
+    bool is_rel = false;
     elf_shdr_t* dynsym = 0x0, *dynstr = 0x0, *rela = 0x0, *plt = 0x0;
     dyna_foreach(elf->shdrs, elf_shdr_t*, iter)
         /* for dynamic (PIE) symbols and string associations. */
-        if (!strcmp(".dynsym", elf_shdr_name(elf, iter))) dynsym = iter;
-        if (!strcmp(".dynstr", elf_shdr_name(elf, iter))) dynstr = iter;
+        const char* shdr_name = elf_shdr_name(elf, iter);
+        if (shdr_name == 0x0) continue;
+        if (!strcmp(".dynsym", shdr_name))
+            dynsym = iter;
+        if (!strcmp(".dynstr", shdr_name))
+            dynstr = iter;
 
         /* rela.plt and plt.sec section headers. */
-        if (!strcmp(".rel.plt", elf_shdr_name(elf, iter)) \
-            || !strcmp(".rela.plt", elf_shdr_name(elf, iter))) rela = iter;
-        if (!strcmp(".plt.sec", elf_shdr_name(elf, iter)) \
-            || !strcmp(".plt", elf_shdr_name(elf, iter))) plt = iter;
+        bool is_relplt = !strcmp(".rel.plt", shdr_name);
+        if (is_relplt || !strcmp(".rela.plt", shdr_name)) {
+            is_rel = is_relplt;
+            rela = iter;
+        }
+        if (!strcmp(".plt.sec", shdr_name) || !strcmp(".plt", shdr_name))
+            plt = iter;
     dyna_endforeach(elf->shdrs);
 
     /* if we didn't find the section headers then we can't continue. */
@@ -181,31 +190,54 @@ plt_init(void) {
         }
     }
     else if (elf->class == ELF_CLASS_32) {
-        elf32_rela_t* rel = (elf32_rela_t*) rela_data;
         elf32_sym_t* sym = (elf32_sym_t*) dynsym_data;
         size_t num_rel = rela->sh_size / rela->sh_entsize;
         uintptr_t plt_address = plt->sh_addr;
 
-        /* ... */
         /* iterate... */
-        for (size_t i = 0u; i < num_rel; i++) {
-            uint32_t sym_idx = ELF32_R_SYM(rel[i].r_info);
-            if (sym_idx == 0) continue;
+        if (is_rel) {
+            elf32_rel_t* rel = (elf32_rel_t*) rela_data;
+            for (size_t i = 0u; i < num_rel; i++) {
+                uint32_t sym_idx = ELF32_R_SYM(rel[i].r_info);
+                if (sym_idx == 0) continue;
 
-            /* calculate the name for the symbol. */
-            char* name = (char*)dynstr_data + sym[sym_idx].st_name;
-            if (!name || name[0] == '\0' || name[0] == '_') continue;
-            if (strstr(name, "tapi_")) continue; /* we want to ignore tapi symbols. */
+                /* calculate the name for the symbol. */
+                char* name = (char*)dynstr_data + sym[sym_idx].st_name;
+                if (!name || name[0] == '\0' || name[0] == '_') continue;
+                if (strstr(name, "tapi_")) continue; /* we want to ignore tapi symbols. */
 
-            /* calculate the associated stub address. */
-            uintptr_t offset = plt0_size + plt_size * i;
-            void* assoc_addr = (void*)(elf_address + plt_address + offset);
+                /* calculate the associated stub address. */
+                uintptr_t offset = plt0_size + plt_size * i;
+                void* assoc_addr = (void*)(elf_address + plt_address + offset);
 
-            /* create a plt entry and add it. */
-            pltr_asc_t* entry = calloc(1u, sizeof *entry);
-            entry->name = name;
-            entry->address = assoc_addr;
-            tapi_dyna_push(plt_table, entry);
+                /* create a plt entry and add it. */
+                pltr_asc_t* entry = calloc(1u, sizeof *entry);
+                entry->name = name;
+                entry->address = assoc_addr;
+                tapi_dyna_push(plt_table, entry);
+            }
+        }
+        else {
+            elf32_rela_t* rel = (elf32_rela_t*) rela_data;
+            for (size_t i = 0u; i < num_rel; i++) {
+                uint32_t sym_idx = ELF32_R_SYM(rel[i].r_info);
+                if (sym_idx == 0) continue;
+
+                /* calculate the name for the symbol. */
+                char* name = (char*)dynstr_data + sym[sym_idx].st_name;
+                if (!name || name[0] == '\0' || name[0] == '_') continue;
+                if (strstr(name, "tapi_")) continue; /* we want to ignore tapi symbols. */
+
+                /* calculate the associated stub address. */
+                uintptr_t offset = plt0_size + plt_size * i;
+                void* assoc_addr = (void*)(elf_address + plt_address + offset);
+
+                /* create a plt entry and add it. */
+                pltr_asc_t* entry = calloc(1u, sizeof *entry);
+                entry->name = name;
+                entry->address = assoc_addr;
+                tapi_dyna_push(plt_table, entry);
+            }
         }
     }
 
