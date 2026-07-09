@@ -73,3 +73,6 @@ docs/xml
 /.run/unit.run.xml
 /.todo
 /inp/
+
+# core dumps
+qemu_*.core

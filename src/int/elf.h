@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-28
+ * @date 2026-07-08
  */
 #ifndef ELF_H
 #define ELF_H
@@ -134,6 +134,12 @@ typedef struct {
     uint32_t r_info;    /* index and type of relocation. */
     int32_t r_addend;   /* constant addend used to compute value. */
 } __attribute__((packed)) elf32_rela_t;
+
+/** @brief an elf32 rel? */
+typedef struct {
+    uint32_t r_offset;  /* location at which to apply the action. */
+    uint32_t r_info;    /* index and type of relocation. */
+} __attribute__((packed)) elf32_rel_t;
 
 /** @brief an elf64 rela? */
 typedef struct {

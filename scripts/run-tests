@@ -15,6 +15,7 @@ run_per_arch() {
 # run x86_64 INTEGRATION tests.
 run_per_arch qemu-amd64 x86_64-linux-gnu x86_64/tests/integration/test_capture int_test_capture
 run_per_arch qemu-amd64 x86_64-linux-gnu x86_64/tests/integration/test_mock int_test_mock
+run_per_arch qemu-amd64 x86_64-linux-gnu x86_64/tests/integration/test_special_mock int_test_special_mock
 
 # run x86_64 UNIT tests.
 run_per_arch qemu-amd64 x86_64-linux-gnu x86_64/tests/unit/test_det unit_test_det
@@ -22,25 +23,28 @@ run_per_arch qemu-amd64 x86_64-linux-gnu x86_64/tests/unit/test_sig unit_test_si
 run_per_arch qemu-amd64 x86_64-linux-gnu x86_64/tests/unit/test_guard unit_test_guard
 run_per_arch qemu-amd64 x86_64-linux-gnu x86_64/tests/unit/test_patch unit_test_patch
 
-# run x86 tests.
-run_per_arch qemu-i386 x86-linux-gnu x86/tests/integration/test_capture int_test_capture
-run_per_arch qemu-i386 x86-linux-gnu x86/tests/integration/test_mock int_test_mock
-run_per_arch qemu-i386 x86-linux-gnu x86/tests/unit/test_det unit_test_det
-run_per_arch qemu-i386 x86-linux-gnu x86/tests/unit/test_sig unit_test_sig
-run_per_arch qemu-i386 x86-linux-gnu x86/tests/unit/test_guard unit_test_guard
-run_per_arch qemu-i386 x86-linux-gnu x86/tests/unit/test_patch unit_test_patch
-
 # run aarch64 tests.
 run_per_arch qemu-aarch64 aarch64-linux-gnu aarch64/tests/integration/test_capture int_test_capture
 run_per_arch qemu-aarch64 aarch64-linux-gnu aarch64/tests/integration/test_mock int_test_mock
+run_per_arch qemu-aarch64 aarch64-linux-gnu aarch64/tests/integration/test_special_mock int_test_special_mock
 run_per_arch qemu-aarch64 aarch64-linux-gnu aarch64/tests/unit/test_det unit_test_det
 run_per_arch qemu-aarch64 aarch64-linux-gnu aarch64/tests/unit/test_sig unit_test_sig
 run_per_arch qemu-aarch64 aarch64-linux-gnu aarch64/tests/unit/test_guard unit_test_guard
 run_per_arch qemu-aarch64 aarch64-linux-gnu aarch64/tests/unit/test_patch unit_test_patch
 
+# run x86 tests.
+run_per_arch qemu-i386 x86-linux-gnu x86/tests/integration/test_capture int_test_capture
+run_per_arch qemu-i386 x86-linux-gnu x86/tests/integration/test_mock int_test_mock
+run_per_arch qemu-i386 x86-linux-gnu x86/tests/integration/test_special_mock int_test_special_mock
+run_per_arch qemu-i386 x86-linux-gnu x86/tests/unit/test_det unit_test_det
+run_per_arch qemu-i386 x86-linux-gnu x86/tests/unit/test_sig unit_test_sig
+run_per_arch qemu-i386 x86-linux-gnu x86/tests/unit/test_guard unit_test_guard
+run_per_arch qemu-i386 x86-linux-gnu x86/tests/unit/test_patch unit_test_patch
+
 # run arm32 tests.
 run_per_arch qemu-arm arm-linux-gnueabihf arm32/tests/integration/test_capture int_test_capture
 run_per_arch qemu-arm arm-linux-gnueabihf arm32/tests/integration/test_mock int_test_mock
+run_per_arch qemu-arm arm-linux-gnueabihf arm32/tests/integration/test_special_mock int_test_special_mock
 run_per_arch qemu-arm arm-linux-gnueabihf arm32/tests/unit/test_det unit_test_det
 run_per_arch qemu-arm arm-linux-gnueabihf arm32/tests/unit/test_sig unit_test_sig
 run_per_arch qemu-arm arm-linux-gnueabihf arm32/tests/unit/test_guard unit_test_guard

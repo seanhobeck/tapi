@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-28
+ * @date 2026-07-08
  */
 #include "elf.h"
 
@@ -116,7 +116,14 @@ elf_parse32(uint8_t* buffer, size_t size) {
         for (uint16_t i = 0; i < elf->phnum; i++) {
             elf32_phdr_t* phdr32 = (elf32_phdr_t*)(buffer + elf->phoff + i * sizeof(elf32_phdr_t));
             elf_phdr_t* phdr = calloc(1u, sizeof *phdr);
-            memcpy(phdr, phdr32, sizeof *phdr);
+            phdr->p_type = phdr32->p_type;
+            phdr->p_flags = phdr32->p_flags;
+            phdr->p_offset = phdr32->p_offset;
+            phdr->p_vaddr = phdr32->p_vaddr;
+            phdr->p_paddr = phdr32->p_paddr;
+            phdr->p_filesz = phdr32->p_filesz;
+            phdr->p_memsz = phdr32->p_memsz;
+            phdr->p_align = phdr32->p_align;
             tapi_dyna_push(elf->phdrs, phdr);
         }
     }
@@ -126,7 +133,16 @@ elf_parse32(uint8_t* buffer, size_t size) {
         for (uint16_t i = 0; i < elf->shnum; i++) {
             elf32_shdr_t* shdr32 = (elf32_shdr_t*)(buffer + elf->shoff + i * sizeof(elf32_shdr_t));
             elf_shdr_t* shdr = calloc(1u, sizeof *shdr);
-            memcpy(shdr, shdr32, sizeof *shdr);
+            shdr->sh_name = shdr32->sh_name;
+            shdr->sh_type = shdr32->sh_type;
+            shdr->sh_flags = shdr32->sh_flags;
+            shdr->sh_addr = shdr32->sh_addr;
+            shdr->sh_offset = shdr32->sh_offset;
+            shdr->sh_size = shdr32->sh_size;
+            shdr->sh_link = shdr32->sh_link;
+            shdr->sh_info = shdr32->sh_info;
+            shdr->sh_addralign = shdr32->sh_addralign;
+            shdr->sh_entsize = shdr32->sh_entsize;
             tapi_dyna_push(elf->shdrs, shdr);
         }
 
@@ -306,7 +322,8 @@ elf_free(elf_t* elf) {
  */
 const char*
 elf_shdr_name(elf_t* elf, elf_shdr_t* shdr) {
-    if (!elf || !shdr || !elf->shstrtab) return 0x0;
+    if (!elf || !shdr || !elf->shstrtab|| !elf->shstrtab) return 0x0;
+    if (elf->shstrtab_size == 0) return 0x0;
     if (shdr->sh_name >= elf->shstrtab_size) return 0x0;
 
     const char* s = elf->shstrtab + shdr->sh_name;

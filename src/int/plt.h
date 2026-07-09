@@ -1,11 +1,14 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-07
+ * @date 2026-07-09
  */
 #ifndef PLT_H
 #define PLT_H
 
-/** @brief ... */
+/**
+ * @brief a structure to keep track of associated system/library calls names to
+ *  their respective stub addresses within the procedure-linkage-table (plt).
+ */
 typedef struct {
     char* name; /* name of the plt stub. */
     void* address; /* address of the stub. */
@@ -24,4 +27,8 @@ plt_init(void);
  */
 void*
 plt_resolve(const char* name);
+
+/** @brief clean up the internal plt_table. */
+void
+plt_cleanup(void);
 #endif /* PLT_H */

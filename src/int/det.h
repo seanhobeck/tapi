@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-26
+ * @date 2026-07-09
  */
 #ifndef DET_H
 #define DET_H
@@ -13,6 +13,9 @@
 
 /*! uses bool, true, false. */
 #include <stdbool.h>
+
+/*! uses tapi_dyna_t. */
+#include <tapi/dyna.h>
 
 /**
  * @brief find the size of the function in memory.
@@ -34,11 +37,21 @@ typedef struct {
     size_t size; /* instruction size. */
     uint8_t bytes[32u]; /* bytes used in the call (max 32). */
     bool is_rel, is_thumb; /* is it a relative address?, are we arm thumb mode? */
-    int32_t orig_off; /* ... */
+    int32_t orig_off; /* the original offset size. */
 } det_call_t;
 
 /**
- * @brief determine the call target within a function in memory.
+ * @brief determine all call targets within a function in memory.
+ *
+ * @param source the function in memory to search through.
+ * @param target the target call to look for.
+ * @return a dynamic array of allocated det_call_t structures.
+ */
+tapi_dyna_t*
+det_call_targets(void* source, const void* target);
+
+/**
+ * @brief determine a call target within a function in memory.
  *
  * @param source the function in memory to search through.
  * @param target the target call to look for.

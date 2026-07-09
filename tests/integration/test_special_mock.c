@@ -31,9 +31,8 @@ int sub(int a, int b) {
 
 int
 target_function() {
-    void* a = calloc(1u, 800);
-    int c = add(12, 13);
-    int d = add(c, 14);
+    int c = add(12, 13); /* first call */
+    int d = add(c, 14); /* second call */
     c = sub(c, 4);
     d = sub(d, 11);
     return d + c;
@@ -42,19 +41,30 @@ target_function() {
 
 tapi_stub_return_int(stub_add, 2);
 
-tapi_test(test_target_add) {
+tapi_test(test_target_add_1) {
     /* arrange & act. */
     int retval = target_function();
 
     /* assert. */
-    tapi_assert(retval == -11);
+    tapi_assert(retval == 3);
+    return E_TAPI_TEST_RESULT_PASSED;
+}
+
+tapi_test(test_target_add_2) {
+    /* arrange & act. */
+    int retval = target_function();
+
+    /* assert. */
+    tapi_assert(retval == 12);
     return E_TAPI_TEST_RESULT_PASSED;
 }
 
 int main() {
     tapi_context_t* context = tapi_init();
-    tapi_add_test_and_special_mock(context, "test_target_add", \
-        test_target_add, target_function, add, stub_add, 0x0);
+    tapi_add_test_and_special_mock(context, "test_target_add_call_1", \
+        test_target_add_1, target_function, add, stub_add, 1);
+    tapi_add_test_and_special_mock(context, "test_target_add_call_2", \
+        test_target_add_2, target_function, add, stub_add, 2);
     tapi_run_context(context);
     return 0;
 }
