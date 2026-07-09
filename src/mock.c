@@ -261,7 +261,7 @@ tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock) {
         return;
     }
 
-    /* is this a 'special/auto mock', if so we have to replace every occurrence. */
+    /* is this a 'regular/auto mock', if so we have to replace every occurrence. */
     if (mock->type != E_TAPI_MOCK_SPECIAL) {
         for (size_t i = 0u; i < mock->fun_size; i++) {
             det_call_t* call = det_call_target(mock->orig, mock->target);
