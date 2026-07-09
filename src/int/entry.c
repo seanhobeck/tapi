@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-07
+ * @date 2026-07-09
  */
 /*! uses plt_init. */
 #include "int/plt.h"
@@ -19,6 +19,6 @@ void lt_entry() {
 __attribute__((destructor))
 #endif
 void lt_exit() {
-
+    plt_cleanup();
 }
 /** \endcond */

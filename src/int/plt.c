@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-08
+ * @date 2026-07-09
  */
 #define _GNU_SOURCE /*! needed for dl_iterate_phdr. */
 #include "plt.h"
@@ -29,7 +29,7 @@
 /*! uses internal. */
 #include "intt.h"
 
-/* an internal list for all of the plt entries. */
+/* an internal list for all the plt entries. */
 internal tapi_dyna_t* plt_table;
 
 #ifdef __gnu_linux__
@@ -263,4 +263,13 @@ plt_resolve(const char* name) {
         if (!strcmp(name, iter->name)) return iter->address;
     dyna_endforeach(plt_table)
     return 0x0;
+};
+
+/** @brief clean up the internal plt_table. */
+void
+plt_cleanup(void) {
+    dyna_foreach(plt_table, pltr_asc_t*, iter)
+        free(iter);
+    dyna_endforeach(plt_table);
+    tapi_dyna_free(plt_table);
 };

@@ -31,6 +31,7 @@ test_strcmp_short(csh handle) {
     /* arrange. */
     char* a = "hello";
     cs_insn* b = cs_malloc(handle);
+    memset(b->op_str, 0, sizeof(b->op_str));
     strcpy(b->mnemonic, "hello");
 
     /* act & assert. */
@@ -47,6 +48,7 @@ test_strcmp_med(csh handle) {
     /* arrange. */
     char* a = "abcdefghijklmnop";
     cs_insn* b = cs_malloc(handle);
+    memset(b->op_str, 0, sizeof(b->op_str));
     strcpy(b->mnemonic, "abcdefghijklmnop");
 
     /* act & assert. */

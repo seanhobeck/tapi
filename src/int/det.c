@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-26
+ * @date 2026-07-09
  */
 #include "det.h"
 
@@ -403,6 +403,98 @@ is_call_arch(csh handle, cs_insn* insn, arch_t architecture) {
 }
 
 /**
+ * @brief determine all call targets within a function in memory.
+ *
+ * @param source the function in memory to search through.
+ * @param target the target call to look for.
+ * @return a dynamic array of allocated det_call_t structures.
+ */
+tapi_dyna_t*
+det_call_targets(void* source, const void* target) {
+    /* open memory for the compile-time architecture. */
+    csh handle;
+    arch_t architecture = get_arch();
+
+    /* detect if we need to use thumb based on the thumb bit. */
+    bool is_thumb = architecture.mode == CS_MODE_ARM && (uint64_t) source & 1u;
+    if (is_thumb)
+        architecture.mode = CS_MODE_THUMB;
+    cs_open(architecture.arch, architecture.mode, &handle);
+    cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
+
+    /* allocate the pointer. */
+    det_call_t* call = calloc(1u, sizeof *call);
+    if (call == 0x0) {
+        /* NOLINTNEXTLINE */
+        fprintf(stderr, "tapi, det_call_target; calloc failed; could not allocate memory for "
+                        "det_call_t*.\n");
+        return 0x0;
+    }
+    call->is_thumb = is_thumb;
+
+    /* set up address and size for the iteration. */
+    size_t size = det_function_size(source, 0x1000);
+    if (is_thumb)
+        source = (void*)((uintptr_t)source & ~1u);
+    const uint8_t* bytes = source;
+    uint64_t address = (uint64_t) source;
+    cs_insn* insn = cs_malloc(handle);
+    if (!insn) {
+        cs_close(&handle);
+        free(call);
+        /* NOLINTNEXTLINE */
+        fprintf(stderr, "tapi det_call_target, cs_malloc failed; could not allocate memory for "
+                        "instructions.\n");
+        return 0x0;
+    }
+
+    /* iterating. */
+    tapi_dyna_t* list = tapi_dyna_create();
+    while (cs_disasm_iter(handle, &bytes, &size, &address, insn)) {
+        /* is this a call instruction? */
+        if (is_call_arch(handle, insn, architecture)) {
+            /* get the target address */
+            switch (architecture.arch) {
+            case (CS_ARCH_X86): {
+                    /* check if we can find the target in the insn. */
+                    if e_intt_passed(find_call_bx86(target, call, insn, architecture.mode)) {
+                        tapi_dyna_push(list, call);
+                        call = calloc(1u, sizeof *call);
+                        call->is_thumb = is_thumb;
+                    }
+                    break;
+            }
+                /* same for both arm32 and aarch64. */
+            case (CS_ARCH_ARM): {
+                    /* this is really aarch32 + thumb. */
+                    if e_intt_passed(find_call_barm32(target, call, insn)) {
+                        tapi_dyna_push(list, call);
+                        call = calloc(1u, sizeof *call);
+                        call->is_thumb = is_thumb;
+                    }
+                    break;
+            }
+            case (CS_ARCH_AARCH64): {
+                    if e_intt_passed(find_call_baarch64(target, call, insn)) {
+                        tapi_dyna_push(list, call);
+                        call = calloc(1u, sizeof *call);
+                        call->is_thumb = is_thumb;
+                    }
+                    break;
+            }
+            default: break;
+            }
+        }
+    }
+
+    /* free & return. */
+    free(call);
+    cs_free(insn, 1u);
+    cs_close(&handle);
+    return list;
+};
+
+/**
  * @brief determine the call target within a function in memory.
  *
  * @param source the function in memory to search through.
@@ -454,7 +546,7 @@ det_call_target(void* source, const void* target) {
         if (is_call_arch(handle, insn, architecture)) {
             /* get the target address */
             switch (architecture.arch) {
-                case (CS_ARCH_X86): {
+            case (CS_ARCH_X86): {
                     /* check if we can find the target in the insn. */
                     if e_intt_passed(find_call_bx86(target, call, insn, architecture.mode)) {
                         cs_free(insn, 1u);
@@ -462,9 +554,9 @@ det_call_target(void* source, const void* target) {
                         return call;
                     }
                     break;
-                }
+            }
                 /* same for both arm32 and aarch64. */
-                case (CS_ARCH_ARM): {
+            case (CS_ARCH_ARM): {
                     /* this is really aarch32 + thumb. */
                     if e_intt_passed(find_call_barm32(target, call, insn)) {
                         cs_free(insn, 1u);
@@ -472,16 +564,16 @@ det_call_target(void* source, const void* target) {
                         return call;
                     }
                     break;
-                }
-                case (CS_ARCH_AARCH64): {
+            }
+            case (CS_ARCH_AARCH64): {
                     if e_intt_passed(find_call_baarch64(target, call, insn)) {
                         cs_free(insn, 1u);
                         cs_close(&handle);
                         return call;
                     }
                     break;
-                }
-                default: break;
+            }
+            default: break;
             }
         }
     }

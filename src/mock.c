@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-07
+ * @date 2026-07-09
  */
 #include <tapi/mock.h>
 
@@ -188,10 +188,41 @@ tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, tapi_acti
  */
 void
 tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock) {
-    /* if this is a 'special/auto mock' we need to find ALL occurrences of this call target. */
-    void* search = mock->orig;
+    /* we find all call targets to the target, then from there try to get the n-th index. */
+    if (mock->type == E_TAPI_MOCK_SPECIAL) {
+        tapi_dyna_t* list = det_call_targets(mock->orig, mock->target);
+        if (list == 0x0) return;
+
+        /* iterate through call call targets. */
+        if (list->length + 1u < mock->call_index) {
+            fprintf(stderr, "tapi_apply_mock; cannot find index %d for mock!\n", mock->call_index);
+            return;
+        }
+
+        /* get the call and work from there. */
+        det_call_t* call = dyna_get(list, det_call_t*, mock->call_index - 1u);
+        if (call == 0x0) return;
+        mock->call = call->call;
+        mock->size = call->size;
+        /* NOLINTNEXTLINE */
+        memcpy(mock->orig_bytes, call->bytes, mock->size);
+
+        /* apply the patch to the call, given the context. */
+        patch_call_target(context, call, mock->mocked);
+
+        /* we read the new bytes and store. */
+        /* NOLINTNEXTLINE */
+        memcpy(mock->mocked_bytes, mock->call, mock->size);
+        dyna_foreach(list, det_call_t*, call)
+            free(call);
+        dyna_endforeach(list)
+        tapi_dyna_free(list);
+        return;
+    }
+
+    /* if this is a 'regular/auto mock' we need to find ALL occurrences of this call target. */
     for (size_t i = 0u; i < mock->fun_size; i++) {;
-        det_call_t* call = det_call_target(search, mock->target);
+        det_call_t* call = det_call_target(mock->orig, mock->target);
         if (call == 0x0) break;
 
         /* if this is the first occurrence, we set the size and length of the call (they
@@ -199,27 +230,6 @@ tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock) {
         if (i == 0u) {
             mock->call = call->call;
             mock->size = call->size;
-        }
-        /* if we are a special mock, and we have hit the call index, then we patch. */
-        if (mock->type == E_TAPI_MOCK_SPECIAL) {
-            if (i + 1u == mock->call_index) {
-                mock->call = call->call;
-                mock->size = call->size;
-                /* NOLINTNEXTLINE */
-                memcpy(mock->orig_bytes, call->bytes, mock->size);
-
-                /* apply the patch to the call, given the context. */
-                patch_call_target(context, call, mock->mocked);
-
-                /* we read the new bytes and store. */
-                /* NOLINTNEXTLINE */
-                memcpy(mock->mocked_bytes, mock->call, mock->size);
-                free(call);
-                break;
-            }
-            search = call->call + call->size; /* continue reading from the last known call. */
-            free(call);
-            continue;
         }
         /* NOLINTNEXTLINE */
         memcpy(mock->orig_bytes, call->bytes, mock->size);
