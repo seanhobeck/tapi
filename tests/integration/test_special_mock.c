@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-07
+ * @date 2026-07-09
  */
 #include <tapi/tapi.h>
 
@@ -59,12 +59,36 @@ tapi_test(test_target_add_2) {
     return E_TAPI_TEST_RESULT_PASSED;
 }
 
+tapi_stub_return_int(stub_sub, -8);
+
+tapi_test(test_target_sub_1) {
+    /* arrange & act. */
+    int retval = target_function();
+
+    /* assert. */
+    tapi_assert(retval == 20);
+    return E_TAPI_TEST_RESULT_PASSED;
+}
+
+tapi_test(test_target_sub_2) {
+    /* arrange & act. */
+    int retval = target_function();
+
+    /* assert. */
+    tapi_assert(retval == 13);
+    return E_TAPI_TEST_RESULT_PASSED;
+}
+
 int main() {
     tapi_context_t* context = tapi_init();
     tapi_add_test_and_special_mock(context, "test_target_add_call_1", \
         test_target_add_1, target_function, add, stub_add, 1);
     tapi_add_test_and_special_mock(context, "test_target_add_call_2", \
         test_target_add_2, target_function, add, stub_add, 2);
+    tapi_add_test_and_special_mock(context, "test_target_sub_call_1", \
+        test_target_sub_1, target_function, sub, stub_sub, 1);
+    tapi_add_test_and_special_mock(context, "test_target_sub_call_2", \
+        test_target_sub_2, target_function, sub, stub_sub, 2);
     tapi_run_context(context);
     return 0;
 }

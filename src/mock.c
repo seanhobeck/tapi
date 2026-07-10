@@ -173,6 +173,7 @@ tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, tapi_acti
         if (!strcmp(target_name, autostub_table[i].name)) {
             mock->autostub = &autostub_table[i];
             mock->mocked = autostub_table[i].stub; /* set the stub. */
+            mock->autostub->action = action;
         }
     }
     return mock;

@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-07
+ * @date 2026-07-09
  */
 #ifndef TAPI_MOCK_H
 #define TAPI_MOCK_H
@@ -174,6 +174,15 @@ tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock);
 /** quickly create an action function to be used in an autostub. */
 #define tapi_action(action_name, ...) \
     e_tapi_action_result_t action_name(void* blank, __VA_ARGS__)
+
+/** quickly create a test with an automock to the test suite. */
+#define tapi_add_test_and_auto_mock(context, name, test_function, tested_function, target_name, \
+    stub_function, action) \
+    tapi_test_t* TAPI_CONCAT(_gentest_, __LINE__) = tapi_make_test(name, test_function); \
+    tapi_mock_t* TAPI_CONCAT(_genmock_, __LINE__) = tapi_make_auto_mock(tested_function, \
+        target_name, stub_function, action); \
+    tapi_dyna_push(TAPI_CONCAT(_gentest_, __LINE__)->mocks, TAPI_CONCAT(_genmock_, __LINE__)); \
+    tapi_dyna_push(context->tests, TAPI_CONCAT(_gentest_, __LINE__));
 
 /** quickly create a simple stub to return a given value. */
 #define tapi_stub_return(func_name, return_type, return_value) \

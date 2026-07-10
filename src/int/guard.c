@@ -1,27 +1,19 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-26
+ * @date 2026-07-09
  */
 #include "guard.h"
 
 /*! uses calloc. */
 #include <stdlib.h>
 
-/*! uses uintptr_t. */
-#include <stdint.h>
-
-/*! uses sysconf, _SC_PAGE_SIZE. */
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <unistd.h>
-#endif
-
-/*! uses mprotect. */
-#include <sys/mman.h>
-
 /*! uses fprintf, stderr. */
 #include <stdio.h>
+
+#ifndef _WIN32
+/*! uses mprotect. */
+#include <sys/mman.h>
+#endif
 
 /*! uses internal, etc... */
 #include "intt.h"
@@ -29,29 +21,8 @@
 /*! uses dyna_t, etc... */
 #include "dyna.h"
 
-/** @return page size on the given architecture, winapi and posix. */
-internal size_t
-get_page_size() {
-#ifndef _WIN32
-    long value = sysconf(_SC_PAGESIZE);
-    return value > 0 ? (size_t)value : 4096u;
-#else
-    SYSTEM_INFO si{};
-    GetSystemInfo(&si);
-    return (size_t) si.dwPageSize;
-#endif
-}
-
-/**
- * @brief align a page down and cast to an address for usage.
- *
- * @param page the page to be aligned down.
- * @return an address aligned down to the nearest page.
- */
-internal void*
-page_align_down(void* page, size_t size) {
-    return (void*)((uintptr_t)page & ~(size - 1));
-}
+/*! uses page_align_down, get_page_size. */
+#include "pgutl.h"
 
 /**
  * @brief close/ restore the write-protect guard.
