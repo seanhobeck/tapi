@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-09
+ * @date 2026-07-16
  */
 #define _GNU_SOURCE /*! needed for dl_iterate_phdr. */
 #include "plt.h"
@@ -29,8 +29,11 @@
 /*! uses internal. */
 #include "intt.h"
 
+/*! uses map_t, ... */
+#include "map.h"
+
 /* an internal list for all the plt entries. */
-internal tapi_dyna_t* plt_table;
+internal map_t* plt_table;
 
 #ifdef __gnu_linux__
 /* the elf base address. */
@@ -52,7 +55,7 @@ plt_init(void) {
     /* only needs to be done once per process, not a per context type of thing. */
     dl_iterate_phdr(elf_baddr_callback, 0x0); /* get the elf base address. */
     elf_t* elf = elf_parse("/proc/self/exe");
-    plt_table = tapi_dyna_create();
+    plt_table = map_make();
 
     /* find the .dynstr, .dynsym, etc... section header locations and read them. */
     bool is_rel = false;
@@ -183,10 +186,10 @@ plt_init(void) {
             void* assoc_addr = (void*)(elf_address + plt_address + offset);
 
             /* create a plt entry and add it. */
-            pltr_asc_t* entry = calloc(1u, sizeof *entry);
+            plt_asc_t* entry = calloc(1u, sizeof *entry);
             entry->name = name;
             entry->address = assoc_addr;
-            tapi_dyna_push(plt_table, entry);
+            map_push(plt_table, entry->name, entry);
         }
     }
     else if (elf->class == ELF_CLASS_32) {
@@ -211,10 +214,10 @@ plt_init(void) {
                 void* assoc_addr = (void*)(elf_address + plt_address + offset);
 
                 /* create a plt entry and add it. */
-                pltr_asc_t* entry = calloc(1u, sizeof *entry);
+                plt_asc_t* entry = calloc(1u, sizeof *entry);
                 entry->name = name;
                 entry->address = assoc_addr;
-                tapi_dyna_push(plt_table, entry);
+                map_push(plt_table, entry->name, entry);
             }
         }
         else {
@@ -233,10 +236,10 @@ plt_init(void) {
                 void* assoc_addr = (void*)(elf_address + plt_address + offset);
 
                 /* create a plt entry and add it. */
-                pltr_asc_t* entry = calloc(1u, sizeof *entry);
+                plt_asc_t* entry = calloc(1u, sizeof *entry);
                 entry->name = name;
                 entry->address = assoc_addr;
-                tapi_dyna_push(plt_table, entry);
+                map_push(plt_table, entry->name, entry);
             }
         }
     }
@@ -259,17 +262,18 @@ plt_init(void) {
  */
 void*
 plt_resolve(const char* name) {
-    dyna_foreach(plt_table, pltr_asc_t*, iter)
-        if (!strcmp(name, iter->name)) return iter->address;
-    dyna_endforeach(plt_table)
-    return 0x0;
+    plt_asc_t* entry = map_get(plt_table, name, plt_asc_t*);
+    if (entry == 0x0)
+        return 0x0;
+    return entry->address;
 };
 
 /** @brief clean up the internal plt_table. */
 void
 plt_cleanup(void) {
-    dyna_foreach(plt_table, pltr_asc_t*, iter)
-        free(iter);
-    dyna_endforeach(plt_table);
-    tapi_dyna_free(plt_table);
+    for (size_t i = 0u; i < plt_table->size; i++) {
+        if (plt_table->t1[i].occupied) free(plt_table->t1[i].value);
+        if (plt_table->t2[i].occupied) free(plt_table->t2[i].value);
+    }
+    map_cleanup(plt_table);
 };

@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-09
+ * @date 2026-07-20
  */
 #include <tapi/mock.h>
 
@@ -209,7 +209,7 @@ tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock) {
         memcpy(mock->orig_bytes, call->bytes, mock->size);
 
         /* apply the patch to the call, given the context. */
-        patch_call_target(context, call, mock->mocked);
+        patch_call_target(context, call, mock->mocked, mock->orig);
 
         /* we read the new bytes and store. */
         /* NOLINTNEXTLINE */
@@ -236,7 +236,7 @@ tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock) {
         memcpy(mock->orig_bytes, call->bytes, mock->size);
 
         /* apply the patch to the call, given the context. */
-        patch_call_target(context, call, mock->mocked);
+        patch_call_target(context, call, mock->mocked, mock->orig);
 
         /* we read the new bytes and store. */
         /* NOLINTNEXTLINE */
@@ -269,7 +269,7 @@ tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock) {
             if (call == 0x0) break;
 
             /* otherwise we re-patch it with the correct call. */
-            patch_call_target(context, call, mock->mocked);
+            patch_call_target(context, call, mock->mocked, mock->orig);
             free(call);
         }
 
@@ -283,7 +283,7 @@ tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock) {
     else {
         /* we then have to restore the bytes for future tests that could call that same function. */
         det_call_t* call = det_call_target(mock->orig, mock->mocked);
-        patch_call_target(context, call, mock->target);
+        patch_call_target(context, call, mock->target, mock->orig);
         free(call);
         free(mock);
     }

@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-08
+ * @date 2026-07-16
  */
 #include "elf.h"
 
@@ -74,7 +74,7 @@ typedef struct {
  * @param ident the elf identifier.
  * @return if the identifier is valid.
  */
-internal bool
+internal e_intt_result_t
 elf_valid_ident(uint8_t* ident) {
     return ident[EI_MAG0] == 0x7fu && ident[EI_MAG1] == 'E' &&
            ident[EI_MAG2] == 'L' && ident[EI_MAG3] == 'F';
@@ -257,7 +257,7 @@ elf_parse(const char* path) {
     fclose(file);
 
     /* check if the elf is valid. */
-    if (size < EI_NIDENT || !elf_valid_ident(buffer)) {
+    if (size < EI_NIDENT || !e_intt_passed(elf_valid_ident(buffer))) {
         fprintf(stderr, "tapi, elf_parse; invalid elf file %s.\n", path);
         free(buffer);
         return 0x0;

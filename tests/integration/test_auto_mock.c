@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-09
+ * @date 2026-07-20
  */
 #include <tapi/tapi.h>
 
@@ -31,7 +31,7 @@ target_function(int x) {
 #pragma endregion
 
 tapi_action(calloc_action, ...) {
-    return 0x0;
+    return E_TAPI_ACTION_RESULT_FAIL;
 }
 
 tapi_test(test_target_function_calloc_fail) {

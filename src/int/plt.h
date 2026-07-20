@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-09
+ * @date 2026-07-16
  */
 #ifndef PLT_H
 #define PLT_H
@@ -12,7 +12,7 @@
 typedef struct {
     char* name; /* name of the plt stub. */
     void* address; /* address of the stub. */
-} pltr_asc_t;
+} plt_asc_t;
 
 /** @brief fill the hashmap corresponding a name of a procedure to its stub within the plt. */
 void

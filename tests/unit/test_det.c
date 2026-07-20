@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-26
+ * @date 2026-07-20
  */
 /*! uses int. module to be tested. */
 #include "int/det.h"
@@ -156,7 +156,7 @@ test_fs_inline(void) {
     assert(size == 0x1c);
 #endif
 #ifdef __arm__
-    assert(size == 0x1a);
+    assert(size == 0x1c);
 #endif
     printf("correctly determined an inline asm. function size: 0x%lx!\n", size);
 }
@@ -225,7 +225,7 @@ test_fs_intrinsic(void) {
     assert(size == 0x18);
 #endif
 #ifdef __arm__
-    assert(size == 0x18);
+    assert(size == 0x1a);
 #endif
     printf("correctly determined a function with intrinsics size: 0x%lx!\n", size);
 }

@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-26
+ * @date 2026-07-20
  */
 /*! uses int. module to be tested. */
 #include "int/patch.h"
@@ -109,7 +109,7 @@ test_f1_success() {
     tapi_context_t* context = tapi_init();
 
     /* act. */
-    int32_t result = patch_call_target(context, call, &add_stub);
+    int32_t result = patch_call_target(context, call, &add_stub, 0x0);
 
     /* assert. */
     det_call_t* call2 = det_call_target(&function, &add);
@@ -133,9 +133,9 @@ test_f2_success() {
     tapi_context_t* context = tapi_init();
 
     /* act. */
-    int32_t result = patch_call_target(context, call, &add_stub);
+    int32_t result = patch_call_target(context, call, &add_stub, 0x0);
     det_call_t* call2 = det_call_target(&function2, &add);
-    int32_t result2 = patch_call_target(context, call2, &add_stub);
+    int32_t result2 = patch_call_target(context, call2, &add_stub, 0x0);
 
     /* assert. */
     det_call_t* call3 = det_call_target(&function2, &add);
@@ -164,7 +164,7 @@ test_f3_success() {
     tapi_context_t* context = tapi_init();
 
     /* act. */
-    int32_t result = patch_call_target(context, call, &add_stub);
+    int32_t result = patch_call_target(context, call, &add_stub, 0x0);
 
     /* assert. */
     det_call_t* call2 = det_call_target(&function3, &add);

@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-09
+ * @date 2026-07-17
  */
 #include "guard.h"
 
@@ -15,14 +15,11 @@
 #include <sys/mman.h>
 #endif
 
-/*! uses internal, etc... */
+/*! uses internal, page_align_down, get_page_size, etc... */
 #include "intt.h"
 
 /*! uses dyna_t, etc... */
 #include "dyna.h"
-
-/*! uses page_align_down, get_page_size. */
-#include "pgutl.h"
 
 /**
  * @brief close/ restore the write-protect guard.
@@ -75,8 +72,7 @@ guard_create(tapi_context_t* context, void* address, size_t length) {
     /* NOLINTNEXTLINE */
     if (mprotect(guard->address, guard->length, PROT_READ | PROT_WRITE | PROT_EXEC) != 0x0) {
         /* NOLINTNEXTLINE */
-        fprintf(stderr, "tapi, guard_create; mprotect failed; could not allocate memory for pguard"
-                        ".");
+        fprintf(stderr, "tapi, guard_create; mprotect failed; could not change page access for guard!");
 #else
     /* winapi doesn't care and does it for us. */
     guard->address = address;
@@ -84,8 +80,7 @@ guard_create(tapi_context_t* context, void* address, size_t length) {
     if (VirtualProtect(guard->address, length, PAGE_EXECUTE_READWRITE, &guard->flags) !=
         0x0) {
         /* we can actually use MSVCs "safe" version for fprintf. */
-        fprintf_s(stderr, "tapi, guard_create; VirtualProtect failed; could not allocate memory "
-                          "for pguard.");
+        fprintf_s(stderr, "tapi, guard_create; mprotect failed; could not change page access for guard!");
 #endif
         free(guard);
         return;
