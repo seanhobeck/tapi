@@ -17,10 +17,8 @@
  * @param context the tapi context to be used.
  * @param call the call structure info representing the call to be patched.
  * @param new_target the new target address to set the new call to.
- * @param base the base function that is being called (mock->orig).
  * @return 1 if successful, and 0 o.w.
  */
 int32_t
-patch_call_target(tapi_context_t* context, const det_call_t* call, \
-    const void* new_target, void* base);
+patch_call_target(tapi_context_t* context, const det_call_t* call, const void* new_target);
 #endif /* PATCH_H */

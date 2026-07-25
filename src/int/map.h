@@ -42,8 +42,7 @@
 #include <stddef.h>
 
 /*! uses pthread_rwlock. */
-#define _XOPEN_SOURCE 600u /* enables POSIX.1-2001 */
-#include <pthread.h>
+#include <tapi/dyna.h>
 
 /**
  * a data structure for representing the key-value pair/entry within a hashmap (often

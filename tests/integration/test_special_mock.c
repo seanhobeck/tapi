@@ -19,8 +19,8 @@
 /*! uses snprintf. */
 #include <stdio.h>
 
-/* region for all tested functions. */
-#pragma region
+/*! -----------------tested functions------------------ !*/
+
 int add(int a, int b) {
     return a + b;
 }
@@ -37,7 +37,8 @@ target_function() {
     d = sub(d, 11);
     return d + c;
 }
-#pragma endregion
+
+/*! -----------------------tests--------------------- !*/
 
 tapi_stub_return_int(stub_add, 2);
 
@@ -78,6 +79,8 @@ tapi_test(test_target_sub_2) {
     tapi_assert(retval == 13);
     return E_TAPI_TEST_RESULT_PASSED;
 }
+
+/*! ----------------------==---------------------- !*/
 
 int main() {
     tapi_context_t* context = tapi_init();

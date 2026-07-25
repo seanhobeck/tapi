@@ -277,7 +277,7 @@ map_push(map_t* map, const char* key, void* value) {
     /* if we couldn't emplace, resize to double and try again. */
     free(iter_key);
 #ifdef TAPI_THREAD_SAFE
-    pthread_rwlock_unlock(&array->lock);
+    pthread_rwlock_unlock(&map->lock);
 #endif
     /* shouldn't recurse very far but still possible. */
     if (depth < MAX_DEPTH) {
@@ -302,19 +302,19 @@ map_pop(map_t* map, const char* key) {
     /* attempt to look up the entry. */
     entry_t* entry = map_lookup(map, key);
 #ifdef TAPI_THREAD_SAFE
-    pthread_rwlock_wrlock(&array->lock);
+    pthread_rwlock_wrlock(&map->lock);
 #endif
     if (entry != 0x0) {
         entry_t* copy = calloc(1u, sizeof *copy);
         memcpy(copy, entry, sizeof *copy);
         free_entry(entry);
 #ifdef TAPI_THREAD_SAFE
-        pthread_rwlock_unlock(&array->lock);
+        pthread_rwlock_unlock(&map->lock);
 #endif
         return copy;
     }
 #ifdef TAPI_THREAD_SAFE
-    pthread_rwlock_unlock(&array->lock);
+    pthread_rwlock_unlock(&map->lock);
 #endif
     return 0x0; /* not found :( */
 };
@@ -331,24 +331,24 @@ map_lookup(map_t* map, const char* key) {
     /* check t1 then t2, very simple. */
     assert(map != 0x0 && key != 0x0);
 #ifdef TAPI_THREAD_SAFE
-    pthread_rwlock_rdlock(&array->lock);
+    pthread_rwlock_rdlock(&map->lock);
 #endif
     uint64_t idx = hash1(key, map->size);
     if (map->t1[idx].occupied && strcmp(map->t1[idx].key, key) == 0) {
 #ifdef TAPI_THREAD_SAFE
-        pthread_rwlock_unlock(&array->lock);
+        pthread_rwlock_unlock(&map->lock);
 #endif
         return &map->t1[idx];
     }
     idx = hash2(key, map->size);
     if (map->t2[idx].occupied && strcmp(map->t2[idx].key, key) == 0) {
 #ifdef TAPI_THREAD_SAFE
-        pthread_rwlock_unlock(&array->lock);
+        pthread_rwlock_unlock(&map->lock);
 #endif
         return &map->t2[idx];
     }
 #ifdef TAPI_THREAD_SAFE
-    pthread_rwlock_unlock(&array->lock);
+    pthread_rwlock_unlock(&map->lock);
 #endif
     return 0x0; /* not found :( */
 };

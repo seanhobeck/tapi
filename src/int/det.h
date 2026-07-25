@@ -1,9 +1,12 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-09
+ * @date 2026-07-21
  */
 #ifndef DET_H
 #define DET_H
+
+/*! uses tapi_dyna_t. */
+#include <tapi/dyna.h>
 
 /*! uses size_t. */
 #include <stddef.h>
@@ -13,9 +16,6 @@
 
 /*! uses bool, true, false. */
 #include <stdbool.h>
-
-/*! uses tapi_dyna_t. */
-#include <tapi/dyna.h>
 
 /**
  * @brief find the size of the function in memory.

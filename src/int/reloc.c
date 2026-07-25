@@ -2,7 +2,9 @@
  * @author Sean Hobeck
  * @date 2026-07-20
  */
+#ifdef __gnu_linux__
 #define _DEFAULT_SOURCE /* required for htole16/32/64. */
+#endif
 #include "reloc.h"
 
 /*! uses assert. */
@@ -195,11 +197,11 @@ internal map_t* reloc_table;
  *
  * @param address the address to relocate a relative call from.
  * @param target the target address to attempt to call.
- * @param base the address of the base function.
+ * @param thumb the target address is currently in thumb mode.
  * @return a relocation structure ready to be used.
  */
 reloc_t*
-reloc_make(void* address, void* target, void* base) {
+reloc_make(void* address, void* target, bool thumb) {
     /* allocate the structure and push it to the internal table. */
     assert(address != 0x0 && target != 0x0);
     reloc_t* reloc = calloc(1u, sizeof *reloc);
@@ -246,10 +248,9 @@ reloc_make(void* address, void* target, void* base) {
     memcpy(reloc->bytes, bytes, reloc->size);
 #endif
 #ifdef __arm__
-    /* if we are in thumb-mode we need to set the reloc address to have the thumb-bit enabled. */
+    /* if we are in thumb-mode, we need to set the reloc address to have the thumb-bit enabled. */
     reloc->size = 12u;
     reloc->bytes = calloc(1u,  reloc->size);
-    bool thumb = ((uintptr_t)base & 1u) != 0x0;
     if (thumb) reloc->callee = (void*)((uintptr_t)reloc->callee | 1u);
     else reloc->callee = (void*)((uintptr_t)reloc->callee & ~1u);
 
@@ -332,11 +333,11 @@ reloc_make(void* address, void* target, void* base) {
  *
  * @param address the address to relocate a relative call from.
  * @param target the target address to attempt to call.
- * @param base the address of the base function.
+ * @param thumb the target address is currently in thumb mode.
  * @return a relocation structure if found, if not one will be made which can return 0x0.
  */
 reloc_t*
-reloc_find(void* address, void* target, void* base) {
+reloc_find(void* address, void* target, bool thumb) {
     /* attempt to get a pre-made value from the table, then simply check the distance. */
     assert(address != 0x0 && target != 0x0);
     char buffer[256u];
@@ -346,7 +347,7 @@ reloc_find(void* address, void* target, void* base) {
     if (reloc_table == 0x0) reloc_table = map_make();
     void* found = map_lookup(reloc_table, buffer);
     if (found != 0x0) return (reloc_t*)found;
-    return reloc_make(address, target, base);
+    return reloc_make(address, target, thumb);
 };
 
 /**

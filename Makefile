@@ -7,23 +7,31 @@ pkg_config := pkg-config
 # architecture defs. todo; update for non-linux architectures
 arch ?= $(shell uname -m)
 ifeq ($(arch),aarch64)
-  cc := aarch64-linux-gnu-gcc
+  	cc := aarch64-linux-gnu-gcc
 endif
 ifeq ($(arch),arm32)
-  cc := arm-linux-gnueabihf-gcc
+  	cc := arm-linux-gnueabihf-gcc
 endif
 ifeq ($(arch),x86)
-  cc := i686-linux-gnu-gcc
+  	cc := i686-linux-gnu-gcc
 endif
 ifeq ($(arch),x86_64)
-  cc := x86_64-linux-gnu-gcc
+  	cc := x86_64-linux-gnu-gcc
 endif
 
-# compilation, release, and asan flags.
+# compilation, release, minimal, thread-safe, and asan flags.
 cflags := -std=c99 -Wall -Wextra -g -O0 -fPIC
 release ?= 0
+minimal ?= 0
+thread-safe ?= 1
 ifeq ($(release),1)
-  cflags := -std=c17 -Wall -Wextra -O2 -fPIC
+  	cflags := -std=c17 -Wall -Wextra -O2 -fPIC
+endif
+ifeq ($(minimal), 1)
+  	cflags += -DTAPI_MINIMAL
+endif
+ifeq ($(thread-safe), 0)
+	cflag += -UTAPI_THREAD_SAFE
 endif
 use_asan := false
 
@@ -53,13 +61,13 @@ capstone_cflags := $(shell $(pkg_config) --cflags capstone 2>/dev/null)
 capstone_libs   := $(shell $(pkg_config) --libs   capstone 2>/dev/null)
 have_capstone := 0
 ifneq ($(strip $(capstone_libs)),)
-  have_capstone := 1
+	have_capstone := 1
 else ifneq ($(wildcard $(vendor_lib)/libcapstone.a),)
-  # no pkg-config / no system capstone; link the vendored static archive in
-  # (it is built -fPIC, so it folds cleanly into the shared lib_file).
-  capstone_cflags := -I$(vendor_include) -I$(vendor_include)/capstone
-  capstone_libs   := -L$(vendor_lib) -l:libcapstone.a
-  have_capstone := 1
+  	# no pkg-config / no system capstone; link the vendored static archive in
+  	# (it is built -fPIC, so it folds cleanly into the shared lib_file).
+	capstone_cflags := -I$(vendor_include) -I$(vendor_include)/capstone
+  	capstone_libs   := -L$(vendor_lib) -l:libcapstone.a
+  	have_capstone := 1
 endif
 
 # includes and appending vendor flags to cflags.
@@ -68,10 +76,10 @@ includes := $(shell find $(include_dir) -type d 2>/dev/null)
 includes += $(shell find $(src_dir) -type d 2>/dev/null)
 cflags += $(addprefix -I,$(includes))
 ifneq ($(wildcard $(vendor_include)),)
-  cflags += -I$(vendor_include)
+	cflags += -I$(vendor_include)
 endif
 ifeq ($(have_capstone),1)
-  cflags += $(capstone_cflags)
+	cflags += $(capstone_cflags)
 endif
 
 # search for source objects.
@@ -82,10 +90,10 @@ objs := $(patsubst $(src_dir)/%.c,$(build_dir)/%.o,$(srcs))
 ldflags := -shared -Wl,-rpath,'$$ORIGIN'
 ldlibs :=
 ifneq ($(wildcard $(vendor_lib)),)
-  ldflags += -L$(vendor_lib)
+	ldflags += -L$(vendor_lib)
 endif
 ifeq ($(have_capstone),1)
-  ldlibs += $(capstone_libs)
+	ldlibs += $(capstone_libs)
 endif
 
 # project headers and destination directories.

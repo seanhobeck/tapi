@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-17
+ * @date 2026-07-21
  */
 #include "patch.h"
 
@@ -241,12 +241,10 @@ patch_relative_barm64(void* call, const size_t size, const void* new_target) {
  * @param context the tapi context to be used.
  * @param call the call structure info representing the call to be patched.
  * @param new_target the new target address to set the new call to.
- * @param base the base function that is being called (mock->orig).
  * @return 1 if successful, and 0 o.w.
  */
 int32_t
-patch_call_target(tapi_context_t* context, const det_call_t* call, \
-    const void* new_target, void* base) {
+patch_call_target(tapi_context_t* context, const det_call_t* call, const void* new_target) {
     /* create a write-protect guard for an entire page. */
     guard_create(context, call->call, call->size);
 
@@ -259,7 +257,7 @@ patch_call_target(tapi_context_t* context, const det_call_t* call, \
                     break;
                 }
                 /* attempt a reloc. */
-                reloc_t* reloc = reloc_find(call->call, (void*)new_target, base);
+                reloc_t* reloc = reloc_find(call->call, (void*)new_target, false);
                 if (reloc != 0x0) {
                     if e_intt_passed(patch_relative_bx86(call->call, call->size, reloc->region)) {
                         break;
@@ -279,7 +277,7 @@ patch_call_target(tapi_context_t* context, const det_call_t* call, \
                     }
 
                     /* attempt a reloc. */
-                    reloc_t* reloc = reloc_find(call->call, (void*)new_target, base);
+                    reloc_t* reloc = reloc_find(call->call, (void*)new_target, true);
                     if (reloc != 0x0) {
                         if e_intt_passed(patch_relative_barmth(call->call, call->size, reloc->region)) {
                             break;
@@ -292,7 +290,7 @@ patch_call_target(tapi_context_t* context, const det_call_t* call, \
                 }
                 else {
                     /* attempt a reloc. */
-                    reloc_t* reloc = reloc_find(call->call, (void*)new_target, base);
+                    reloc_t* reloc = reloc_find(call->call, (void*)new_target, false);
                     if (reloc != 0x0) {
                         if e_intt_passed(patch_relative_barm(call->call, call->size, reloc->region)) {
                             break;
@@ -310,7 +308,7 @@ patch_call_target(tapi_context_t* context, const det_call_t* call, \
                     break;
                 }
                 /* attempt a reloc. */
-                reloc_t* reloc = reloc_find(call->call, (void*)new_target, base);
+                reloc_t* reloc = reloc_find(call->call, (void*)new_target, false);
                 if (reloc != 0x0) {
                     if e_intt_passed(patch_relative_barm64(call->call, call->size, reloc->region)) {
                         break;

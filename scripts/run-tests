@@ -8,8 +8,8 @@ run_per_arch() {
   local test="bin/$3"
 
   # run the command and check output.
-  touch "output_$2_$4.txt"
-  "$emu" -L "$arch" "$test" > "output_$2_$4.txt"
+  touch "log/output_$2_$4.txt"
+  "$emu" -L "$arch" "$test" > "log/output_$2_$4.txt"
 }
 
 # run x86_64 INTEGRATION tests.

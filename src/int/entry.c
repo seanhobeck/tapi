@@ -4,14 +4,14 @@
  * @date 2026-07-09
  */
 /*! uses plt_init. */
-#include "int/plt.h"
+#include "int/lnk.h"
 
 /** @brief library entry point. */
 #ifdef __gnu_linux__
 __attribute__((constructor))
 #endif
 void lt_entry() {
-    plt_init();
+    lnk_init();
 }
 
 /** @brief library exit point. */
@@ -19,6 +19,6 @@ void lt_entry() {
 __attribute__((destructor))
 #endif
 void lt_exit() {
-    plt_cleanup();
+    lnk_cleanup();
 }
 /** \endcond */

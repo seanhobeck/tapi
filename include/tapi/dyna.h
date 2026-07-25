@@ -5,17 +5,17 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-26
+ * @date 2026-07-21
  */
 #ifndef TAPI_DYNA_H
 #define TAPI_DYNA_H
 
-/*! uses size_t. */
-#include <stddef.h>
-
 /*! uses pthread_rwlock. */
 #define _XOPEN_SOURCE 600u /* enables POSIX.1-2001 */
 #include <pthread.h>
+
+/*! uses size_t. */
+#include <stddef.h>
 
 /* for functions that are exported by tapi. */
 #if (defined(__GNUC__) || defined(__IBMC__))
@@ -32,6 +32,13 @@
 #endif
 #endif
 /** \endcond */
+
+/**
+ * similarly to the `TAPI_MINIMAL` macro, `TAPI_THREAD_SAFE` adds locks to data structures (maps, lists)
+ *  used internally by tapi. if you are testing within an environment that does not support POSIX.5+,
+ *  then you can add the thread-safe=0 flag to your compilation process for tapi.
+ */
+#define TAPI_THREAD_SAFE
 
 /**
  * @brief a dynamic array of pointers.
@@ -157,8 +164,8 @@ tapi_dyna_make(void** data, size_t length);
 
 /* ending an iteration. */
 #define dyna_endforeach(array) \
-        pthread_rwlock_unlock(&(array)->lock); \
-    }
+    } \
+    pthread_rwlock_unlock(&(array)->lock);
 #else
 /* starting an iteration. */
 #define dyna_foreach_it(array, type, var, iter) \

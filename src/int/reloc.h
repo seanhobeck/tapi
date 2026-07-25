@@ -8,6 +8,9 @@
 /*! uses size_t. */
 #include <stddef.h>
 
+/*! uses bool, true, false. */
+#include <stdbool.h>
+
 /**
  * ...
  */
@@ -24,11 +27,11 @@ typedef struct {
  *
  * @param address the address to relocate a relative call from.
  * @param target the target address to attempt to call.
- * @param base the address of the base function.
+ * @param thumb the target address is currently in thumb mode.
  * @return a relocation structure ready to be used.
  */
 reloc_t*
-reloc_make(void* address, void* target, void* base);
+reloc_make(void* address, void* target, bool thumb);
 
 /**
  * @brief attempt to find an already made relocation structure,
@@ -36,11 +39,11 @@ reloc_make(void* address, void* target, void* base);
  *
  * @param address the address to relocate a relative call from.
  * @param target the target address to attempt to call.
- * @param base the address of the base function.
+ * @param thumb the target address is currently in thumb mode.
  * @return a relocation structure if found, if not one will be made which can return 0x0.
  */
 reloc_t*
-reloc_find(void* address, void* target, void* base);
+reloc_find(void* address, void* target, bool thumb);
 
 /**
  * @brief free a relocation structure (free the memory used as well).

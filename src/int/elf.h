@@ -5,14 +5,14 @@
 #ifndef ELF_H
 #define ELF_H
 #ifdef __gnu_linux__
+/*! uses tapi_dyna_t. */
+#include <tapi/dyna.h>
+
 /*! uses uint8_t, uint16_t, uint32_t, uint64_t. */
 #include <stdint.h>
 
 /*! uses ssize_t, pid_t. */
 #include <sys/types.h>
-
-/*! uses tapi_dyna_t. */
-#include <tapi/dyna.h>
 
 /** @brief enum for the elf class. */
 typedef enum {
