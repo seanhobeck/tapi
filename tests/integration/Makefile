@@ -9,16 +9,16 @@ use_asan := false
 # architecture defs.
 arch ?= $(shell uname -m).
 ifeq ($(arch),aarch64)
-  cc := aarch64-linux-gnu-gcc
+	cc := aarch64-linux-gnu-gcc
 endif
 ifeq ($(arch),arm32)
-  cc := arm-linux-gnueabihf-gcc
+  	cc := arm-linux-gnueabihf-gcc
 endif
 ifeq ($(arch),x86)
-  cc := i686-linux-gnu-gcc
+  	cc := i686-linux-gnu-gcc
 endif
 ifeq ($(arch),x86_64)
-  cc := gcc
+  	cc := gcc
 endif
 
 # asan usage.

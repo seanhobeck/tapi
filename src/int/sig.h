@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-05-19
+ * @date 2026-07-25
  */
 #ifndef SIG_H
 #define SIG_H
@@ -67,7 +67,6 @@ sig_aarch64_chk(cs_insn* insn);
 e_sig_type_t
 sig_armhf_chk(cs_insn* insn);
 
-
 /*! @note common sequences for prologues & epilogues of functions for arm. */
 #pragma region common sequences
 #define AARCH64_P1 "sub sp, sp, #??????" /* sub. from the sp for new vars, max of #0xffff. */
@@ -118,6 +117,17 @@ sig_armhf_chk(cs_insn* insn);
 #define ARMHF_E18 "ldmia sp!, {r??, r??, r??, r??, pc}"
 /* for some reason armhf LOVES to use 'andeq' or 'lsls' as padding after an epilogue like ARMHF_E1-18? */
 #define ARMHF_EP1 "lsls r??, r??, #??????"
+
+/* these are various arm32 plt styles. */
+#define ARM32_PLT1 "str lr, [sp, #??????]!"
+#define ARM32_PLT2 "ldr lr, [pc, #??????]"
+#define ARM32_PLT3 "add lr, pc, lr"
+/* thumb does this then proceeds with the regular arm32 plt entry. */
+#define ARMHF_PLT1 "bx pc"
+#define ARMHF_PLT2 "nop"
+/* very rarely does arm produce literal type entries where these instructions follow, then .word (got offset). */
+#define ARM32L_PLT1 "ldr lr, [pc #??????]"
+#define ARM32L_PLT2 "add lr, pc, lr"
 
 /* for any x86 & x86_64 we aren't using any patterns since we can rely on capstones id's with CET. */
 #pragma endregion

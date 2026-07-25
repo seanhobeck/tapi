@@ -1,14 +1,13 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-26
+ * @date 2026-07-21
  */
 #include <tapi/tapi.h>
 
 /*! uses tapi_stub_return. */
 #include <tapi/mock.h>
 
-/* region for all of the test call targets and assembly specific fuctions. */
-#pragma region test call targets
+/*! -----------------tested functions------------------ !*/
 int target_function(int x) {
     return ~x + 1u;
 }
@@ -114,9 +113,9 @@ int conditional_caller(int use_target) {
     }
     return 0;
 }
-#pragma endregion
 
-/* region for all of the setups and mock return values. */
+/*! -----------------mock return values------------------ !*/
+
 #pragma region mock return values
 tapi_stub_return(tested_function_target, int, 0u);
 #if defined(__x86_64__) || defined(__i386__)
@@ -131,8 +130,8 @@ tapi_stub_return(mock_nested_target, int, 42);
 tapi_stub_return(mock_conditional_target, int, 999);
 #pragma endregion
 
-/* region for all of the tests. */
-#pragma region tests
+/*! -----------------------tests--------------------- !*/
+
 tapi_test(test_basic_mock){
     /* act & assert. */
     int result = function();
@@ -183,7 +182,8 @@ tapi_test(test_conditional_mock){
     tapi_assert(result == 999);
     return E_TAPI_TEST_RESULT_PASSED;
 }
-#pragma endregion
+
+/*! ----------------------==---------------------- !*/
 
 int main() {
     /* basic test. */

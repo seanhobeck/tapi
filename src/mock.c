@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-09
+ * @date 2026-07-21
  */
 #include <tapi/mock.h>
 
@@ -21,11 +21,15 @@
 #include "patch.h"
 
 /*! uses plt_resolve. */
-#include "plt.h"
+#include "lnk.h"
 
 /*! uses internal. */
 #include "int/intt.h"
 /** \endcond */
+
+
+/*! -----------------autostubs------------------ !*/
+#ifndef TAPI_MINIMAL
 
 /** @brief malloc autostub used by tapi. */
 void*
@@ -111,6 +115,9 @@ tapi_stub_free(void* ptr) {
     free(ptr);
 };
 
+#endif
+/*! ----------------------==---------------------- !*/
+
 /**
  * @brief mock all/specified call occurrence(s) to a target with a call to a mocked function
  *  instead. this will automatically allocate the mock structure ready to be applied whenever and
@@ -134,10 +141,10 @@ tapi_make_mock(void* orig, void* target, void* mocked, size_t call_index) {
     mock->fun_size = det_function_size(orig, TAPI_MAX_DET_DEPTH);
     /* we are using a max of 4096 bytes (by default). */
     mock->type = call_index != 0u ? E_TAPI_MOCK_SPECIAL : E_TAPI_MOCK_REGULAR;
-    mock->autostub = 0x0;
     return mock;
 };
 
+#ifndef TAPI_MINIMAL
 /**
  * @brief mock all call occurrences to a target with a call to an autostub or a mocked function
  *  instead. this should only be used on system/library calls with addresses that need to be resolved,
@@ -148,17 +155,19 @@ tapi_make_mock(void* orig, void* target, void* mocked, size_t call_index) {
  * @param mocked the function to replace the target call with. this should only be
  *  given if an autostub cannot be used on the specified system/library call (see more above).
  * @param action the action associated with the autostub used in this mock.
+ * @param set_errno should the autostub associated with this mock set errno?
  * @return an allocated mock structure ready to be applied.
  */
 tapi_mock_t*
-tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, tapi_action_t action) {
+tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, \
+    tapi_action_t action, bool set_errno) {
     /* allocate the structure. */
     tapi_mock_t* mock = calloc(1u, sizeof *mock);
     mock->orig = orig;
-    mock->target = plt_resolve(target_name);
+    mock->target = lnk_resolve(target_name);
     if (mock->target == 0x0) {
         fprintf(stderr, "tapi_make_auto_mock; failed to resolve " \
-                        "plt address for %s!\n", target_name);
+                        "plt/got/iat address for %s!\n", target_name);
         free(mock);
         return 0x0;
     }
@@ -168,15 +177,16 @@ tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, tapi_acti
     /* we are using a max of 4096 bytes (by default). */
     mock->type = E_TAPI_MOCK_AUTO;
     /* simply iterate through the table of given autostubs, find it if possible. */
-    mock->autostub = 0x0;
+    mock->a_data.info.autostub = 0x0;
+    mock->a_data.info.action = action;
+    mock->a_data.info.set_errno = set_errno;
     for (size_t i = 0u; i < sizeof(autostub_table) / sizeof(tapi_autostub_t); i++) {
-        if (!strcmp(target_name, autostub_table[i].name)) {
-            mock->autostub = &autostub_table[i];
-            mock->mocked = autostub_table[i].stub; /* set the stub. */
-        }
+        if (!strcmp(target_name, autostub_table[i].name))
+            mock->a_data.info.autostub = &autostub_table[i];
     }
     return mock;
 };
+#endif
 
 /**
  * @brief apply a call target (or multiple) patch in memory to route to the given stub by the
@@ -195,7 +205,7 @@ tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock) {
 
         /* iterate through call call targets. */
         if (list->length + 1u < mock->call_index) {
-            fprintf(stderr, "tapi_apply_mock; cannot find index %d for mock!\n", mock->call_index);
+            fprintf(stderr, "tapi_apply_mock; cannot find index %zu for mock!\n", mock->call_index);
             return;
         }
 
@@ -219,6 +229,15 @@ tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock) {
         tapi_dyna_free(list);
         return;
     }
+
+#ifndef TAPI_MINIMAL
+    /* for every 'auto mock' we change the details of the internal table before the target is called. */
+    if (mock->type == E_TAPI_MOCK_AUTO && mock->a_data.info.autostub != 0x0) {
+        mock->a_data.info.autostub->action = mock->a_data.info.action;
+        mock->a_data.info.autostub->set_errno = mock->a_data.info.set_errno;
+        mock->mocked = mock->a_data.info.autostub->stub;
+    }
+#endif
 
     /* if this is a 'regular/auto mock' we need to find ALL occurrences of this call target. */
     for (size_t i = 0u; i < mock->fun_size; i++) {;
@@ -255,7 +274,7 @@ tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock) {
 void
 tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock) {
     /* we can't restore a mock that hasn't been applied... */
-    if (mock->call == 0x0) {
+    if (mock->type != E_TAPI_MOCK_AUTO && mock->call == 0x0) {
         /* NOLINTNEXTLINE */
         fprintf(stderr, "tapi, mock_restore; cannot restore unapplied mock.\n");
         return;
@@ -272,11 +291,13 @@ tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock) {
             free(call);
         }
 
+#ifndef TAPI_MINIMAL
         /* reset the autostub. */
-        if (mock->autostub != 0x0) {
-            mock->autostub->action = 0x0;
-            mock->autostub->set_errno = false;
+        if (mock->a_data.info.autostub != 0x0) {
+            mock->a_data.info.autostub->action = 0x0;
+            mock->a_data.info.autostub->set_errno = false;
         }
+#endif
         free(mock);
     }
     else {

@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-07
+ * @date 2026-07-21
  */
 #ifndef TAPI_MOCK_H
 #define TAPI_MOCK_H
@@ -20,6 +20,11 @@
 #include <stdbool.h>
 /** \endcond */
 
+/**
+ * to make this library more minimal and controlled, you can define 'TAPI_MINIMAL' during compilation
+ *  by adding the minimal=1 flag to your compilation process for tapi.
+ */
+#ifndef TAPI_MINIMAL
 /** an enum for different results from an action. */
 typedef enum {
     E_TAPI_ACTION_RESULT_ALLOW = 0x0, /* allow the mock to proceed as usual. */
@@ -32,6 +37,36 @@ typedef enum {
  *  the tested function will receive a failure from this special mock
  *  as well. */
 typedef e_tapi_action_result_t (*tapi_action_t)(void* blank, ...);
+
+/**
+ * @brief a structure to keep track of special mocks that can be automatically stubbed with
+ *  pre-built stubs for ease of use.
+ *
+ * `tapi_autostub_t` is a data structure for representing the data required internally by tapi to
+ *  automatically stub commonly used special mocks, ie. malloc, free, calloc, fopen, etc... these
+ *  functions can then be conditioned to fail under certain conditions, allowing testers to test
+ *  for failures.
+ *
+ * list of currently supported autostubs for POSIX system/library calls:
+ *  _________________________________________
+ *  |system     | libc      | other         |
+ *  =========================================
+ *  |malloc     |           |               |1
+ *  |calloc     |           |               |
+ *  |free       |           |               |
+ *  =========================================
+ */
+typedef struct {
+    /** pointer to the stub itself. */
+    void* stub;
+    /** pointer to an action */
+    tapi_action_t action;
+    /** the name of the special function (library/system call). */
+    char* name;
+    /** should we be setting errno on failure for this action? */
+    bool set_errno;
+} tapi_autostub_t;
+#endif
 
 /**
  * @brief enum for differentiating different types of mocks.
@@ -47,34 +82,6 @@ typedef enum {
     E_TAPI_MOCK_AUTO, /* possibly autostub the mock, this is reserved for library/system calls. */
 } e_tapi_mock_type_t;
 
-/**
- * @brief a structure to keep track of special mocks that can be automatically stubbed with
- *  pre-built stubs for ease of use.
- *
- * `tapi_autostub_t` is a data structure for representing the data required internally by tapi to
- *  automatically stub commonly used special mocks, ie. malloc, free, calloc, fopen, etc... these
- *  functions can then be conditioned to fail under certain conditions, allowing testers to test
- *  for failures.
- *
- * list of currently supported autostubs for POSIX system/library calls:
- *  _________________________________________
- *  |system     | libc      | other         |
- *  =========================================
- *  |malloc     |           |               |
- *  |calloc     |           |               |
- *  |free       |           |               |
- *  =========================================
- */
-typedef struct {
-    /** pointer to the stub itself. */
-    void* stub;
-    /** pointer to an action */
-    tapi_action_t action;
-    /** the name of the special function (library/system call). */
-    char* name;
-    /** should we be setting errno on failure for this action? */
-    bool set_errno;
-} tapi_autostub_t;
 
 /**
  * @brief a patch-based runtime mock for redirecting calls within a tested function.
@@ -96,16 +103,28 @@ typedef struct {
     void* call;
     /** size of the patch and function. */
     size_t size, fun_size;
-    /** first 32 bytes of the original target function. */
-    unsigned char orig_bytes[32u];
-    /** first 32 bytes of the mocked function. */
-    unsigned char mocked_bytes[32u];
+    /** 15 bytes of the original call target. */
+    unsigned char orig_bytes[15u];
+    /** 15 bytes of the mocked call target. */
+    unsigned char mocked_bytes[15u];
     /** is this a special kind of mock, ie. does it need to all possible call targets? */
     e_tapi_mock_type_t type;
     /** the n-th call target occurrence within the original function (for special mocks only). */
     size_t call_index;
-    /** a pointer to an autostub structure if found in tapi's internal table (see above). */
-    tapi_autostub_t* autostub;
+
+#ifndef TAPI_MINIMAL
+    /*! anon struct to encompass all 'auto mock' data. */
+    union {
+        struct {
+            /** a pointer to an autostub structure if found in tapi's internal table (see above). */
+            tapi_autostub_t* autostub;
+            /** an action associated with an autostub structure. */
+            tapi_action_t action;
+            /** should errno be set by the autostub? */
+            bool set_errno;
+        } info;
+    } a_data;
+#endif
 } tapi_mock_t;
 
 /**
@@ -123,6 +142,7 @@ typedef struct {
 tapi_mock_t*
 tapi_make_mock(void* orig, void* target, void* mocked, size_t call_index);
 
+#ifndef TAPI_MINIMAL
 /**
  * @brief mock all call occurrences to a target with a call to an autostub or a mocked function
  *  instead. this should only be used on system/library calls with addresses that need to be resolved,
@@ -133,10 +153,13 @@ tapi_make_mock(void* orig, void* target, void* mocked, size_t call_index);
  * @param mocked the function to replace the target call with. this should only be
  *  given if an autostub cannot be used on the specified system/library call (see more above).
  * @param action the action associated with the autostub used in this mock.
+ * @param set_errno should the autostub associated with this mock set errno?
  * @return an allocated mock structure ready to be applied.
  */
 tapi_mock_t*
-tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, tapi_action_t action);
+tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, \
+    tapi_action_t action, bool set_errno);
+#endif
 
 /** @note this means that we are using a maximum search len of 4096 bytes for determining a
  * functions size; we only iterate through 4096 bytes worth of possible opcodes (every
@@ -174,6 +197,15 @@ tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock);
 /** quickly create an action function to be used in an autostub. */
 #define tapi_action(action_name, ...) \
     e_tapi_action_result_t action_name(void* blank, __VA_ARGS__)
+
+/** quickly create a test with an automock to the test suite. */
+#define tapi_add_test_and_auto_mock(context, name, test_function, tested_function, target_name, \
+    stub_function, action, set_errno) \
+    tapi_test_t* TAPI_CONCAT(_gentest_, __LINE__) = tapi_make_test(name, test_function); \
+    tapi_mock_t* TAPI_CONCAT(_genmock_, __LINE__) = tapi_make_auto_mock(tested_function, \
+        target_name, stub_function, action, set_errno); \
+    tapi_dyna_push(TAPI_CONCAT(_gentest_, __LINE__)->mocks, TAPI_CONCAT(_genmock_, __LINE__)); \
+    tapi_dyna_push(context->tests, TAPI_CONCAT(_gentest_, __LINE__));
 
 /** quickly create a simple stub to return a given value. */
 #define tapi_stub_return(func_name, return_type, return_value) \

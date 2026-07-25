@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-26
+ * @date 2026-07-21
  */
 #include "patch.h"
 
@@ -15,6 +15,9 @@
 
 /*! uses internal. */
 #include "intt.h"
+
+/*! uses reloc_t, reloc_find. */
+#include "reloc.h"
 
 /**
  * @brief flush the instruction cache to allow our patched instructions to be read properly.
@@ -253,8 +256,17 @@ patch_call_target(tapi_context_t* context, const det_call_t* call, const void* n
                 if e_intt_passed(patch_relative_bx86(call->call, call->size, new_target)) {
                     break;
                 }
+                /* attempt a reloc. */
+                reloc_t* reloc = reloc_find(call->call, (void*)new_target, false);
+                if (reloc != 0x0) {
+                    if e_intt_passed(patch_relative_bx86(call->call, call->size, reloc->region)) {
+                        break;
+                    }
+                }
+                else return 0u;
+
                 /* NOLINTNEXTLINE */
-                fprintf(stderr, "bx86/64; patching relative call failed.\n");
+                fprintf(stderr, "bx86/64; patching relative call failed, attempting absolute reloc also failed.\n");
                 break;
             }
             case CS_ARCH_ARM: {
@@ -263,20 +275,49 @@ patch_call_target(tapi_context_t* context, const det_call_t* call, const void* n
                     if e_intt_passed(patch_relative_barmth(call->call, call->size, new_target)) {
                         break;
                     }
+
+                    /* attempt a reloc. */
+                    reloc_t* reloc = reloc_find(call->call, (void*)new_target, true);
+                    if (reloc != 0x0) {
+                        if e_intt_passed(patch_relative_barmth(call->call, call->size, reloc->region)) {
+                            break;
+                        }
+                    }
+                    else return 0u;
                 }
                 else if e_intt_passed(patch_relative_barm(call->call, call->size, new_target)) {
                     break;
                 }
+                else {
+                    /* attempt a reloc. */
+                    reloc_t* reloc = reloc_find(call->call, (void*)new_target, false);
+                    if (reloc != 0x0) {
+                        if e_intt_passed(patch_relative_barm(call->call, call->size, reloc->region)) {
+                            break;
+                        }
+                    }
+                    else return 0u;
+                }
+
                 /* NOLINTNEXTLINE */
-                fprintf(stderr, "barm32/th; patching relative call failed.\n");
+                fprintf(stderr, "barm32/th; patching relative call failed, attempting absolute reloc also failed.\n");
                 break;
             }
             case CS_ARCH_AARCH64: {
                 if e_intt_passed(patch_relative_barm64(call->call, call->size, new_target)) {
                     break;
                 }
+                /* attempt a reloc. */
+                reloc_t* reloc = reloc_find(call->call, (void*)new_target, false);
+                if (reloc != 0x0) {
+                    if e_intt_passed(patch_relative_barm64(call->call, call->size, reloc->region)) {
+                        break;
+                    }
+                }
+                else return 0u;
+
                 /* NOLINTNEXTLINE */
-                fprintf(stderr, "barm64; patching relative call failed.\n");
+                fprintf(stderr, "barm64; patching relative call failed, attempting absolute reloc also failed.\n");
                 break;
             }
             default: {
@@ -287,7 +328,7 @@ patch_call_target(tapi_context_t* context, const det_call_t* call, const void* n
         }
     } else {
         /* NOLINTNEXTLINE */
-        fprintf(stderr, "unknown architecture; cannot patch a non-relative call!\n");
+        fprintf(stderr, "unknown architecture; cannot patch a non-relative call!\n"); /* not yet... indirect here we come. */
         return 0u;
     }
 
