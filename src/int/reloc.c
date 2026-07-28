@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-20
+ * @date 2026-07-27
  */
 #ifdef __gnu_linux__
 #define _DEFAULT_SOURCE /* required for htole16/32/64. */
@@ -9,6 +9,9 @@
 
 /*! uses assert. */
 #include <assert.h>
+
+/*! uses uintptr. */
+#include <stdint.h>
 
 #ifdef _WIN32
 /*! uses virtualalloc. */
@@ -25,12 +28,12 @@
 #include "guard.h"
 
 /* max distance for a reloc. */
-#if defined(__amd64__) || defined(__i386__)
+#if defined(__amd64__) || defined(__i386__) || defined(_M_AMD64) || defined(_M_IX86)
 #define MAX_DISTANCE 0x7fffffff
 #else
-#ifdef __aarch64__
+#if defined(__aarch64__) || defined(_M_ARM64)
 #define MAX_DISTANCE 0x8000000
-#elif __arm__
+#elif defined(__arm__) || defined(_M_ARM)
 #define MAX_DISTANCE 0x2000000
 #endif
 #endif
@@ -66,7 +69,7 @@
 #include <sys/endian.h>
 #elif defined(_WIN32)
 /*! uses uint16/32/64_t. */
-#include <stdint.h>
+#include <stdint.h> 
 
 /* little endian on all archs. */
 #define htole16(x) ((uint16_t)(x))
@@ -89,20 +92,20 @@
  */
 internal e_intt_result_t
 rel_range_chk(const void* from, const uintptr_t to) {
-#if defined(__amd64__) || defined(__i386__)
+#if defined(__amd64__) || defined(__i386__) || defined(_M_AMD64) || defined(_M_IX86)
     /* calculate the displacement. */
     int64_t displacement = (int64_t)to - ((int64_t)from + 5ll); /*! assuming e8. */
     return displacement >= INT32_MIN && displacement<= INT32_MAX;
 #else
     /* needs to be 4-byte aligned, not sure if mmap or virtualalloc handles this? */
     if (((uintptr_t)to & 3l) != 0x0) return false;
-#ifdef __aarch64__
+#if defined(__aarch64__) || defined(_M_ARM64)
     /* calculate the displacement. */
     int64_t displacement = (int64_t)to - (int64_t)from;
     if (displacement & 3l != 0x0) return false;
     int64_t imm26 = displacement / 4ll;
     return imm26 >= -(1ll << 25ll) && imm26 <= (1ll << 25ll) - 1ll;
-#elif __arm__
+#elif defined(__arm__) || defined(_M_ARM)
     /* calculate the displacement. */
     uintptr_t from_ptr = (uintptr_t)from;
     from_ptr &= ~(uintptr_t)1u;
@@ -207,7 +210,7 @@ reloc_make(void* address, void* target, bool thumb) {
     reloc_t* reloc = calloc(1u, sizeof *reloc);
     reloc->caller = address;
     reloc->callee = target;
-#ifdef __amd64__
+#if defined(__amd64__) || defined(_M_AMD64)
     reloc->size = 17u;
     reloc->bytes = calloc(1u,  reloc->size);
 
@@ -220,7 +223,7 @@ reloc_make(void* address, void* target, bool thumb) {
     *(uint64_t*)(bytes + 6u) = (uint64_t)reloc->callee;
     memcpy(reloc->bytes, bytes, reloc->size);
 #endif
-#ifdef __aarch64__
+#if defined(__aarch64__) || defined(_M_ARM64)
     reloc->size = 16u;
     reloc->bytes = calloc(1u,  reloc->size);
 
@@ -234,7 +237,7 @@ reloc_make(void* address, void* target, bool thumb) {
     *(uint64_t*)(bytes + 8u) = htole64((uint64_t)reloc->callee);
     memcpy(reloc->bytes, bytes, reloc->size);
 #endif
-#ifdef __i386
+#if defined(__i386) || defined(_M_IX86)
     /* todo; clobbering is possible with different calling conventions on win32, ie.
      *  cdecl vs. fastcall vs. stdcall. */
     reloc->size = 7u;
@@ -247,7 +250,7 @@ reloc_make(void* address, void* target, bool thumb) {
     *(uint32_t*)(bytes + 1u) = (uint32_t)reloc->callee;
     memcpy(reloc->bytes, bytes, reloc->size);
 #endif
-#ifdef __arm__
+#if defined(__arm__) || defined(_M_ARM)
     /* if we are in thumb-mode, we need to set the reloc address to have the thumb-bit enabled. */
     reloc->size = 12u;
     reloc->bytes = calloc(1u,  reloc->size);

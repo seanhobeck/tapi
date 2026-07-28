@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-21
+ * @date 2026-07-28
  */
 #ifndef TAPI_MOCK_H
 #define TAPI_MOCK_H
@@ -139,7 +139,7 @@ typedef struct {
  *  assumed to be regular not special and will replace every call occurrence found.
  * @return an allocated mock structure ready to be applied.
  */
-tapi_mock_t*
+TAPI_EXPORT tapi_mock_t*
 tapi_make_mock(void* orig, void* target, void* mocked, size_t call_index);
 
 #ifndef TAPI_MINIMAL
@@ -156,7 +156,7 @@ tapi_make_mock(void* orig, void* target, void* mocked, size_t call_index);
  * @param set_errno should the autostub associated with this mock set errno?
  * @return an allocated mock structure ready to be applied.
  */
-tapi_mock_t*
+TAPI_EXPORT tapi_mock_t*
 tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, \
     tapi_action_t action, bool set_errno);
 #endif

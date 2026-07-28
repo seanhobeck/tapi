@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Source Files\int">
+      <UniqueIdentifier>{f6660a45-36f8-4a40-9945-18ecf738db3c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\capture.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dyna.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\mock.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sink.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\tapi.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\int\arch.c">
+      <Filter>Source Files\int</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\int\det.c">
+      <Filter>Source Files\int</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\int\entry.c">
+      <Filter>Source Files\int</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\int\guard.c">
+      <Filter>Source Files\int</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\int\patch.c">
+      <Filter>Source Files\int</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\int\sig.c">
+      <Filter>Source Files\int</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\int\elf.c">
+      <Filter>Source Files\int</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\int\lnk.c">
+      <Filter>Source Files\int</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\int\map.c">
+      <Filter>Source Files\int</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\int\reloc.c">
+      <Filter>Source Files\int</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\int\arch.h">
+      <Filter>Source Files\int</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\int\det.h">
+      <Filter>Source Files\int</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\int\guard.h">
+      <Filter>Source Files\int</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\int\intt.h">
+      <Filter>Source Files\int</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\int\patch.h">
+      <Filter>Source Files\int</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\int\sig.h">
+      <Filter>Source Files\int</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tapi\capture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tapi\dyna.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tapi\mock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tapi\sink.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tapi\tapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\int\elf.h">
+      <Filter>Source Files\int</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\int\lnk.h">
+      <Filter>Source Files\int</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\int\map.h">
+      <Filter>Source Files\int</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\int\reloc.h">
+      <Filter>Source Files\int</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-26
+ * @date 2026-07-27
  */
 #include <tapi/sink.h>
 
@@ -11,6 +11,50 @@
 /*! uses errno. */
 #include <errno.h>
 /** \endcond */
+#ifdef _WIN32
+/*! uses _sopen_s, rewind etc.. */
+#include <io.h>
+
+/*! uses _O_CREAT, etc... */
+#include <fcntl.h>
+
+/*! uses _S_IREAD, _S_IWRITE. */
+#include <sys/stat.h>
+
+/**
+ * @brief open a memory stream for a buffer.
+ * 
+ * @param buffer the buffer to open a memory stream to.
+ * @param length the length of the memory buffer.
+ * @param mode the mode in which the stream should be opened.
+ * @return an open stream if successful, 0x0 o.w.
+ */
+tapi_stream_t 
+fmemopen(void* buffer, const size_t length, const char* mode) {
+    char tmp[MAX_PATH - 13u], name[MAX_PATH + 1u];
+    int retval = -1, fd = 0u;
+    FILE* fptr = 0x0;
+    
+    /* get data for a temporary path. */
+    if (!GetTempPathA(MAX_PATH - 13u, tmp)) return 0x0;
+    if (!GetTempFileNameA(tmp, "MemTF_", 0, name)) return 0x0;
+    
+    /* open the temporary path and get the FILE*. */
+    retval = _sopen_s(&fd, name, _O_CREAT | _O_SHORT_LIVED | _O_TEMPORARY | _O_RDWR | \
+        _O_BINARY | O_NOINHERIT, _SH_DENYRW, _S_IREAD | _S_IWRITE);
+    if (retval != 0 || fd == -1) return 0x0;
+
+    /* attempt to open the file descriptor and write to it then rewind. */
+    fptr = _fdopen(fd, "wb+");
+    if (!fptr) {
+        _close(fd);
+        return 0x0;
+    }
+    fwrite(buffer, length, 1u, fptr);
+    rewind(fptr);
+    return fptr;
+};
+#endif
 
 /**
  * @brief make a sink structure to be written to.

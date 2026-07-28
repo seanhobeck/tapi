@@ -5,14 +5,19 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-21
+ * @date 2026-07-28
  */
 #ifndef TAPI_DYNA_H
 #define TAPI_DYNA_H
 
+#ifndef _WIN32
 /*! uses pthread_rwlock. */
 #define _XOPEN_SOURCE 600u /* enables POSIX.1-2001 */
 #include <pthread.h>
+#else
+/*! uses SRWLOCK. */
+#include <windows.h>
+#endif
 
 /*! uses size_t. */
 #include <stddef.h>
@@ -23,7 +28,7 @@
 #define TAPI_HIDDEN __attribute__((visibility("hidden")))
 #else
 /* if we are using msvc toolchain (winapi). */
-#if (defined(_MSC_VER))
+#if defined(_MSC_VER)
 #define TAPI_EXPORT __declspec(dllexport)
 #define TAPI_HIDDEN
 #else
@@ -62,7 +67,11 @@ typedef struct {
     size_t length, capacity;
 #ifdef TAPI_THREAD_SAFE
     /** a read-write access lock to data (only one thread writes at a time). */
+#ifndef _WIN32
     pthread_rwlock_t lock;
+#else
+    SRWLOCK lock;
+#endif
 #endif
 } tapi_dyna_t;
 
@@ -138,6 +147,7 @@ tapi_dyna_make(void** data, size_t length);
 
 /*! if we are compiling with the thread-safe flag. */
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
 /* starting an iteration. */
 #define dyna_foreach_it(array, type, var, iter) \
     pthread_rwlock_rdlock(&(array)->lock); \
@@ -166,6 +176,36 @@ tapi_dyna_make(void** data, size_t length);
 #define dyna_endforeach(array) \
     } \
     pthread_rwlock_unlock(&(array)->lock);
+#else
+/* starting an iteration. */
+#define dyna_foreach_it(array, type, var, iter) \
+    AcquireSRWLockShared(&(array)->lock); \
+    for (size_t iter = 0; iter < (array)->length; iter++) { \
+        type var = dyna_get(array, type, iter);
+
+/* starting an iteration. */
+#define dyna_foreach(array, type, var) \
+    AcquireSRWLockShared(&(array)->lock); \
+    for (size_t i = 0; i < (array)->length; i++) { \
+        type var = dyna_get(array, type, i);
+
+/* starting an iteration, backwards. */
+#define dyna_inv_foreach(array, type, var) \
+    AcquireSRWLockShared(&(array)->lock); \
+    for (size_t i = (array)->length; i != 0; i--) { \
+        type var = dyna_get(array, type, i - 1);
+
+/* starting an iteration, backwards. */
+#define dyna_inv_foreach_it(array, type, var, iter) \
+    AcquireSRWLockShared(&(array)->lock); \
+    for (size_t iter = (array)->length; iter != 0; iter--) { \
+        type var = dyna_get(array, type, iter - 1);
+
+/* ending an iteration. */
+#define dyna_endforeach(array) \
+    } \
+    ReleaseSRWLockShared(&(array)->lock);
+#endif
 #else
 /* starting an iteration. */
 #define dyna_foreach_it(array, type, var, iter) \

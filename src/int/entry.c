@@ -1,17 +1,24 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-09
+ * @date 2026-07-25
  */
-/*! uses plt_init. */
-#include "int/lnk.h"
+/*! uses lnk_init. */
+#include "lnk.h"
 
 /** @brief library entry point. */
 #ifdef __gnu_linux__
 __attribute__((constructor))
-#endif
 void lt_entry() {
+#else
+/*! uses BOOL, WINAPI(__stdcall), HINSTANCE, etc... */
+#include <windows.h>
+BOOL WINAPI DllMain(HINSTANCE hInstanceDll, DWORD dwReason, LPVOID lpvReserved) {
+#endif
     lnk_init();
+#ifdef _WIN32
+    return TRUE;
+#endif
 }
 
 /** @brief library exit point. */

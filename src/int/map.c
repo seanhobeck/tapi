@@ -30,7 +30,7 @@
  */
 /**
  * @author Sean Hobeck
- * @date 2026-07-16
+ * @date 2026-07-27
  */
 #include "map.h"
 
@@ -140,7 +140,11 @@ map_make(void) {
     map->t1 = calloc(16u, sizeof(entry_t));
     map->t2 = calloc(16u, sizeof(entry_t));
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
     pthread_rwlock_init(&map->lock, 0x0);
+#else
+    SRWLOCK lock;
+#endif
 #endif
     return map;
 };
@@ -157,7 +161,11 @@ map_resize(map_t* map, size_t new_size) {
     /* make copy of the tables, then allocate new ones. */
     assert(map != 0x0);
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
     pthread_rwlock_wrlock(&map->lock);
+#else
+    AcquireSRWLockExclusive(&map->lock);
+#endif
 #endif
     entry_t* c1 = map->t1, *c2 = map->t2;
     size_t size = map->size;
@@ -179,8 +187,12 @@ map_resize(map_t* map, size_t new_size) {
     }
     free(c1);
     free(c2);
-#ifdef TAPI_THREAD_SAFE
+#ifdef TAPI_THREAD_SAFE 
+#ifndef _WIN32
     pthread_rwlock_unlock(&map->lock);
+#else
+    ReleaseSRWLockExclusive(&map->lock);
+#endif
 #endif
 };
 
@@ -209,13 +221,28 @@ map_push(map_t* map, const char* key, void* value) {
     assert(map != 0x0 && key != 0x0);
     entry_t* existing = map_lookup(map, key);
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
     pthread_rwlock_wrlock(&map->lock);
+#else
+    AcquireSRWLockExclusive(&map->lock);
+#endif
 #endif
     if (existing != 0x0) {
         free_entry(existing);
         existing->occupied = true;
+#ifndef _WIN32
         existing->key = strdup(key);
+#else
+        existing->key = _strdup(key);
+#endif
         existing->value = value;
+#ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
+        pthread_rwlock_unlock(&map->lock);
+#else
+        ReleaseSRWLockExclusive(&map->lock);
+#endif
+#endif
         return;
     }
 
@@ -227,7 +254,11 @@ map_push(map_t* map, const char* key, void* value) {
     /* chain... */
     uint64_t iter = 0x0, table = 1u;
     void* iter_value = value;
+#ifndef _WIN32
     char* iter_key = strdup(key);
+#else
+    char* iter_key = _strdup(key);
+#endif
     for (size_t chain = 0u; chain < MAX_CHAIN; chain++) {
         /* if we are on t1. */
         if (table == 1u) {
@@ -238,6 +269,13 @@ map_push(map_t* map, const char* key, void* value) {
                 map->t1[iter].value = iter_value;
                 map->t1[iter].occupied = true;
                 map->count++;
+#ifdef TAPI_THREAD_SAFE 
+#ifndef _WIN32
+                pthread_rwlock_unlock(&map->lock);
+#else
+                ReleaseSRWLockExclusive(&map->lock);
+#endif
+#endif
                 return;
             }
             entry_t* entry = &map->t1[iter];
@@ -259,6 +297,13 @@ map_push(map_t* map, const char* key, void* value) {
                 map->t2[iter].value = iter_value;
                 map->t2[iter].occupied = true;
                 map->count++;
+#ifdef TAPI_THREAD_SAFE 
+#ifndef _WIN32
+                pthread_rwlock_unlock(&map->lock);
+#else
+                ReleaseSRWLockExclusive(&map->lock);
+#endif
+#endif
                 return;
             }
             entry_t* entry = &map->t2[iter];
@@ -276,8 +321,12 @@ map_push(map_t* map, const char* key, void* value) {
 
     /* if we couldn't emplace, resize to double and try again. */
     free(iter_key);
-#ifdef TAPI_THREAD_SAFE
+#ifdef TAPI_THREAD_SAFE 
+#ifndef _WIN32
     pthread_rwlock_unlock(&map->lock);
+#else
+    ReleaseSRWLockExclusive(&map->lock);
+#endif
 #endif
     /* shouldn't recurse very far but still possible. */
     if (depth < MAX_DEPTH) {
@@ -302,19 +351,31 @@ map_pop(map_t* map, const char* key) {
     /* attempt to look up the entry. */
     entry_t* entry = map_lookup(map, key);
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
     pthread_rwlock_wrlock(&map->lock);
+#else
+    AcquireSRWLockExclusive(&map->lock);
+#endif
 #endif
     if (entry != 0x0) {
         entry_t* copy = calloc(1u, sizeof *copy);
         memcpy(copy, entry, sizeof *copy);
         free_entry(entry);
-#ifdef TAPI_THREAD_SAFE
+#ifdef TAPI_THREAD_SAFE 
+#ifndef _WIN32
         pthread_rwlock_unlock(&map->lock);
+#else
+        ReleaseSRWLockExclusive(&map->lock);
+#endif
 #endif
         return copy;
     }
-#ifdef TAPI_THREAD_SAFE
+#ifdef TAPI_THREAD_SAFE 
+#ifndef _WIN32
     pthread_rwlock_unlock(&map->lock);
+#else
+    ReleaseSRWLockExclusive(&map->lock);
+#endif
 #endif
     return 0x0; /* not found :( */
 };
@@ -331,24 +392,40 @@ map_lookup(map_t* map, const char* key) {
     /* check t1 then t2, very simple. */
     assert(map != 0x0 && key != 0x0);
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
     pthread_rwlock_rdlock(&map->lock);
+#else
+    AcquireSRWLockShared(&map->lock);
+#endif
 #endif
     uint64_t idx = hash1(key, map->size);
     if (map->t1[idx].occupied && strcmp(map->t1[idx].key, key) == 0) {
-#ifdef TAPI_THREAD_SAFE
+#ifdef TAPI_THREAD_SAFE 
+#ifndef _WIN32
         pthread_rwlock_unlock(&map->lock);
+#else
+        ReleaseSRWLockShared(&map->lock);
+#endif
 #endif
         return &map->t1[idx];
     }
     idx = hash2(key, map->size);
     if (map->t2[idx].occupied && strcmp(map->t2[idx].key, key) == 0) {
-#ifdef TAPI_THREAD_SAFE
+#ifdef TAPI_THREAD_SAFE 
+#ifndef _WIN32
         pthread_rwlock_unlock(&map->lock);
+#else
+        ReleaseSRWLockShared(&map->lock);
+#endif
 #endif
         return &map->t2[idx];
     }
-#ifdef TAPI_THREAD_SAFE
+#ifdef TAPI_THREAD_SAFE 
+#ifndef _WIN32
     pthread_rwlock_unlock(&map->lock);
+#else
+    ReleaseSRWLockShared(&map->lock);
+#endif
 #endif
     return 0x0; /* not found :( */
 };
@@ -365,15 +442,23 @@ map_cleanup(map_t* map) {
     /* make copy of the tables, then allocate new ones. */
     assert(map != 0x0);
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
     pthread_rwlock_wrlock(&map->lock);
+#else
+    AcquireSRWLockExclusive(&map->lock);
+#endif
 #endif
     /* iterate... */
     for (size_t i = 0u; i < map->size; i++) {
         if (map->t1[i].occupied) free_entry(&map->t1[i]);
         if (map->t2[i].occupied) free_entry(&map->t2[i]);
     }
-#ifdef TAPI_THREAD_SAFE
+#ifdef TAPI_THREAD_SAFE 
+#ifndef _WIN32
     pthread_rwlock_unlock(&map->lock);
+#else
+    ReleaseSRWLockExclusive(&map->lock);
+#endif
 #endif
     free(map->t1);
     free(map->t2);

@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-17
+ * @date 2026-07-25
  */
 #include "guard.h"
 
@@ -19,7 +19,7 @@
 #include "intt.h"
 
 /*! uses dyna_t, etc... */
-#include "dyna.h"
+#include <tapi/dyna.h>
 
 /**
  * @brief close/ restore the write-protect guard.
