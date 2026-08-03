@@ -154,25 +154,25 @@ tapi_dyna_make(void** data, size_t length);
 #define dyna_foreach_it(array, type, var, iter) \
     pthread_rwlock_rdlock(&(array)->lock); \
     for (size_t iter = 0; iter < (array)->length; iter++) { \
-        type var = dyna_get(array, type, iter);
+        type var = (type)(array->data[iter]);
 
 /* starting an iteration. */
 #define dyna_foreach(array, type, var) \
     pthread_rwlock_rdlock(&(array)->lock); \
     for (size_t i = 0; i < (array)->length; i++) { \
-        type var = dyna_get(array, type, i);
+        type var = (type)(array->data[i]);
 
 /* starting an iteration, backwards. */
 #define dyna_inv_foreach(array, type, var) \
     pthread_rwlock_rdlock(&(array)->lock); \
     for (size_t i = (array)->length; i != 0; i--) { \
-        type var = dyna_get(array, type, i - 1);
+        type var = (type)(array->data[i - 1]);
 
 /* starting an iteration, backwards. */
 #define dyna_inv_foreach_it(array, type, var, iter) \
     pthread_rwlock_rdlock(&(array)->lock); \
     for (size_t iter = (array)->length; iter != 0; iter--) { \
-        type var = dyna_get(array, type, iter - 1);
+        type var = (type)(array->data[iter - 1]);
 
 /* ending an iteration. */
 #define dyna_endforeach(array) \
@@ -183,25 +183,25 @@ tapi_dyna_make(void** data, size_t length);
 #define dyna_foreach_it(array, type, var, iter) \
     AcquireSRWLockShared(&(array)->lock); \
     for (size_t iter = 0; iter < (array)->length; iter++) { \
-        type var = dyna_get(array, type, iter);
+        type var = (type)(array->data[iter]);
 
 /* starting an iteration. */
 #define dyna_foreach(array, type, var) \
     AcquireSRWLockShared(&(array)->lock); \
     for (size_t i = 0; i < (array)->length; i++) { \
-        type var = dyna_get(array, type, i);
+        type var = (type)(array->data[i]);
 
 /* starting an iteration, backwards. */
 #define dyna_inv_foreach(array, type, var) \
     AcquireSRWLockShared(&(array)->lock); \
     for (size_t i = (array)->length; i != 0; i--) { \
-        type var = dyna_get(array, type, i - 1);
+        type var = (type)(array->data[i - 1]);
 
 /* starting an iteration, backwards. */
 #define dyna_inv_foreach_it(array, type, var, iter) \
     AcquireSRWLockShared(&(array)->lock); \
     for (size_t iter = (array)->length; iter != 0; iter--) { \
-        type var = dyna_get(array, type, iter - 1);
+        type var =(type)(array->data[iter - 1]);
 
 /* ending an iteration. */
 #define dyna_endforeach(array) \

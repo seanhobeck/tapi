@@ -90,6 +90,13 @@ tapi_dyna_push(tapi_dyna_t* array, void* data) {
         if (!_data) {
             /* NOLINTNEXTLINE */
             fprintf(stderr, "tapi, dyna_push; realloc failed; could not allocate memory for push.");
+#ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
+            pthread_rwlock_unlock(&array->lock);
+#else
+            ReleaseSRWLockExclusive(&array->lock);
+#endif
+#endif
             return; /* do NOT exit on failure. */
         }
         array->data = _data;
@@ -175,8 +182,16 @@ tapi_dyna_get(tapi_dyna_t* array, size_t index) {
 #endif
 
     /* if the index is out of bounds. */
-    if (index >= array->length)
+    if (index >= array->length) {
+#ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
+        pthread_rwlock_unlock(&array->lock);
+#else           
+        ReleaseSRWLockShared(&array->lock);
+#endif
+#endif
         return 0x0;
+    }
 #ifdef TAPI_THREAD_SAFE
 #ifndef _WIN32
     pthread_rwlock_unlock(&array->lock);
@@ -209,6 +224,13 @@ tapi_dyna_shrink(tapi_dyna_t* array) {
     if (!_data) {
         /* NOLINTNEXTLINE */
         fprintf(stderr, "tapi, dyna_shrink; realloc failed; could not allocate memory for shrink.");
+#ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
+        pthread_rwlock_unlock(&array->lock);
+#else
+        ReleaseSRWLockExclusive(&array->lock);
+#endif
+#endif
         exit(EXIT_FAILURE); /* exit on failure. */
     }
     array->data = _data;
