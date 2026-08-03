@@ -36,7 +36,7 @@ guard_close(guard_t* guard) {
     }
 #else
     DWORD tmp;
-    if (VirtualProtect(guard->address, guard->length, guard->flags, &tmp) != 0x0) {
+    if (VirtualProtect(guard->address, guard->length, guard->flags, &tmp) == 0x0) {
         /* we can actually use MSVCs "safe" version for fprintf. */
         fprintf_s(stderr, "tapi, guard_close; VirtualProtect failed; could not close pguard.");
     }
@@ -77,8 +77,7 @@ guard_create(tapi_context_t* context, void* address, size_t length) {
     /* winapi doesn't care and does it for us. */
     guard->address = address;
     guard->length = length;
-    if (VirtualProtect(guard->address, length, PAGE_EXECUTE_READWRITE, &guard->flags) !=
-        0x0) {
+    if (VirtualProtect(guard->address, length, PAGE_EXECUTE_READWRITE, &guard->flags) == 0x0) {
         /* we can actually use MSVCs "safe" version for fprintf. */
         fprintf_s(stderr, "tapi, guard_create; mprotect failed; could not change page access for guard!");
 #endif

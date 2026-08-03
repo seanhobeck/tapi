@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-26
+ * @date 2026-07-30
  */
 /*! uses int. module to be tested. */
 #include "int/sig.h"
@@ -646,17 +646,24 @@ test_aarch64_chk_9(csh handle) {
     printf("correctly checked aarch64 (autiasp) instruction!\n");
 };
 
+#ifndef _WIN32
 int main() {
+#else
+/*! for test_sig. */
+#include "test_sig.h"
+
+int test_sig() {
+#endif
     /* open with architecture etc... */
     cs_arch arch;
     cs_mode mode;
-#ifdef __amd64__
+#if defined(__amd64__) || defined(_M_AMD64)
     arch = CS_ARCH_X86; mode = CS_MODE_64;
 #endif
-#ifdef __i386__
+#if defined(__i386__) || defined(_M_IX86)
     arch = CS_ARCH_X86; mode = CS_MODE_32;
 #endif
-#ifdef __aarch64__
+#if defined(__aarch64__) || defined(_M_ARM64)
     arch = CS_ARCH_AARCH64; mode = CS_MODE_ARM;
 #endif
 #ifdef __arm__
@@ -665,12 +672,14 @@ int main() {
     csh handle;
 
     /* detect if we need to use thumb based on the thumb bit. */
+#ifndef _WIN32
     void* address = (void*) &main;
     bool is_thumb = mode == CS_MODE_ARM && (uintptr_t)address & 1u;
     if (is_thumb) {
         address = (void*)((uintptr_t)address & ~1u);
         mode = CS_MODE_THUMB;
     }
+#endif
     cs_open(arch, mode, &handle);
     cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
 

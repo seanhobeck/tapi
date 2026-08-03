@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-25
+ * @date 2026-07-31
  */
 #define _GNU_SOURCE /*! needed for dl_iterate_phdr. */
 #include "lnk.h"
@@ -23,6 +23,9 @@
 #include <link.h>
 #endif
 
+/*! uses cs_insn, cs_disas. */
+#include <capstone/capstone.h>
+
 /*! uses elf_t, elf_parse, ... */
 #include "elf.h"
 
@@ -30,9 +33,9 @@
 #include "intt.h"
 
 /*! uses map_t, ... */
-#include <capstone/capstone.h>
-
 #include "map.h"
+
+/*! uses sig_compare. */
 #include "sig.h"
 
 /* an internal list for all the plt entries. */
@@ -317,6 +320,41 @@ lnk_resolve(const char* name) {
         return 0x0;
     return entry->value;
 };
+
+#ifdef _WIN32
+/*! uses get_arch. */
+#include "arch.h"
+
+/**
+ * @brief quickly resolve a windows thunk.
+ *
+ * @param address the address of the thunk.
+ * @return the actual address of what is being called at the thunk.
+ */
+void*
+lnk_qr_thunk(void* address) {
+    /* to resolve these incremental thunks, we simply evaluate the address of the jmp. */
+    csh handle;
+    arch_t arch = get_arch(); /* we don't need to worry about arm32th (thank god). */
+    cs_open(arch.arch, arch.mode, &handle);
+    cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
+    cs_insn* insn = cs_malloc(handle);
+    if (!insn) {
+        cs_close(&handle);
+        /* NOLINTNEXTLINE */
+        fprintf(stderr, "tapi, lnk_qr_thunk; cs_malloc failed; could not allocate memory for "
+            "instructions.");
+        return 0;
+    }
+    
+    /* disassemble just the jump (e9 rel32). */
+    const uint8_t* bytes = (uint8_t*)address;
+    cs_disasm(handle, bytes, 5u, (uintptr_t)address, 1u, &insn);
+    if (!insn->op_str) return 0x0;
+    uintptr_t value = strtoll((char*)(insn->op_str + 2u), 0x0, 16u);
+    return value;
+};
+#endif  
 
 /** @brief clean up the internal plt_table. */
 void

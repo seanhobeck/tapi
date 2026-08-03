@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-06-26
+ * @date 2026-07-30
  */
 /*! uses int. module to be tested. */
 #include "int/guard.h"
@@ -23,6 +23,18 @@
 /*! uses strcpy. */
 #include <string.h>
 
+/*! uses lnk_qr_thunk. */
+#include "lnk.h"
+
+/*! noinline macro. */
+#ifdef _WIN32
+#define TEST_NOINLINE __declspec(noinline)
+#define raddressof(function) lnk_qr_thunk(&function)
+#else
+#define TEST_NOINLINE __attribute__((noinline))
+#define raddressof(function) &function
+#endif
+
 /*! uses VirtualQuery for windows. */
 #ifdef _WIN32
 #include <windows.h>
@@ -35,7 +47,7 @@
  * this is a function that results in a large amount of space allocated \
  *  due to casts, calculations and calls.
  */
-long
+TEST_NOINLINE long
 some_function(int a, short b, char** c) {
     long d = a + b * **c;
     printf("this is the result of this function, %ld\n", d);
@@ -44,14 +56,25 @@ some_function(int a, short b, char** c) {
     return f;
 };
 
+#ifndef _WIN32
 int main() {
+#else
+/*! for test_guard. */
+#include "test_guard.h"
+
+int test_guard() {
+#endif
     /* guard_create unit tests. */
     printf("----src/int/guard.c: 'guard_create' unit tests----\n");
     tapi_context_t* context = calloc(1u, sizeof *context);
     context->guards = tapi_dyna_create();
 
     /* arrange & act. */
+#ifndef _WIN32
     void* address = &some_function;
+#else
+    void* address = lnk_qr_thunk(&some_function);
+#endif
     guard_create(context, address, 0xf0);
 
     /* assert. */
@@ -80,6 +103,7 @@ int main() {
             }
         }
     }
+    fclose(ptr);
 #endif
 #ifdef _WIN32
     MEMORY_BASIC_INFORMATION mbi;
@@ -90,6 +114,5 @@ int main() {
         else assert("failed, page permissions not correct(win32)!\n");
     }
 #endif
-    fclose(ptr);
     return 0;
 };

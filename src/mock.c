@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-21
+ * @date 2026-08-02
  */
 #include <tapi/mock.h>
 
@@ -20,7 +20,7 @@
 /*! uses patch_call_target. */
 #include "patch.h"
 
-/*! uses plt_resolve. */
+/*! uses lnk_resolve, lnk_qr_thunk. */
 #include "lnk.h"
 
 /*! uses internal. */
@@ -134,7 +134,11 @@ tapi_mock_t*
 tapi_make_mock(void* orig, void* target, void* mocked, size_t call_index) {
     /* allocate the structure. */
     tapi_mock_t* mock = calloc(1u, sizeof *mock);
+#ifndef _WIN32
     mock->orig = orig;
+#else
+    mock->orig = lnk_qr_thunk(orig);  /* on windows, most calls are to the iat thunk and not to the function itself. */
+#endif
     mock->target = target;
     mock->mocked = mocked;
     mock->call_index = call_index;
@@ -163,7 +167,11 @@ tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, \
     tapi_action_t action, bool set_errno) {
     /* allocate the structure. */
     tapi_mock_t* mock = calloc(1u, sizeof *mock);
+#ifndef _WIN32
     mock->orig = orig;
+#else
+    mock->orig = lnk_qr_thunk(orig); /* again most calls are to the thunk, no reloc is needed. */
+#endif
     mock->target = lnk_resolve(target_name);
     if (mock->target == 0x0) {
         fprintf(stderr, "tapi_make_auto_mock; failed to resolve " \

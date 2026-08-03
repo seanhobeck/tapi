@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-20
+ * @date 2026-08-02
  */
 /*! uses int. module to be tested. */
 #include "int/det.h"
@@ -17,10 +17,22 @@
 /*! uses MAYBE_UNUSED. */
 #include "ptc.h"
 
+/*! uses lnk_qr_thunk. */
+#include "lnk.h"
+
+/*! noinline macro. */
+#ifdef _WIN32
+#define TEST_NOINLINE __declspec(noinline)
+#define raddressof(function) lnk_qr_thunk(&function)
+#else
+#define TEST_NOINLINE __attribute__((noinline))
+#define raddressof(function) &function
+#endif
+
 /*!
  * this is just a random function that performs some computations and file i/o.
  */
-long
+TEST_NOINLINE long
 general_function(long a, short b, int c) {
     long d = a + b;
     char buf[256];
@@ -35,8 +47,9 @@ general_function(long a, short b, int c) {
  *
  * int negate_plus_one(int x) { return ~x + 1; }
  */
-int
+TEST_NOINLINE int
 inline_fun(MAYBE_UNUSED int x) {
+#ifndef _WIN32
     __asm(
 #ifdef __amd64__
     "\tmov -0x4(%rbp), %eax\n"
@@ -56,12 +69,15 @@ inline_fun(MAYBE_UNUSED int x) {
     "\tbx lr\n"
 #endif
     );
+#else
+    return -x;
+#endif
 }
 
 /*!
  * this is just a recursive fibonacci function.
  */
-int
+TEST_NOINLINE int
 recursive_fibonacci(int n) {
     if (n == 0) return 0;
     if (n == 1) return 1;
@@ -71,7 +87,7 @@ recursive_fibonacci(int n) {
 /*!
  * this function calls a bunch of other functions.
  */
-void
+TEST_NOINLINE void
 random_calls() {
     int result = general_function(1, 2, 3);
     int result2 = inline_fun(4);
@@ -85,7 +101,8 @@ random_calls() {
 /*!
  * this function gets the tls pointer using intrinsics.
  */
-void*
+#ifndef _WIN32
+TEST_NOINLINE void*
 intrinsic_fun() {
     void* ptr;
 #ifdef __amd64__
@@ -114,6 +131,18 @@ intrinsic_fun() {
 #endif
     return ptr;
 }
+#else
+/*! uses __readgsqword/fsdword. */
+#include <intrin.h>
+TEST_NOINLINE void*
+intrinsic_fun() {
+#ifdef _M_AMD64
+    return __readgsqword(0x30);
+#elif defined(_M_IX86)
+    return __readfsdword(0x18);
+#endif
+}
+#endif
 
 /**
  * @brief test 'det_function_size' for the example function general_function
@@ -122,7 +151,7 @@ intrinsic_fun() {
 void
 test_fs_general(void) {
     /* arrange, act, assert. */
-    size_t size = det_function_size((void*) general_function, 0x100);
+    size_t size = det_function_size(raddressof(general_function), 0x100);
 #ifdef __amd64__
     assert(size == 0xbd);
 #endif
@@ -135,6 +164,12 @@ test_fs_general(void) {
 #ifdef __arm__
     assert(size == 0xca);
 #endif
+#ifdef _M_AMD64
+    assert(size == 0x95);
+#endif
+#ifdef _M_IX86
+    assert(size == 0x77);
+#endif
     printf("correctly determined a general functions size: 0x%lx!\n", size);
 }
 
@@ -145,7 +180,7 @@ test_fs_general(void) {
 void
 test_fs_inline(void) {
     /* arrange, act, assert. */
-    size_t size = det_function_size((void*) inline_fun, 0x24);
+    size_t size = det_function_size(raddressof(inline_fun), 0x24);
 #ifdef __amd64__
     assert(size == 0x17);
 #endif
@@ -158,6 +193,12 @@ test_fs_inline(void) {
 #ifdef __arm__
     assert(size == 0x1c);
 #endif
+#ifdef _M_AMD64
+    assert(size == 0xb);
+#endif
+#ifdef _M_IX86
+    assert(size == 0xa);
+#endif
     printf("correctly determined an inline asm. function size: 0x%lx!\n", size);
 }
 
@@ -168,7 +209,7 @@ test_fs_inline(void) {
 void
 test_fs_recursive(void) {
     /* arrange, act, assert. */
-    size_t size = det_function_size((void*) recursive_fibonacci, 0x100);
+    size_t size = det_function_size(raddressof(recursive_fibonacci), 0x100);
 #ifdef __amd64__
     assert(size == 0x4e);
 #endif
@@ -181,6 +222,12 @@ test_fs_recursive(void) {
 #ifdef __arm__
     assert(size == 0x3e);
 #endif
+#ifdef _M_AMD64
+    assert(size == 0x4b);
+#endif
+#ifdef _M_IX86
+    assert(size == 0x40);
+#endif
     printf("correctly determined a recursive functions size: 0x%lx!\n", size);
 }
 
@@ -191,7 +238,7 @@ test_fs_recursive(void) {
 void
 test_fs_random(void) {
     /* arrange, act, assert. */
-    size_t size = det_function_size((void*) random_calls, 0xf0);
+    size_t size = det_function_size(raddressof(random_calls), 0xf0);
 #ifdef __amd64__
     assert(size == 0xae);
 #endif
@@ -204,6 +251,12 @@ test_fs_random(void) {
 #ifdef __arm__
     assert(size == 0x64);
 #endif
+#ifdef _M_AMD64
+    assert(size == 0x8c);
+#endif
+#ifdef _M_IX86
+    assert(size == 0x80);
+#endif
     printf("correctly determined a function with a set of random calls size: 0x%lx!\n", size);
 }
 
@@ -214,7 +267,7 @@ test_fs_random(void) {
 void
 test_fs_intrinsic(void) {
     /* arrange, act, assert. */
-    size_t size = det_function_size((void*) intrinsic_fun, 0x40);
+    size_t size = det_function_size(raddressof(intrinsic_fun), 0x40);
 #ifdef __amd64__
     assert(size == 0x1b);
 #endif
@@ -227,6 +280,12 @@ test_fs_intrinsic(void) {
 #ifdef __arm__
     assert(size == 0x1a);
 #endif
+#ifdef _M_AMD64
+    assert(size == 0xa);
+#endif
+#ifdef _M_IX86
+    assert(size == 0xb);
+#endif
     printf("correctly determined a function with intrinsics size: 0x%lx!\n", size);
 }
 
@@ -237,13 +296,13 @@ test_fs_intrinsic(void) {
 void
 test_ct_random_calls_general(void) {
     /* arrange, act, assert. */
-    det_call_t* target = det_call_target((void*) random_calls, (void*) general_function);
+    det_call_t* target = det_call_target(raddressof(random_calls), &general_function);
     assert(target != 0x0);
     assert(target->call != 0x0);
     /* this is here for the time being, there is some issue with the thumb bit or something on armhf,
         since it seems that the addresses in gdb-multiarch are completely the same (with runtime eval). */
 #ifndef __arm__
-    assert(target->dest == general_function);
+    assert(target->dest == &general_function);
 #endif
     printf("correctly determined a relative call to another function at: 0x%p!\n", target->call);
 }
@@ -255,11 +314,11 @@ test_ct_random_calls_general(void) {
 void
 test_ct_random_calls_inline(void) {
     /* arrange, act, assert. */
-    det_call_t* target = det_call_target((void*) random_calls, (void*) inline_fun);
+    det_call_t* target = det_call_target(raddressof(random_calls), &inline_fun);
     assert(target != 0x0);
     assert(target->call != 0x0);
 #ifndef __arm__
-    assert(target->dest == inline_fun);
+    assert(target->dest == &inline_fun);
 #endif
     printf("correctly determined a relative call to a inline function at: 0x%p!\n", target->call);
 }
@@ -271,11 +330,11 @@ test_ct_random_calls_inline(void) {
 void
 test_ct_random_calls_recursive(void) {
     /* arrange, act, assert. */
-    det_call_t* target = det_call_target((void*) random_calls, (void*) recursive_fibonacci);
+    det_call_t* target = det_call_target(raddressof(random_calls), &recursive_fibonacci);
     assert(target != 0x0);
     assert(target->call != 0x0);
 #ifndef __arm__
-    assert(target->dest == recursive_fibonacci);
+    assert(target->dest == &recursive_fibonacci);
 #endif
     printf("correctly determined a relative call to a recursive function at: 0x%p!\n", target->call);
 }
@@ -287,7 +346,7 @@ test_ct_random_calls_recursive(void) {
 void
 test_ct_random_calls_dne(void) {
     /* arrange, act, assert. */
-    det_call_t* target = det_call_target((void*) random_calls, (void*) test_fs_general);
+    det_call_t* target = det_call_target(raddressof(random_calls), &test_fs_general);
     assert(target == 0x0);
     printf("correctly determined no relative call to a function!\n");
 }
@@ -299,16 +358,24 @@ test_ct_random_calls_dne(void) {
 void
 test_ct_recursive_itself(void) {
     /* arrange, act, assert. */
-    det_call_t* target = det_call_target((void*) recursive_fibonacci, (void*) recursive_fibonacci);
+    det_call_t* target = det_call_target(raddressof(recursive_fibonacci), &recursive_fibonacci);
     assert(target != 0x0);
     assert(target->call != 0x0);
 #ifndef __arm__
-    assert(target->dest == recursive_fibonacci);
+    assert(target->dest == &recursive_fibonacci);
 #endif
     printf("correctly determined a relative call to self at: 0x%p!\n", target->call);
 }
 
+/* we use a singular main function per suite of testing done. */
+#ifndef _WIN32
 int main() {
+#else
+/*! for test_det. */
+#include "test_det.h"
+
+int test_det() {
+#endif
     /* det_function_size unit tests (some arch rely on src/int/sig). */
     printf("----src/int/det.c: 'det_function_size' unit tests----\n");
     test_fs_general();

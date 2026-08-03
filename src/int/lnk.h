@@ -19,6 +19,17 @@ lnk_init(void);
 void*
 lnk_resolve(const char* name);
 
+#ifdef _WIN32
+/**
+ * @brief quickly resolve a windows thunk.
+ * 
+ * @param address the address of the thunk.
+ * @return the actual address of what is being called at the thunk.
+ */
+void*
+lnk_qr_thunk(void* address);
+#endif
+
 /** @brief clean up the internal plt_table. */
 void
 lnk_cleanup(void);

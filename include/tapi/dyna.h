@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-28
+ * @date 2026-07-31
  */
 #ifndef TAPI_DYNA_H
 #define TAPI_DYNA_H
@@ -30,9 +30,11 @@
 /* if we are using msvc toolchain (winapi). */
 #if defined(_MSC_VER)
 #define TAPI_EXPORT __declspec(dllexport)
+#define TAPI __cdecl
 #define TAPI_HIDDEN
 #else
 #define TAPI_EXPORT
+#define TAPI
 #define TAPI_HIDDEN
 #endif
 #endif
@@ -80,7 +82,7 @@ typedef struct {
  *
  * @return an allocated dynamic array.
  */
-TAPI_EXPORT tapi_dyna_t*
+TAPI_EXPORT tapi_dyna_t* TAPI
 tapi_dyna_create();
 
 /**
@@ -88,7 +90,7 @@ tapi_dyna_create();
  *
  * @param array pointer to a dynamically allocated array.
  */
-TAPI_EXPORT void
+TAPI_EXPORT void TAPI
 tapi_dyna_free(tapi_dyna_t* array);
 
 /**
@@ -97,7 +99,7 @@ tapi_dyna_free(tapi_dyna_t* array);
  * @param array pointer to a dynamically allocated array.
  * @param data data to be pushed onto the top of the allocated array.
  */
-TAPI_EXPORT void
+TAPI_EXPORT void TAPI
 tapi_dyna_push(tapi_dyna_t* array, void* data);
 
 /**
@@ -110,7 +112,7 @@ tapi_dyna_push(tapi_dyna_t* array, void* data);
  * @param index index at which to pop the item.
  * @return data at the specified index, popped off the array.
  */
-TAPI_EXPORT void*
+TAPI_EXPORT void* TAPI
 tapi_dyna_pop(tapi_dyna_t* array, size_t index);
 
 /**
@@ -121,7 +123,7 @@ tapi_dyna_pop(tapi_dyna_t* array, size_t index);
  * @param index the index in the array that we are to retrieve data from.
  * @return 0x0 if the index is out of bounds or the data at a specified index in the array.
  */
-TAPI_EXPORT void*
+TAPI_EXPORT void* TAPI
 tapi_dyna_get(tapi_dyna_t* array, size_t index);
 
 /**
@@ -129,7 +131,7 @@ tapi_dyna_get(tapi_dyna_t* array, size_t index);
  *
  * @param array the dynamically allocated array to be shrinked.
  */
-TAPI_EXPORT void
+TAPI_EXPORT void TAPI
 tapi_dyna_shrink(tapi_dyna_t* array);
 
 /**
@@ -139,7 +141,7 @@ tapi_dyna_shrink(tapi_dyna_t* array);
  * @param length the length of the list of data.
  * @return an allocated dyna_t structure with all data copied over.
  */
-TAPI_EXPORT tapi_dyna_t*
+TAPI_EXPORT tapi_dyna_t* TAPI
 tapi_dyna_make(void** data, size_t length);
 
 /* a get operation. */

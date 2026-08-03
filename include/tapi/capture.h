@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-26
+ * @date 2026-07-31
  */
 #ifndef TAPI_CAPTURE_H
 #define TAPI_CAPTURE_H
@@ -47,7 +47,7 @@ typedef struct {
  * @param stream the stream to re-route data from.
  * @return a pointer to an allocated capture structure.
  */
-TAPI_EXPORT tapi_capture_t*
+TAPI_EXPORT tapi_capture_t* TAPI
 tapi_make_capture(tapi_sink_t* sink, tapi_stream_t stream);
 
 /**
@@ -55,7 +55,7 @@ tapi_make_capture(tapi_sink_t* sink, tapi_stream_t stream);
  *
  * @param capture the capture to be ended.
  */
-TAPI_EXPORT void
+TAPI_EXPORT void TAPI
 tapi_stop_capture(tapi_capture_t* capture);
 
 /**
@@ -63,7 +63,7 @@ tapi_stop_capture(tapi_capture_t* capture);
  *
  * @param capture the capture to be freed.
  */
-TAPI_EXPORT void
+TAPI_EXPORT void TAPI
 tapi_cleanup_capture(tapi_capture_t* capture);
 
 /** assert on a string stored within a sink. */

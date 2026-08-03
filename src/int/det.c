@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-09
+ * @date 2026-08-02
  */
 #include "det.h"
 
@@ -83,7 +83,7 @@ det_function_size(void* address, size_t max_size) {
     cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
 
     /* get the bytes at the address, and create an iterator. */
-    const uint8_t* bytes = (unsigned char*) address;
+    const uint8_t* bytes = (uint8_t*) address;
     uint64_t iter = (uintptr_t) address;
     size_t code_size = max_size;
     cs_insn* insn = cs_malloc(handle);
@@ -146,6 +146,12 @@ det_function_size(void* address, size_t max_size) {
                 /* common aarch64 prologues, stp x29, x30, [sp, ...]. */
                 is_prologue = sig_aarch64_chk(insn) == SIG_AARCH64_PROLOGUE;
             }
+#ifdef _WIN32 /* push ebp is a very common windows prologue for functions, and ret is a common epilogue (compared to leave on linux). */
+            else if (architecture.arch == CS_ARCH_X86 && architecture.mode == CS_MODE_32) {
+                /* common ix86 prologues. push ebp, mov ebp, esp. */
+                is_prologue = sig_compare("push ebp", insn);
+            }
+#endif
             /* if we encounter a regular instruction after our starting prologues... */
             if (starting_prologues && !is_prologue) starting_prologues = false;
 
@@ -185,8 +191,16 @@ det_function_size(void* address, size_t max_size) {
                 pad_count++;
                 /* bruteforce nop pad calculation is unstable, we aren't analyzing the binary,
                     so this might be phased out, not sure yet. */
-                if (pad_count > 2)
+                if (pad_count > 2) {
+                    if (architecture.arch == CS_ARCH_X86) {
+                        size -= 3u; /* nop and int3 (cc) are 1 byte. */
+                    }
+                    else if (architecture.arch == CS_ARCH_ARM) {
+                        if (is_thumb) size -= 6u; /* arm(thumb-mode) nops are 2 bytes. */
+                        else size -= 12u;
+                    }
                     break;
+                }
             } else {
                 pad_count = 0;
             }
