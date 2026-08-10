@@ -130,8 +130,8 @@ tapi_stop_capture(tapi_capture_t* capture) {
         if (capture->sink->type == E_TAPI_SINK_TYPE_BUF) {
             ssize_t remaining = (ssize_t) (capture->sink->buffer.capacity - capture->sink->buffer.length);
             if (remaining > 0) {
-                strncpy(capture->sink->buffer.data + capture->sink->buffer.length, buf, remaining);
-                capture->sink->buffer.length += n;
+                memcpy(capture->sink->buffer.data + capture->sink->buffer.length, buf, remaining);
+                capture->sink->buffer.length += remaining;
             }
             else break;
         }

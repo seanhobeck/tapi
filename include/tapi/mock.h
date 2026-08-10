@@ -22,7 +22,7 @@
 
 /**
  * to make this library more minimal and controlled, you can define 'TAPI_MINIMAL' during compilation
- *  by adding the minimal=1 flag to your compilation process for tapi.
+ *  by adding the minimal=1 flag (for make) or -DMINIMIAL (for msvc) to your compilation process for tapi.
  */
 #ifndef TAPI_MINIMAL
 /** an enum for different results from an action. */

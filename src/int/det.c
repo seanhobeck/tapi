@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-02
+ * @date 2026-08-06
  */
 #include "det.h"
 
@@ -236,6 +236,41 @@ find_call_bx86(const void* target, det_call_t* call, const cs_insn* insn, const 
     /* we look for the target address. */
     uint64_t address = 0u;
     cs_x86* ops = &insn->detail->x86;
+#ifdef _WIN32
+    /* indirect call rip + disp32. */
+    if (sig_compare("call qword ptr [rip + 0x????????]", insn)) {
+        /* copy past 'qword ptr[rip + '. */
+        char* copy = _strdup(insn->op_str + 19u);
+        size_t disp32 = strtoll(copy, copy + strlen(copy) - 1, 16);
+        if (insn->address + disp32 + 6u == (uint64_t)target) {
+            call->call = (void*)insn->address;
+            call->dest = (void*)target;
+            call->size = insn->size;
+            call->spec = E_DET_CALLSPEC_RIP_IND;
+
+            /* copy and return. */
+            /* NOLINTNEXTLINE */
+            memcpy(call->bytes, insn->bytes, insn->size < 32u ? insn->size : 32u);
+            return E_INTT_RESULT_SUCCESS;
+        }
+    }
+    else if (sig_compare("call dword ptr [0x????????]", insn)) {
+        /* copy past 'dword ptr['. */
+        char* copy = _strdup(insn->op_str + 13u);
+        uint32_t disp32 = strtoll(copy, copy + strlen(copy) - 1, 16);
+        if (disp32 == (uint32_t)target) {
+            call->call = (void*)insn->address;
+            call->dest = (void*)target;
+            call->size = insn->size;
+            call->spec = E_DET_CALLSPEC_RIP_IND;
+
+            /* copy and return. */
+            /* NOLINTNEXTLINE */
+            memcpy(call->bytes, insn->bytes, insn->size < 32u ? insn->size : 32u);
+            return E_INTT_RESULT_SUCCESS;
+        }
+    }
+#endif
     for (size_t i = 0; i < ops->op_count; i++) {
         /* iterate until we find the immediate value used in the call. */
         cs_x86_op* op = &ops->operands[i];
@@ -474,7 +509,7 @@ det_call_targets(void* source, const void* target) {
                     if e_intt_passed(find_call_bx86(target, call, insn, architecture.mode)) {
                         tapi_dyna_push(list, call);
                         call = calloc(1u, sizeof *call);
-                        call->is_thumb = is_thumb;
+                        call->is_thumb = false;
                     }
                     break;
             }
@@ -492,7 +527,7 @@ det_call_targets(void* source, const void* target) {
                     if e_intt_passed(find_call_baarch64(target, call, insn)) {
                         tapi_dyna_push(list, call);
                         call = calloc(1u, sizeof *call);
-                        call->is_thumb = is_thumb;
+                        call->is_thumb = false;
                     }
                     break;
             }

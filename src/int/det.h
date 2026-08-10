@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-21
+ * @date 2026-08-06
  */
 #ifndef DET_H
 #define DET_H
@@ -28,6 +28,17 @@ size_t
 det_function_size(void* address, size_t max_size);
 
 /**
+ * @brief ...
+ */
+typedef enum {
+    E_DET_CALLSPEC_UNDEF, /* general call. */
+    E_DET_CALLSPEC_RIP_IND = 0x1, /* qword ptr[rip + disp32]. */
+    E_DET_CALLSPEC_RAX_IND_32, /* qword ptr[rax + disp32] (requires trace). */
+    E_DET_CALLSPEC_RAX_IND_8, /* qword ptr[rax + disp8] (requires trace). */
+    E_DET_CALLSPEC_REG_IND, /* rax, rbx, r8-15, ... (requires trace). */
+} e_det_call_spec_t;
+
+/**
  * a data structure representing determined call instruction information read from capstone.
  * this data structure holds all the necessary information required to do a binary patch on that
  *  instruction, diverting addresses to stubs, which are then used by users in test_cases.
@@ -38,6 +49,7 @@ typedef struct {
     uint8_t bytes[32u]; /* bytes used in the call (max 32). */
     bool is_rel, is_thumb; /* is it a relative address?, are we arm thumb mode? */
     int32_t orig_off; /* the original offset size. */
+    e_det_call_spec_t spec; /* the specific type of call. */
 } det_call_t;
 
 /**

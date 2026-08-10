@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-20
+ * @date 2026-08-09
  */
 #ifndef RELOC_H
 #define RELOC_H
@@ -10,6 +10,9 @@
 
 /*! uses bool, true, false. */
 #include <stdbool.h>
+
+/*! uses uint8_t. */
+#include <stdint.h>
 
 /**
  * ...
@@ -28,10 +31,26 @@ typedef struct {
  * @param address the address to relocate a relative call from.
  * @param target the target address to attempt to call.
  * @param thumb the target address is currently in thumb mode.
+ * @param disp32 if we should be checking with a rip-based call.
  * @return a relocation structure ready to be used.
  */
 reloc_t*
-reloc_make(void* address, void* target, bool thumb);
+reloc_make(void* address, void* target, bool thumb, bool disp32);
+
+/**
+ * @brief make a relocation from a short relative call to a an allocated
+ *  space of bytes with a custom size.
+ *
+ * @param address the address to relocate a call from.
+ * @param target the target address to attempt to call.
+ * @param size the size of the region to allocate.
+ * @param bytes the bytes to be written.
+ * @param disp32 if we should be checking with a rip-based call.
+ * @return a relocation structure ready to be used.
+ */
+reloc_t*
+reloc_make_custom(void* address, void* target, size_t size, \
+    uint8_t* bytes, bool disp32);
 
 /**
  * @brief attempt to find an already made relocation structure,
@@ -40,10 +59,11 @@ reloc_make(void* address, void* target, bool thumb);
  * @param address the address to relocate a relative call from.
  * @param target the target address to attempt to call.
  * @param thumb the target address is currently in thumb mode.
+ * @param disp32 if we should be checking with a rip-based call.
  * @return a relocation structure if found, if not one will be made which can return 0x0.
  */
 reloc_t*
-reloc_find(void* address, void* target, bool thumb);
+reloc_find(void* address, void* target, bool thumb, bool disp32);
 
 /**
  * @brief free a relocation structure (free the memory used as well).

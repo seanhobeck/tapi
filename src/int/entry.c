@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-25
+ * @date 2026-08-05
  */
 /*! uses lnk_init. */
 #include "lnk.h"
@@ -10,13 +10,20 @@
 #ifdef __gnu_linux__
 __attribute__((constructor))
 void lt_entry() {
-#else
+    lnk_init();
+    return;
+#elif defined(_WIN32)
 /*! uses BOOL, WINAPI(__stdcall), HINSTANCE, etc... */
 #include <windows.h>
 BOOL WINAPI DllMain(HINSTANCE hInstanceDll, DWORD dwReason, LPVOID lpvReserved) {
-#endif
-    lnk_init();
-#ifdef _WIN32
+    switch (dwReason) {
+    case DLL_PROCESS_ATTACH:
+        lnk_init();
+        break;
+    case DLL_PROCESS_DETACH:
+        lnk_cleanup();
+        break;
+    }
     return TRUE;
 #endif
 }

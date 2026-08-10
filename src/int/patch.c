@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-21
+ * @date 2026-08-07
  */
 #include "patch.h"
 
@@ -76,6 +76,51 @@ patch_relative_bx86(void* call, const size_t size, const void* new_target) {
     *(int32_t*)(code + 1u) = offset;
     return E_INTT_RESULT_SUCCESS;
 }
+
+/**
+ * @brief patch a rip-based disp32 call on x86 architectures.
+ * 
+ * @param call the pointer to the call insn. within a function.
+ * @param size the size of the insn.
+ * @param new_target the pointer to the new call target.
+ * @param absolute if we should patch the new target by itself (abs).
+ * @return ref to intt.h for enum.
+ */
+internal e_intt_result_t
+patch_rip_based_bx86(void* call, const size_t size, const void* new_target, bool absolute) {
+    /* get the given byte code. */
+    uint8_t* code = call;
+
+    /* x64 rip-based. call is always 6 bytes. */
+    if (size != 6u) {
+        /* NOLINTNEXTLINE */
+        fprintf(stderr, "bx86/64; instruction too small (%zu bytes).\n", size);
+        return E_INTT_RESULT_FAILURE;
+    }
+
+    /* verify its actually an ff rip-based displ call */
+    if (code[0] != 0xff || code[1] != 0x15) {
+        /* NOLINTNEXTLINE */
+        fprintf(stderr, "bx86/64; not a rip-based call (0x%02x).\n", code[0]);
+        return E_INTT_RESULT_FAILURE;
+    }
+
+    /* calculate new displacement. */
+    int64_t disp64 = (int64_t)new_target;
+    if (!absolute) disp64 -= ((int64_t)call + 6u);
+
+    /* check if the disp is 32-bit signed. */
+    if (disp64 > INT32_MAX || disp64 < INT32_MIN) {
+        /* NOLINTNEXTLINE */
+        fprintf(stderr, "bx86/64; new target out of range (>2gb).\n");
+        return E_INTT_RESULT_FAILURE;
+    }
+    int32_t disp32 = (int32_t)disp64;
+
+    /* write to ff 15 ?? ?? ?? ??, and return. */
+    *(int32_t*)(code + 2u) = disp32;
+    return E_INTT_RESULT_SUCCESS;
+};
 
 /**
  * @brief patch a relative call on aarch32 architecture.
@@ -252,73 +297,78 @@ patch_call_target(tapi_context_t* context, const det_call_t* call, const void* n
     arch_t architecture = get_arch();
     if (call->is_rel) {
         switch (architecture.arch) {
-            case CS_ARCH_X86: {
-                if e_intt_passed(patch_relative_bx86(call->call, call->size, new_target)) {
-                    break;
-                }
-                /* attempt a reloc. */
-                reloc_t* reloc = reloc_find(call->call, (void*)new_target, false);
-                if (reloc != 0x0) {
-                    if e_intt_passed(patch_relative_bx86(call->call, call->size, reloc->region)) {
-                        break;
-                    }
-                }
-                else return 0u;
+        case CS_ARCH_X86: {
+            switch (call->spec) {
+                case E_DET_CALLSPEC_UNDEF: {
+                    if e_intt_passed(patch_relative_bx86(call->call, call->size, new_target)) break;
 
-                /* NOLINTNEXTLINE */
-                fprintf(stderr, "bx86/64; patching relative call failed, attempting absolute reloc also failed.\n");
-                break;
+                    /* attempt a reloc. */
+                    reloc_t* reloc = reloc_find(call->call, (void*)new_target, false, false);
+                    if (reloc != 0x0) {
+                        if e_intt_passed(patch_relative_bx86(call->call, call->size, reloc->region)) break;
+                    }
+
+                    /* NOLINTNEXTLINE */
+                    fprintf(stderr, "bx86/64; patching relative call failed, attempting absolute reloc also failed.\n");
+                    return 0u;
+                };
+                case E_DET_CALLSPEC_RIP_IND: {
+                    /* we attempt a custom reloc. */
+                    uint8_t* bytes = (uint8_t*)(&new_target);
+                    size_t size = architecture.mode; /* CS_MODE_32 = 4u, and _64 = 8u. */
+                    bool absolute = architecture.mode == CS_MODE_32 ? true : false;
+                    reloc_t* reloc = reloc_make_custom(call->call, (void*)new_target, size, bytes, true);
+                    if (reloc != 0x0) {
+                        if e_intt_passed(patch_rip_based_bx86(call->call, call->size, reloc->region, absolute)) break;
+                    }
+
+                    /* NOLINTNEXTLINE */
+                    fprintf(stderr, "bx86/64; patching rip-based call failed, attempting absolute reloc also failed.\n");
+                    return 0u;
+                };
+                default: {
+                    /* NOLINTNEXTLINE */
+                    fprintf(stderr, "bx86/64; cannot patch register based calls, cannot realloc bytes for source function.\n");
+                    return 0u;
+                }
+            }
+            break;
             }
             case CS_ARCH_ARM: {
                 /* arm thumb? */
                 if (call->is_thumb) {
-                    if e_intt_passed(patch_relative_barmth(call->call, call->size, new_target)) {
-                        break;
-                    }
+                    if e_intt_passed(patch_relative_barmth(call->call, call->size, new_target)) break;
 
                     /* attempt a reloc. */
-                    reloc_t* reloc = reloc_find(call->call, (void*)new_target, true);
+                    reloc_t* reloc = reloc_find(call->call, (void*)new_target, true, false);
                     if (reloc != 0x0) {
-                        if e_intt_passed(patch_relative_barmth(call->call, call->size, reloc->region)) {
-                            break;
-                        }
+                        if e_intt_passed(patch_relative_barmth(call->call, call->size, reloc->region)) break;
                     }
-                    else return 0u;
                 }
-                else if e_intt_passed(patch_relative_barm(call->call, call->size, new_target)) {
-                    break;
-                }
+                else if e_intt_passed(patch_relative_barm(call->call, call->size, new_target)) break;
                 else {
                     /* attempt a reloc. */
-                    reloc_t* reloc = reloc_find(call->call, (void*)new_target, false);
+                    reloc_t* reloc = reloc_find(call->call, (void*)new_target, false, false);
                     if (reloc != 0x0) {
-                        if e_intt_passed(patch_relative_barm(call->call, call->size, reloc->region)) {
-                            break;
-                        }
+                        if e_intt_passed(patch_relative_barm(call->call, call->size, reloc->region)) break;
                     }
-                    else return 0u;
                 }
 
                 /* NOLINTNEXTLINE */
                 fprintf(stderr, "barm32/th; patching relative call failed, attempting absolute reloc also failed.\n");
-                break;
+                return 0u;
             }
             case CS_ARCH_AARCH64: {
-                if e_intt_passed(patch_relative_barm64(call->call, call->size, new_target)) {
-                    break;
-                }
+                if e_intt_passed(patch_relative_barm64(call->call, call->size, new_target)) break;
                 /* attempt a reloc. */
-                reloc_t* reloc = reloc_find(call->call, (void*)new_target, false);
+                reloc_t* reloc = reloc_find(call->call, (void*)new_target, false, false);
                 if (reloc != 0x0) {
-                    if e_intt_passed(patch_relative_barm64(call->call, call->size, reloc->region)) {
-                        break;
-                    }
+                    if e_intt_passed(patch_relative_barm64(call->call, call->size, reloc->region)) break;
                 }
-                else return 0u;
 
                 /* NOLINTNEXTLINE */
                 fprintf(stderr, "barm64; patching relative call failed, attempting absolute reloc also failed.\n");
-                break;
+                return 0u;
             }
             default: {
                 /* NOLINTNEXTLINE */

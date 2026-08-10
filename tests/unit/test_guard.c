@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-30
+ * @date 2026-08-04
  */
 /*! uses int. module to be tested. */
 #include "int/guard.h"
@@ -25,6 +25,9 @@
 
 /*! uses lnk_qr_thunk. */
 #include "lnk.h"
+
+/*! uses det_function_size. */
+#include "det.h"
 
 /*! noinline macro. */
 #ifdef _WIN32
@@ -75,7 +78,8 @@ int test_guard() {
 #else
     void* address = lnk_qr_thunk(&some_function);
 #endif
-    guard_create(context, address, 0xf0);
+    size_t size = det_function_size(address, 0x100);
+    guard_create(context, address, size);
 
     /* assert. */
 #ifdef __linux__
@@ -109,7 +113,7 @@ int test_guard() {
     MEMORY_BASIC_INFORMATION mbi;
     if (VirtualQuery(address, &mbi, sizeof(mbi)) != 0) {
         if (mbi.Protect & PAGE_EXECUTE_READWRITE) {
-            printf("successful page permission(win32) change!\n");
+            printf("successful page permission(win32) change!\n\n");
         }
         else assert("failed, page permissions not correct(win32)!\n");
     }

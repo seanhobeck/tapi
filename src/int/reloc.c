@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-27
+ * @date 2026-08-09
  */
 #ifdef __gnu_linux__
 #define _DEFAULT_SOURCE /* required for htole16/32/64. */
@@ -87,14 +87,16 @@
  *
  * @param from the start of the call instruction from which to call from (ip/pc).
  * @param to the address we are trying to make a relative call to.
+ * @param disp32 if we are dealing with a disp32 rip-based call.
  * @return if its possible to make a call to the given address in the number '
  *  of bytes within the relative call instruction given per architecture.
  */
 internal e_intt_result_t
-rel_range_chk(const void* from, const uintptr_t to) {
+rel_range_chk(const void* from, const uintptr_t to, bool disp32) {
 #if defined(__amd64__) || defined(__i386__) || defined(_M_AMD64) || defined(_M_IX86)
     /* calculate the displacement. */
-    int64_t displacement = (int64_t)to - ((int64_t)from + 5ll); /*! assuming e8. */
+    int64_t offset = disp32 ? 6ll : 5ll;
+    int64_t displacement = (int64_t)to - ((int64_t)from + offset); /*! assuming e8. */
     return displacement >= INT32_MIN && displacement<= INT32_MAX;
 #else
     /* needs to be 4-byte aligned, not sure if mmap or virtualalloc handles this? */
@@ -121,10 +123,11 @@ rel_range_chk(const void* from, const uintptr_t to) {
  *
  * @param target the target address to allocate a region near.
  * @param size the size of the region needed to be allocated.
+ * @param disp32 if we should be checking with a rip-based call.
  * @return a region of size bytes ready to be used as a jump, 0x0 o.w.
  */
 internal void*
-alloc_region(const void* target, size_t size) {
+alloc_region(const void* target, size_t size, bool disp32) {
     /* getting the page size and step. */
     size_t page_size = get_page_size();
 #ifdef _WIN32
@@ -145,7 +148,7 @@ alloc_region(const void* target, size_t size) {
         uintptr_t lower = base - iter;
 
         /* check the upper and lower ranges. */
-        if (e_intt_passed(rel_range_chk(target, upper))) {
+        if (e_intt_passed(rel_range_chk(target, upper, disp32))) {
 #ifdef __gnu_linux__
             void* region = mmap((void*)upper, new_size, \
                 PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | \
@@ -159,7 +162,7 @@ alloc_region(const void* target, size_t size) {
             if (region) return region;
 #endif
         }
-        if (e_intt_passed(rel_range_chk(target, lower))) {
+        if (e_intt_passed(rel_range_chk(target, lower, disp32))) {
 #ifdef __gnu_linux__
             void* region = mmap((void*)lower, new_size, \
                 PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | \
@@ -201,10 +204,11 @@ internal map_t* reloc_table;
  * @param address the address to relocate a relative call from.
  * @param target the target address to attempt to call.
  * @param thumb the target address is currently in thumb mode.
+ * @param disp32 if we should be checking with a rip-based call.
  * @return a relocation structure ready to be used.
  */
 reloc_t*
-reloc_make(void* address, void* target, bool thumb) {
+reloc_make(void* address, void* target, bool thumb, bool disp32) {
     /* allocate the structure and push it to the internal table. */
     assert(address != 0x0 && target != 0x0);
     reloc_t* reloc = calloc(1u, sizeof *reloc);
@@ -281,7 +285,7 @@ reloc_make(void* address, void* target, bool thumb) {
     }
 #endif
     /* allocate the region and then copy it over. */
-    reloc->region = alloc_region(address, reloc->size);
+    reloc->region = alloc_region(address, reloc->size, disp32);
     if (reloc->region == 0x0) {
         fprintf(stderr, "tapi, reloc_make; unable to find region in given relative call range!\n");
         free(reloc->bytes);
@@ -300,7 +304,80 @@ reloc_make(void* address, void* target, bool thumb) {
 #else
         /* winapi doesn't care and does it for us. */
         DWORD old;
-        if (VirtualProtect(reloc->region, reloc->size, PAGE_EXECUTE_READWRITE, &old) != 0x0) {
+        if (VirtualProtect(reloc->region, reloc->size, PAGE_EXECUTE_READWRITE, &old) == 0x0) {
+        /* we can actually use MSVCs "safe" version for fprintf. */
+        fprintf_s(stderr, "tapi, reloc_make; mprotect failed; could not protect region!");
+#endif
+        reloc_cleanup(reloc);
+        return 0x0; /* failure. */
+    }
+
+    /* and then flush the instruction cache. */
+#ifdef _WIN32
+    FlushInstructionCache(GetCurrentProcess(), reloc->region, reloc->size);
+#else
+    __builtin___clear_cache(reloc->region, reloc->region + reloc->size);
+#endif
+
+    /* we use the addresses as a key. */
+    char buffer[256u];
+    snprintf(buffer, 256u, "%p%p", address, target);
+
+    /* push onto the internal table. */
+    if (reloc_table == 0x0) reloc_table = map_make();
+    map_push(reloc_table, buffer, reloc);
+
+#ifdef __arm__
+    /* this prevents a sigill. */
+    if (thumb) reloc->region = (void*)((uintptr_t)reloc->region | 1u);
+#endif
+    return reloc;
+};
+
+/**
+ * @brief make a relocation from a short relative call to a an allocated
+ *  space of bytes with a custom size.
+ *
+ * @param address the address to relocate a call from.
+ * @param target the target address to attempt to call.
+ * @param size the size of the region to allocate.
+ * @param bytes the bytes to be written.
+ * @param disp32 if we should be checking with a rip-based call.
+ * @return a relocation structure ready to be used.
+ */
+reloc_t*
+reloc_make_custom(void* address, void* target, size_t size, \
+    uint8_t* bytes, bool disp32) {
+    /* allocate the structure and push it to the internal table. */
+    assert(address != 0x0 && target != 0x0);
+    reloc_t* reloc = calloc(1u, sizeof * reloc);
+    reloc->caller = address;
+    reloc->callee = target;
+    reloc->size = size;
+    reloc->bytes = calloc(1u, reloc->size);
+    memcpy(reloc->bytes, bytes, reloc->size);
+
+    /* allocate the region and then copy it over. */
+    reloc->region = alloc_region(address, reloc->size, disp32);
+    if (reloc->region == 0x0) {
+        fprintf(stderr, "tapi, reloc_make; unable to find region in given relative call range!\n");
+        free(reloc->bytes);
+        free(reloc);
+        return 0x0;
+    }
+    uint8_t* region_bytes = reloc->region;
+    memcpy(region_bytes, reloc->bytes, reloc->size);
+
+    /* we now need to change this page to be executable. */
+#ifndef _WIN32
+    /* NOLINTNEXTLINE */
+    if (mprotect(reloc->region, reloc->size, PROT_READ | PROT_WRITE | PROT_EXEC) != 0x0) {
+        /* NOLINTNEXTLINE */
+        fprintf(stderr, "tapi, reloc_make; mprotect failed; could not protect region!");
+#else
+        /* winapi doesn't care and does it for us. */
+    DWORD old;
+    if (VirtualProtect(reloc->region, reloc->size, PAGE_EXECUTE_READWRITE, &old) == 0x0) {
         /* we can actually use MSVCs "safe" version for fprintf. */
         fprintf_s(stderr, "tapi, reloc_make; mprotect failed; could not protect region!");
 #endif
@@ -337,10 +414,11 @@ reloc_make(void* address, void* target, bool thumb) {
  * @param address the address to relocate a relative call from.
  * @param target the target address to attempt to call.
  * @param thumb the target address is currently in thumb mode.
+ * @param disp32 if we should be checking with a rip-based call.
  * @return a relocation structure if found, if not one will be made which can return 0x0.
  */
 reloc_t*
-reloc_find(void* address, void* target, bool thumb) {
+reloc_find(void* address, void* target, bool thumb, bool disp32) {
     /* attempt to get a pre-made value from the table, then simply check the distance. */
     assert(address != 0x0 && target != 0x0);
     char buffer[256u];
@@ -350,7 +428,7 @@ reloc_find(void* address, void* target, bool thumb) {
     if (reloc_table == 0x0) reloc_table = map_make();
     void* found = map_lookup(reloc_table, buffer);
     if (found != 0x0) return (reloc_t*)found;
-    return reloc_make(address, target, thumb);
+    return reloc_make(address, target, thumb, disp32);
 };
 
 /**

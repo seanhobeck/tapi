@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-03
+ * @date 2026-08-04
  */
 /*! uses int. module to be tested. */
 #include "int/patch.h"
@@ -124,7 +124,7 @@ function3() {
         mov c, eax
     }
 #else
-   
+    c = add(a, b); /* no inline asm unfortunately. */
 #endif
 #endif
     printf("%d\n", c);
@@ -206,7 +206,7 @@ test_f3_success() {
     free(call);
     free(call3);
     free(context);
-    printf("successfully replaced a singular call within a inline assembly function!\n");
+    printf("successfully replaced a singular call within a inline assembly function!\n\n");
 }
 
 #ifndef _WIN32

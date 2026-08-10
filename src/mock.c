@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-08-02
+ * @date 2026-08-07
  */
 #include <tapi/mock.h>
 
@@ -226,7 +226,7 @@ tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock) {
         memcpy(mock->orig_bytes, call->bytes, mock->size);
 
         /* apply the patch to the call, given the context. */
-        patch_call_target(context, call, mock->mocked);
+        int32_t result = patch_call_target(context, call, mock->mocked);
 
         /* we read the new bytes and store. */
         /* NOLINTNEXTLINE */
@@ -262,12 +262,13 @@ tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock) {
         memcpy(mock->orig_bytes, call->bytes, mock->size);
 
         /* apply the patch to the call, given the context. */
-        patch_call_target(context, call, mock->mocked);
+        int32_t result = patch_call_target(context, call, mock->mocked);
 
         /* we read the new bytes and store. */
         /* NOLINTNEXTLINE */
         memcpy(mock->mocked_bytes, mock->call, mock->size);
         free(call);
+        if (result == 0u) break;
     }
 };
 
@@ -295,8 +296,9 @@ tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock) {
             if (call == 0x0) break;
 
             /* otherwise we re-patch it with the correct call. */
-            patch_call_target(context, call, mock->mocked);
+            int32_t result = patch_call_target(context, call, mock->mocked);
             free(call);
+            if (result == 0u) break;
         }
 
 #ifndef TAPI_MINIMAL

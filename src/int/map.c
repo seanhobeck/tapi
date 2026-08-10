@@ -143,7 +143,7 @@ map_make(void) {
 #ifndef _WIN32
     pthread_rwlock_init(&map->lock, 0x0);
 #else
-    SRWLOCK lock;
+    SRWLOCK lock = { 0 };
 #endif
 #endif
     return map;
@@ -160,13 +160,8 @@ void
 map_resize(map_t* map, size_t new_size) {
     /* make copy of the tables, then allocate new ones. */
     assert(map != 0x0);
-#ifdef TAPI_THREAD_SAFE
-#ifndef _WIN32
-    pthread_rwlock_wrlock(&map->lock);
-#else
-    AcquireSRWLockExclusive(&map->lock);
-#endif
-#endif
+
+    /* no locks need to be added here since exclusive is already done on map_push. */
     entry_t* c1 = map->t1, *c2 = map->t2;
     size_t size = map->size;
     map->t1 = calloc(new_size, sizeof(entry_t));
@@ -187,13 +182,6 @@ map_resize(map_t* map, size_t new_size) {
     }
     free(c1);
     free(c2);
-#ifdef TAPI_THREAD_SAFE 
-#ifndef _WIN32
-    pthread_rwlock_unlock(&map->lock);
-#else
-    ReleaseSRWLockExclusive(&map->lock);
-#endif
-#endif
 };
 
 /* the max number of chaining operations that an insert will go through. */
@@ -248,8 +236,23 @@ map_push(map_t* map, const char* key, void* value) {
 
     /* o.w. we have to emplace based on cuckoo, first we check the load factor (opposite of ref). */
     float alpha = map->count / map->size;
-    if (alpha > 0.5f)
+    if (alpha > 0.5f) {
+#ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
+        pthread_rwlock_unlock(&map->lock);
+#else
+        ReleaseSRWLockExclusive(&map->lock);
+#endif
+#endif
         map_resize(map, map->size * 2u);
+        #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
+    pthread_rwlock_wrlock(&map->lock);
+#else
+    AcquireSRWLockExclusive(&map->lock);
+#endif
+#endif
+    }
 
     /* chain... */
     uint64_t iter = 0x0, table = 1u;

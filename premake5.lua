@@ -1,5 +1,5 @@
 workspace "tapi"
-	configurations { "Debug", "Release" }
+	configurations { "Debug" }
 	platforms { "Win32", "x86_64", "ARM64" }
 	location "vs"
 	
@@ -32,6 +32,10 @@ project "tapi"
 
 	buildoptions { "/experimental:c11atomics" }
 	defines { "_CRT_SECURE_NO_WARNINGS" }
+	staticruntime "Off"
+	symbols "On"
+	optimize "Off"
+	runtime "Debug"
 
 	links {
 		"capstone"
@@ -43,17 +47,9 @@ project "tapi"
 		objdir "build/win32/%{cfg.buildcfg}"
 	
 	filter "platforms:x86_64" 
-		libdirs { "vendor/capstone/buildx64/Release" }
+		libdirs { "vendor/capstone/buildwin64/Release" }
 		targetdir "bin/win64/%{cfg.buildcfg}"
 		objdir "build/win64/%{cfg.buildcfg}"
-	
-	filter "configurations:Debug"
-		symbols "On"
-		optimize "Off"
-
-	filter "configurations:Release"
-		symbols "Off"
-		optimize "Speed"
 
 	filter {}
 
@@ -86,6 +82,10 @@ project "tapi-integration"
 
 	buildoptions { "/experimental:c11atomics" }
 	defines { "_CRT_SECURE_NO_WARNINGS" }
+	staticruntime "Off"
+	symbols "On"
+	optimize "Off"
+	runtime "Debug"
 
 	filter "platforms:Win32"
 		libdirs { 
@@ -110,6 +110,8 @@ project "tapi-integration"
 			"{COPYFILE} ../bin/win64/%{cfg.buildcfg}/tapi.dll %{cfg.targetdir}",
 			"{COPYFILE} ../bin/win64/%{cfg.buildcfg}/tapi.pdb %{cfg.targetdir}"
 		}
+
+	filter {}
 
 project "tapi-unit"
 	kind "ConsoleApp"
@@ -149,6 +151,10 @@ project "tapi-unit"
 
 	buildoptions { "/experimental:c11atomics" }
 	defines { "_CRT_SECURE_NO_WARNINGS" }
+	staticruntime "Off"
+	symbols "On"
+	optimize "Off"
+	runtime "Debug"
 
 	filter "platforms:Win32"
 		libdirs { "vendor/capstone/buildwin32/Release" }
@@ -156,6 +162,8 @@ project "tapi-unit"
 		objdir "build/win32/%{cfg.buildcfg}/tests/unit"
 	
 	filter "platforms:x86_64" 
-		libdirs { "vendor/capstone/buildx64/Release" }
+		libdirs { "vendor/capstone/buildwin64/Release" }
 		targetdir "bin/win64/%{cfg.buildcfg}/tests/unit"
 		objdir "build/win64/%{cfg.buildcfg}/tests/unit"
+
+	filter {}

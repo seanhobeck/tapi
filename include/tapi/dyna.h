@@ -147,68 +147,6 @@ tapi_dyna_make(void** data, size_t length);
 /* a get operation. */
 #define dyna_get(array, type, index) ((type) tapi_dyna_get(array, index))
 
-/*! if we are compiling with the thread-safe flag. */
-#ifdef TAPI_THREAD_SAFE
-#ifndef _WIN32
-/* starting an iteration. */
-#define dyna_foreach_it(array, type, var, iter) \
-    pthread_rwlock_rdlock(&(array)->lock); \
-    for (size_t iter = 0; iter < (array)->length; iter++) { \
-        type var = (type)(array->data[iter]);
-
-/* starting an iteration. */
-#define dyna_foreach(array, type, var) \
-    pthread_rwlock_rdlock(&(array)->lock); \
-    for (size_t i = 0; i < (array)->length; i++) { \
-        type var = (type)(array->data[i]);
-
-/* starting an iteration, backwards. */
-#define dyna_inv_foreach(array, type, var) \
-    pthread_rwlock_rdlock(&(array)->lock); \
-    for (size_t i = (array)->length; i != 0; i--) { \
-        type var = (type)(array->data[i - 1]);
-
-/* starting an iteration, backwards. */
-#define dyna_inv_foreach_it(array, type, var, iter) \
-    pthread_rwlock_rdlock(&(array)->lock); \
-    for (size_t iter = (array)->length; iter != 0; iter--) { \
-        type var = (type)(array->data[iter - 1]);
-
-/* ending an iteration. */
-#define dyna_endforeach(array) \
-    } \
-    pthread_rwlock_unlock(&(array)->lock);
-#else
-/* starting an iteration. */
-#define dyna_foreach_it(array, type, var, iter) \
-    AcquireSRWLockShared(&(array)->lock); \
-    for (size_t iter = 0; iter < (array)->length; iter++) { \
-        type var = (type)(array->data[iter]);
-
-/* starting an iteration. */
-#define dyna_foreach(array, type, var) \
-    AcquireSRWLockShared(&(array)->lock); \
-    for (size_t i = 0; i < (array)->length; i++) { \
-        type var = (type)(array->data[i]);
-
-/* starting an iteration, backwards. */
-#define dyna_inv_foreach(array, type, var) \
-    AcquireSRWLockShared(&(array)->lock); \
-    for (size_t i = (array)->length; i != 0; i--) { \
-        type var = (type)(array->data[i - 1]);
-
-/* starting an iteration, backwards. */
-#define dyna_inv_foreach_it(array, type, var, iter) \
-    AcquireSRWLockShared(&(array)->lock); \
-    for (size_t iter = (array)->length; iter != 0; iter--) { \
-        type var =(type)(array->data[iter - 1]);
-
-/* ending an iteration. */
-#define dyna_endforeach(array) \
-    } \
-    ReleaseSRWLockShared(&(array)->lock);
-#endif
-#else
 /* starting an iteration. */
 #define dyna_foreach_it(array, type, var, iter) \
     for (size_t iter = 0; iter < (array)->length; iter++) { \
@@ -231,5 +169,4 @@ tapi_dyna_make(void** data, size_t length);
 
 /* ending an iteration. */
 #define dyna_endforeach(array) }
-#endif /* TAPI_THREAD_SAFE */
 #endif /* TAPI_DYNA_H */

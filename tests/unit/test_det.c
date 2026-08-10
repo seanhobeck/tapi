@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-02
+ * @date 2026-08-04
  */
 /*! uses int. module to be tested. */
 #include "int/det.h"
@@ -364,7 +364,7 @@ test_ct_recursive_itself(void) {
 #ifndef __arm__
     assert(target->dest == &recursive_fibonacci);
 #endif
-    printf("correctly determined a relative call to self at: 0x%p!\n", target->call);
+    printf("correctly determined a relative call to self at: 0x%p!\n\n", target->call);
 }
 
 /* we use a singular main function per suite of testing done. */

@@ -56,7 +56,6 @@ guard_create(tapi_context_t* context, void* address, size_t length) {
     dyna_foreach(context->guards, guard_t*, guard)
         if (guard->address == address && guard->length == length) {
             guard->ref_count++;
-            return;
         }
     dyna_endforeach(context->guards);
 
@@ -104,6 +103,7 @@ guard_cleanup(tapi_context_t* context) {
         guard_close(guard);
         free(guard);
     dyna_endforeach(context->guards);
+
     free(context->guards->data);
     free(context->guards);
 };
