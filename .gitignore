@@ -77,7 +77,4 @@ docs/xml
 # core dumps
 qemu_*.core
 log/
-/vs/tapi/.vs/tapi.slnx
-/vs/test_auto_mock/x64/Debug
-/vs/test_mock/x64/Debug
-/vs/.vs
+vs/

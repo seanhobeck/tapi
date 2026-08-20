@@ -1,9 +1,0 @@
-<Solution>
-  <Configurations>
-    <Platform Name="x64" />
-    <Platform Name="x86" />
-  </Configurations>
-  <Project Path="../test_auto_mock/test_auto_mock.vcxproj" Id="e56a59b1-7231-40ee-b47a-acd75d1c7628" />
-  <Project Path="../test_mock/test_mock.vcxproj" Id="27baef76-79b1-4d38-a9f9-5cebcac92ebc" />
-  <Project Path="tapi.vcxproj" Id="885d42a7-61a6-46c6-bcde-fc2b6e1fca64" />
-</Solution>
