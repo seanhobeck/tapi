@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-10
+ * @date 2026-08-20
  */
 /*! uses int. module to be tested. */
 #include "int/det.h"
@@ -28,7 +28,7 @@
 
 /*! noinline macro. */
 #define TEST_NOINLINE __attribute__((noinline))
-#define raddressof(function) &function
+#define TEST_ADDRESSOF(function) &function
 #endif
 
 /*!

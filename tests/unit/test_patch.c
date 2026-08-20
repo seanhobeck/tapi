@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-04
+ * @date 2026-08-20
  */
 /*! uses int. module to be tested. */
 #include "int/patch.h"
@@ -21,7 +21,7 @@
 #include <stdlib.h>
 
 /*! uses lnk_qr_thunk. */
-#include "lnk.h"
+#include "int/lnk.h"
 
 /*! noinline macro. */
 #ifdef _WIN32
@@ -29,7 +29,7 @@
 #define TEST_ADDRESSOF(function) lnk_qr_thunk(&function)
 #else
 #define TEST_NOINLINE __attribute__((noinline))
-#define raddressof(function) &function
+#define TEST_ADDRESSOF(function) &function
 #endif
 
 /*! function we search for. */

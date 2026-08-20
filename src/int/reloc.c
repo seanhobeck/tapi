@@ -399,11 +399,6 @@ reloc_make_custom(void* address, void* target, size_t size, \
     /* push onto the internal table. */
     if (reloc_table == 0x0) reloc_table = map_make();
     map_push(reloc_table, buffer, reloc);
-
-#ifdef __arm__
-    /* this prevents a sigill. */
-    if (thumb) reloc->region = (void*)((uintptr_t)reloc->region | 1u);
-#endif
     return reloc;
 };
 

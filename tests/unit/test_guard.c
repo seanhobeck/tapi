@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-04
+ * @date 2026-08-20
  */
 /*! uses int. module to be tested. */
 #include "int/guard.h"
@@ -24,10 +24,10 @@
 #include <string.h>
 
 /*! uses lnk_qr_thunk. */
-#include "lnk.h"
+#include "int/lnk.h"
 
 /*! uses det_function_size. */
-#include "det.h"
+#include "int/det.h"
 
 /*! noinline macro. */
 #ifdef _WIN32
