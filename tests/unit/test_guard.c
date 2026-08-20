@@ -32,7 +32,7 @@
 /*! noinline macro. */
 #ifdef _WIN32
 #define TEST_NOINLINE __declspec(noinline)
-#define raddressof(function) lnk_qr_thunk(&function)
+#define TEST_ADDRESSOF(function) lnk_qr_thunk(&function)
 #else
 #define TEST_NOINLINE __attribute__((noinline))
 #define raddressof(function) &function

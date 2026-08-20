@@ -239,9 +239,7 @@ find_call_bx86(const void* target, det_call_t* call, const cs_insn* insn, const 
 #ifdef _WIN32
     /* indirect call rip + disp32. */
     if (sig_compare("call qword ptr [rip + 0x????????]", insn)) {
-        /* copy past 'qword ptr[rip + '. */
-        char* copy = _strdup(insn->op_str + 19u);
-        size_t disp32 = strtoll(copy, copy + strlen(copy) - 1, 16);
+        uint64_t disp32 = insn->detail->x86.disp;
         if (insn->address + disp32 + 6u == (uint64_t)target) {
             call->call = (void*)insn->address;
             call->dest = (void*)target;
@@ -255,9 +253,8 @@ find_call_bx86(const void* target, det_call_t* call, const cs_insn* insn, const 
         }
     }
     else if (sig_compare("call dword ptr [0x????????]", insn)) {
-        /* copy past 'dword ptr['. */
-        char* copy = _strdup(insn->op_str + 13u);
-        uint32_t disp32 = strtoll(copy, copy + strlen(copy) - 1, 16);
+        /* we can get the disp through detail, ty capstone. */
+        uint32_t disp32 = insn->detail->x86.disp;
         if (disp32 == (uint32_t)target) {
             call->call = (void*)insn->address;
             call->dest = (void*)target;

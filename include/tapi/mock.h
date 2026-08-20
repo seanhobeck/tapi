@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-31
+ * @date 2026-08-18
  */
 #ifndef TAPI_MOCK_H
 #define TAPI_MOCK_H
@@ -111,6 +111,8 @@ typedef struct {
     e_tapi_mock_type_t type;
     /** the n-th call target occurrence within the original function (for special mocks only). */
     size_t call_index;
+    /** the dynamic list of det_call_t structures. */
+    tapi_dyna_t* calls;
 
 #ifndef TAPI_MINIMAL
     /*! anon struct to encompass all 'auto mock' data. */
@@ -123,7 +125,7 @@ typedef struct {
             /** should errno be set by the autostub? */
             bool set_errno;
         } info;
-    } a_data;
+    } data;
 #endif
 } tapi_mock_t;
 

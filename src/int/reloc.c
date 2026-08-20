@@ -188,7 +188,7 @@ alloc_region(const void* target, size_t size, bool disp32) {
 internal void
 free_region(reloc_t* reloc) {
 #ifdef _WIN32
-    VirtualFree(reloc->callee, reloc->size, MEM_DECOMMIT); /* we could use this again soon. */
+    VirtualFree(reloc->callee, reloc->size, MEM_RELEASE); /* we could use this again soon. */
 #else
     munmap(reloc->callee, reloc->size);
 #endif

@@ -26,7 +26,7 @@
 /*! noinline macro. */
 #ifdef _WIN32
 #define TEST_NOINLINE __declspec(noinline)
-#define raddressof(function) lnk_qr_thunk(&function)
+#define TEST_ADDRESSOF(function) lnk_qr_thunk(&function)
 #else
 #define TEST_NOINLINE __attribute__((noinline))
 #define raddressof(function) &function
@@ -136,15 +136,15 @@ function3() {
 void
 test_f1_success() {
     /* arrange. */
-    det_call_t* call = det_call_target(raddressof(function), &add);
+    det_call_t* call = det_call_target(TEST_ADDRESSOF(function), &add);
     tapi_context_t* context = tapi_init();
 
     /* act. */
     int32_t result = patch_call_target(context, call, &add_stub);
 
     /* assert. */
-    det_call_t* call2 = det_call_target(raddressof(function), &add);
-    det_call_t* call3 = det_call_target(raddressof(function), &add_stub);
+    det_call_t* call2 = det_call_target(TEST_ADDRESSOF(function), &add);
+    det_call_t* call3 = det_call_target(TEST_ADDRESSOF(function), &add_stub);
     assert(result == 0x1);
     assert(call2 == 0x0);
     assert(call3 != 0x0);
@@ -160,18 +160,18 @@ test_f1_success() {
 void
 test_f2_success() {
     /* arrange. */
-    det_call_t* call = det_call_target(raddressof(function2), &add);
+    det_call_t* call = det_call_target(TEST_ADDRESSOF(function2), &add);
     tapi_context_t* context = tapi_init();
 
     /* act. */
     int32_t result = patch_call_target(context, call, &add_stub);
-    det_call_t* call2 = det_call_target(raddressof(function2), &add);
+    det_call_t* call2 = det_call_target(TEST_ADDRESSOF(function2), &add);
     int32_t result2 = patch_call_target(context, call2, &add_stub);
 
     /* assert. */
-    det_call_t* call3 = det_call_target(raddressof(function2), &add);
-    det_call_t* call4 = det_call_target(raddressof(function2), &add_stub);
-    det_call_t* call5 = det_call_target(raddressof(function2), &add_stub);
+    det_call_t* call3 = det_call_target(TEST_ADDRESSOF(function2), &add);
+    det_call_t* call4 = det_call_target(TEST_ADDRESSOF(function2), &add_stub);
+    det_call_t* call5 = det_call_target(TEST_ADDRESSOF(function2), &add_stub);
     assert(result == 0x1);
     assert(result2 == 0x1);
     assert(call3 == 0x0);
@@ -191,15 +191,15 @@ test_f2_success() {
 void
 test_f3_success() {
     /* arrange. */
-    det_call_t* call = det_call_target(raddressof(function3), &add);
+    det_call_t* call = det_call_target(TEST_ADDRESSOF(function3), &add);
     tapi_context_t* context = tapi_init();
 
     /* act. */
     int32_t result = patch_call_target(context, call, &add_stub);
 
     /* assert. */
-    det_call_t* call2 = det_call_target(raddressof(function3), &add);
-    det_call_t* call3 = det_call_target(raddressof(function3), &add_stub);
+    det_call_t* call2 = det_call_target(TEST_ADDRESSOF(function3), &add);
+    det_call_t* call3 = det_call_target(TEST_ADDRESSOF(function3), &add_stub);
     assert(result == 0x1);
     assert(call2 == 0x0);
     assert(call3 != 0x0);
