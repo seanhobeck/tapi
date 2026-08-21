@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-09
+ * @date 2026-08-21
  */
 #ifdef __gnu_linux__
 #define _DEFAULT_SOURCE /* required for htole16/32/64. */
@@ -421,8 +421,8 @@ reloc_find(void* address, void* target, bool thumb, bool disp32) {
 
     /* attempt to read, if found return it o.w. make one. */
     if (reloc_table == 0x0) reloc_table = map_make();
-    void* found = map_lookup(reloc_table, buffer);
-    if (found != 0x0) return (reloc_t*)found;
+    entry_t* found = (entry_t*)map_lookup(reloc_table, buffer);
+    if (found != 0x0) return (reloc_t*) found->value;
     return reloc_make(address, target, thumb, disp32);
 };
 
@@ -435,7 +435,7 @@ void
 reloc_cleanup(reloc_t* reloc) {
     /* free the region, then the bytes then the reloc. */
     assert(reloc != 0x0);
-    free_region(reloc->region);
+    free_region(reloc);
     free(reloc->bytes);
     free(reloc);
 };

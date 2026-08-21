@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-07
+ * @date 2026-08-21
  */
 #include "patch.h"
 
@@ -307,9 +307,6 @@ patch_call_target(tapi_context_t* context, const det_call_t* call, const void* n
                     if (reloc != 0x0) {
                         if e_intt_passed(patch_relative_bx86(call->call, call->size, reloc->region)) break;
                     }
-
-                    /* NOLINTNEXTLINE */
-                    fprintf(stderr, "bx86/64; patching relative call failed, attempting absolute reloc also failed.\n");
                     return 0u;
                 };
                 case E_DET_CALLSPEC_RIP_IND: {
@@ -321,9 +318,6 @@ patch_call_target(tapi_context_t* context, const det_call_t* call, const void* n
                     if (reloc != 0x0) {
                         if e_intt_passed(patch_rip_based_bx86(call->call, call->size, reloc->region, absolute)) break;
                     }
-
-                    /* NOLINTNEXTLINE */
-                    fprintf(stderr, "bx86/64; patching rip-based call failed, attempting absolute reloc also failed.\n");
                     return 0u;
                 };
                 default: {
@@ -353,9 +347,6 @@ patch_call_target(tapi_context_t* context, const det_call_t* call, const void* n
                         if e_intt_passed(patch_relative_barm(call->call, call->size, reloc->region)) break;
                     }
                 }
-
-                /* NOLINTNEXTLINE */
-                fprintf(stderr, "barm32/th; patching relative call failed, attempting absolute reloc also failed.\n");
                 return 0u;
             }
             case CS_ARCH_AARCH64: {
@@ -365,9 +356,6 @@ patch_call_target(tapi_context_t* context, const det_call_t* call, const void* n
                 if (reloc != 0x0) {
                     if e_intt_passed(patch_relative_barm64(call->call, call->size, reloc->region)) break;
                 }
-
-                /* NOLINTNEXTLINE */
-                fprintf(stderr, "barm64; patching relative call failed, attempting absolute reloc also failed.\n");
                 return 0u;
             }
             default: {

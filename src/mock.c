@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-08-20
+ * @date 2026-08-21
  */
 #include <tapi/mock.h>
 
@@ -292,16 +292,28 @@ tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock) {
     /* we can't restore a mock that hasn't been applied... */
     if (mock->type != E_TAPI_MOCK_AUTO && mock->call == 0x0) {
         /* NOLINTNEXTLINE */
-        fprintf(stderr, "tapi, mock_restore; cannot restore unapplied mock.\n");
+        fprintf(stderr, "tapi_cleanup_mock; cannot restore unapplied mock.\n");
         return;
     }
 
     /* is this a 'regular/auto mock', if so we have to replace every occurrence. */
     if (mock->type != E_TAPI_MOCK_SPECIAL) {
+        det_call_t* first = tapi_dyna_get(mock->calls, 0u);
         dyna_foreach(mock->calls, det_call_t*, call)
+            /* we replace the call target with the original bytes, iff they are the
+             * same type of call (always except for x86 rip-based ind. calls). */
+            if (first->spec == call->spec) {
+                memcpy(call->call, mock->orig_bytes, call->size);
+                continue;
+            }
+
             /* otherwise we re-patch it with the old call address and type we had. */
-            int32_t result = patch_call_target(context, call, mock->mocked);
-            if (result == 0u) break;
+            int32_t result = patch_call_target(context, call, mock->target);
+            if (result == 0u) {
+                /* NOLINTNEXTLINE */
+                fprintf(stderr, "tapi_cleanup_mock; cannot patch original target!\n");
+                break;
+            }
         dyna_endforeach(mock->calls)
 
 #ifndef TAPI_MINIMAL
@@ -320,7 +332,7 @@ tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock) {
     else {
         /* we then have to restore the call target for future tests. */
         det_call_t* call = tapi_dyna_pop(mock->calls, 0u);
-        patch_call_target(context, call, mock->target);
+        memcpy(call->call, mock->orig_bytes, call->size);
         free(call);
     }
     tapi_dyna_free(mock->calls);
