@@ -53,7 +53,7 @@ ldflags += -L$(vendor_lib)
 ldlibs  := -l$(lib_name)
 
 # each test .c becomes its own executable in bin/$(arch)/tests/unit/
-test_srcs := $(filter-out tests/unit/winmain.c,$(shell find $(src_dir) -maxdepth 1 -name '*.c'))
+test_srcs := $(shell find $(src_dir) -maxdepth 1 -name '*.c' ! -name 'winmain.c')
 test_objs := $(patsubst $(src_dir)/%.c,$(build_dir)/%.o,$(test_srcs))
 test_bins := $(patsubst $(src_dir)/%.c,$(test_bin_dir)/%,$(test_srcs))
 
