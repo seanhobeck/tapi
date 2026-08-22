@@ -30,7 +30,7 @@
  */
 /**
  * @author Sean Hobeck
- * @date 2026-07-16
+ * @date 2026-07-25
  */
 #ifndef MAP_H
 #define MAP_H
@@ -76,7 +76,11 @@ typedef struct {
     size_t count, size; /* the size and count of entries found within t1/t2. */
 #ifdef TAPI_THREAD_SAFE
     /** a read-write access lock to t1 and t2 (only one thread writes at a time). */
+#ifndef _WIN32
     pthread_rwlock_t lock;
+#else
+    SRWLOCK lock;
+#endif
 #endif
 } map_t;
 

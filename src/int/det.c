@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-09
+ * @date 2026-08-06
  */
 #include "det.h"
 
@@ -83,7 +83,7 @@ det_function_size(void* address, size_t max_size) {
     cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
 
     /* get the bytes at the address, and create an iterator. */
-    const uint8_t* bytes = (unsigned char*) address;
+    const uint8_t* bytes = (uint8_t*) address;
     uint64_t iter = (uintptr_t) address;
     size_t code_size = max_size;
     cs_insn* insn = cs_malloc(handle);
@@ -146,6 +146,12 @@ det_function_size(void* address, size_t max_size) {
                 /* common aarch64 prologues, stp x29, x30, [sp, ...]. */
                 is_prologue = sig_aarch64_chk(insn) == SIG_AARCH64_PROLOGUE;
             }
+#ifdef _WIN32 /* push ebp is a very common windows prologue for functions, and ret is a common epilogue (compared to leave on linux). */
+            else if (architecture.arch == CS_ARCH_X86 && architecture.mode == CS_MODE_32) {
+                /* common ix86 prologues. push ebp, mov ebp, esp. */
+                is_prologue = sig_compare("push ebp", insn);
+            }
+#endif
             /* if we encounter a regular instruction after our starting prologues... */
             if (starting_prologues && !is_prologue) starting_prologues = false;
 
@@ -185,8 +191,16 @@ det_function_size(void* address, size_t max_size) {
                 pad_count++;
                 /* bruteforce nop pad calculation is unstable, we aren't analyzing the binary,
                     so this might be phased out, not sure yet. */
-                if (pad_count > 2)
+                if (pad_count > 2) {
+                    if (architecture.arch == CS_ARCH_X86) {
+                        size -= 3u; /* nop and int3 (cc) are 1 byte. */
+                    }
+                    else if (architecture.arch == CS_ARCH_ARM) {
+                        if (is_thumb) size -= 6u; /* arm(thumb-mode) nops are 2 bytes. */
+                        else size -= 12u;
+                    }
                     break;
+                }
             } else {
                 pad_count = 0;
             }
@@ -222,6 +236,38 @@ find_call_bx86(const void* target, det_call_t* call, const cs_insn* insn, const 
     /* we look for the target address. */
     uint64_t address = 0u;
     cs_x86* ops = &insn->detail->x86;
+#ifdef _WIN32
+    /* indirect call rip + disp32. */
+    if (sig_compare("call qword ptr [rip + 0x????????]", insn)) {
+        uint64_t disp32 = insn->detail->x86.disp;
+        if (insn->address + disp32 + 6u == (uint64_t)target) {
+            call->call = (void*)insn->address;
+            call->dest = (void*)target;
+            call->size = insn->size;
+            call->spec = E_DET_CALLSPEC_RIP_IND;
+
+            /* copy and return. */
+            /* NOLINTNEXTLINE */
+            memcpy(call->bytes, insn->bytes, insn->size < 32u ? insn->size : 32u);
+            return E_INTT_RESULT_SUCCESS;
+        }
+    }
+    else if (sig_compare("call dword ptr [0x????????]", insn)) {
+        /* we can get the disp through detail, ty capstone. */
+        uint32_t disp32 = insn->detail->x86.disp;
+        if (disp32 == (uint32_t)target) {
+            call->call = (void*)insn->address;
+            call->dest = (void*)target;
+            call->size = insn->size;
+            call->spec = E_DET_CALLSPEC_RIP_IND;
+
+            /* copy and return. */
+            /* NOLINTNEXTLINE */
+            memcpy(call->bytes, insn->bytes, insn->size < 32u ? insn->size : 32u);
+            return E_INTT_RESULT_SUCCESS;
+        }
+    }
+#endif
     for (size_t i = 0; i < ops->op_count; i++) {
         /* iterate until we find the immediate value used in the call. */
         cs_x86_op* op = &ops->operands[i];
@@ -460,7 +506,7 @@ det_call_targets(void* source, const void* target) {
                     if e_intt_passed(find_call_bx86(target, call, insn, architecture.mode)) {
                         tapi_dyna_push(list, call);
                         call = calloc(1u, sizeof *call);
-                        call->is_thumb = is_thumb;
+                        call->is_thumb = false;
                     }
                     break;
             }
@@ -478,7 +524,7 @@ det_call_targets(void* source, const void* target) {
                     if e_intt_passed(find_call_baarch64(target, call, insn)) {
                         tapi_dyna_push(list, call);
                         call = calloc(1u, sizeof *call);
-                        call->is_thumb = is_thumb;
+                        call->is_thumb = false;
                     }
                     break;
             }

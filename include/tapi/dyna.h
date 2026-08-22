@@ -5,14 +5,19 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-21
+ * @date 2026-08-20
  */
 #ifndef TAPI_DYNA_H
 #define TAPI_DYNA_H
 
+#ifndef _WIN32
 /*! uses pthread_rwlock. */
 #define _XOPEN_SOURCE 600u /* enables POSIX.1-2001 */
 #include <pthread.h>
+#else
+/*! uses SRWLOCK. */
+#include <windows.h>
+#endif
 
 /*! uses size_t. */
 #include <stddef.h>
@@ -20,14 +25,17 @@
 /* for functions that are exported by tapi. */
 #if (defined(__GNUC__) || defined(__IBMC__))
 #define TAPI_EXPORT __attribute__((visibility("default")))
+#define TAPI
 #define TAPI_HIDDEN __attribute__((visibility("hidden")))
 #else
 /* if we are using msvc toolchain (winapi). */
-#if (defined(_MSC_VER))
+#if defined(_MSC_VER)
 #define TAPI_EXPORT __declspec(dllexport)
+#define TAPI __cdecl
 #define TAPI_HIDDEN
 #else
 #define TAPI_EXPORT
+#define TAPI
 #define TAPI_HIDDEN
 #endif
 #endif
@@ -62,7 +70,11 @@ typedef struct {
     size_t length, capacity;
 #ifdef TAPI_THREAD_SAFE
     /** a read-write access lock to data (only one thread writes at a time). */
+#ifndef _WIN32
     pthread_rwlock_t lock;
+#else
+    SRWLOCK lock;
+#endif
 #endif
 } tapi_dyna_t;
 
@@ -71,7 +83,7 @@ typedef struct {
  *
  * @return an allocated dynamic array.
  */
-TAPI_EXPORT tapi_dyna_t*
+TAPI_EXPORT tapi_dyna_t* TAPI
 tapi_dyna_create();
 
 /**
@@ -79,7 +91,7 @@ tapi_dyna_create();
  *
  * @param array pointer to a dynamically allocated array.
  */
-TAPI_EXPORT void
+TAPI_EXPORT void TAPI
 tapi_dyna_free(tapi_dyna_t* array);
 
 /**
@@ -88,7 +100,7 @@ tapi_dyna_free(tapi_dyna_t* array);
  * @param array pointer to a dynamically allocated array.
  * @param data data to be pushed onto the top of the allocated array.
  */
-TAPI_EXPORT void
+TAPI_EXPORT void TAPI
 tapi_dyna_push(tapi_dyna_t* array, void* data);
 
 /**
@@ -101,7 +113,7 @@ tapi_dyna_push(tapi_dyna_t* array, void* data);
  * @param index index at which to pop the item.
  * @return data at the specified index, popped off the array.
  */
-TAPI_EXPORT void*
+TAPI_EXPORT void* TAPI
 tapi_dyna_pop(tapi_dyna_t* array, size_t index);
 
 /**
@@ -112,7 +124,7 @@ tapi_dyna_pop(tapi_dyna_t* array, size_t index);
  * @param index the index in the array that we are to retrieve data from.
  * @return 0x0 if the index is out of bounds or the data at a specified index in the array.
  */
-TAPI_EXPORT void*
+TAPI_EXPORT void* TAPI
 tapi_dyna_get(tapi_dyna_t* array, size_t index);
 
 /**
@@ -120,7 +132,7 @@ tapi_dyna_get(tapi_dyna_t* array, size_t index);
  *
  * @param array the dynamically allocated array to be shrinked.
  */
-TAPI_EXPORT void
+TAPI_EXPORT void TAPI
 tapi_dyna_shrink(tapi_dyna_t* array);
 
 /**
@@ -130,43 +142,12 @@ tapi_dyna_shrink(tapi_dyna_t* array);
  * @param length the length of the list of data.
  * @return an allocated dyna_t structure with all data copied over.
  */
-TAPI_EXPORT tapi_dyna_t*
+TAPI_EXPORT tapi_dyna_t* TAPI
 tapi_dyna_make(void** data, size_t length);
 
 /* a get operation. */
 #define dyna_get(array, type, index) ((type) tapi_dyna_get(array, index))
 
-/*! if we are compiling with the thread-safe flag. */
-#ifdef TAPI_THREAD_SAFE
-/* starting an iteration. */
-#define dyna_foreach_it(array, type, var, iter) \
-    pthread_rwlock_rdlock(&(array)->lock); \
-    for (size_t iter = 0; iter < (array)->length; iter++) { \
-        type var = dyna_get(array, type, iter);
-
-/* starting an iteration. */
-#define dyna_foreach(array, type, var) \
-    pthread_rwlock_rdlock(&(array)->lock); \
-    for (size_t i = 0; i < (array)->length; i++) { \
-        type var = dyna_get(array, type, i);
-
-/* starting an iteration, backwards. */
-#define dyna_inv_foreach(array, type, var) \
-    pthread_rwlock_rdlock(&(array)->lock); \
-    for (size_t i = (array)->length; i != 0; i--) { \
-        type var = dyna_get(array, type, i - 1);
-
-/* starting an iteration, backwards. */
-#define dyna_inv_foreach_it(array, type, var, iter) \
-    pthread_rwlock_rdlock(&(array)->lock); \
-    for (size_t iter = (array)->length; iter != 0; iter--) { \
-        type var = dyna_get(array, type, iter - 1);
-
-/* ending an iteration. */
-#define dyna_endforeach(array) \
-    } \
-    pthread_rwlock_unlock(&(array)->lock);
-#else
 /* starting an iteration. */
 #define dyna_foreach_it(array, type, var, iter) \
     for (size_t iter = 0; iter < (array)->length; iter++) { \
@@ -189,5 +170,4 @@ tapi_dyna_make(void** data, size_t length);
 
 /* ending an iteration. */
 #define dyna_endforeach(array) }
-#endif /* TAPI_THREAD_SAFE */
 #endif /* TAPI_DYNA_H */

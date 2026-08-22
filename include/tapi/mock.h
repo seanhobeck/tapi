@@ -5,12 +5,12 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-21
+ * @date 2026-08-18
  */
 #ifndef TAPI_MOCK_H
 #define TAPI_MOCK_H
 
-/*! uses TAPI_EXPORT, tapi_context_t. */
+/*! uses TAPI_EXPORT, TAPI, tapi_context_t. */
 #include <tapi/tapi.h>
 
 /*! uses size_t. */
@@ -22,7 +22,7 @@
 
 /**
  * to make this library more minimal and controlled, you can define 'TAPI_MINIMAL' during compilation
- *  by adding the minimal=1 flag to your compilation process for tapi.
+ *  by adding the minimal=1 flag (for make) or -DMINIMIAL (for msvc) to your compilation process for tapi.
  */
 #ifndef TAPI_MINIMAL
 /** an enum for different results from an action. */
@@ -111,6 +111,8 @@ typedef struct {
     e_tapi_mock_type_t type;
     /** the n-th call target occurrence within the original function (for special mocks only). */
     size_t call_index;
+    /** the dynamic list of det_call_t structures. */
+    tapi_dyna_t* calls;
 
 #ifndef TAPI_MINIMAL
     /*! anon struct to encompass all 'auto mock' data. */
@@ -123,7 +125,7 @@ typedef struct {
             /** should errno be set by the autostub? */
             bool set_errno;
         } info;
-    } a_data;
+    } data;
 #endif
 } tapi_mock_t;
 
@@ -139,7 +141,7 @@ typedef struct {
  *  assumed to be regular not special and will replace every call occurrence found.
  * @return an allocated mock structure ready to be applied.
  */
-tapi_mock_t*
+TAPI_EXPORT tapi_mock_t* TAPI
 tapi_make_mock(void* orig, void* target, void* mocked, size_t call_index);
 
 #ifndef TAPI_MINIMAL
@@ -156,7 +158,7 @@ tapi_make_mock(void* orig, void* target, void* mocked, size_t call_index);
  * @param set_errno should the autostub associated with this mock set errno?
  * @return an allocated mock structure ready to be applied.
  */
-tapi_mock_t*
+TAPI_EXPORT tapi_mock_t* TAPI
 tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, \
     tapi_action_t action, bool set_errno);
 #endif
@@ -180,7 +182,7 @@ tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, \
  * @param context the context of tapi to be used.
  * @param mock the mock to be applied.
  */
-TAPI_EXPORT void
+TAPI_EXPORT void TAPI
 tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock);
 
 /**
@@ -191,7 +193,7 @@ tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock);
  * @param context the context of tapi to be used.
  * @param mock the mock structure to be freed and restored.
  */
-TAPI_EXPORT void
+TAPI_EXPORT void TAPI
 tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock);
 
 /** quickly create an action function to be used in an autostub. */

@@ -5,14 +5,19 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-26
+ * @date 2026-07-31
  */
 #ifndef TAPI_H
 #define TAPI_H
 
-/*! uses tapi_dyna_t. */
+/*! uses tapi_dyna_t, TAPI_EXPORT, TAPI. */
 #include <tapi/dyna.h>
 /** \endcond */
+
+/*! if using windows/msvc you must define the macro below in order for easier call resolution. */
+#if defined(_MSC_VER)
+#pragma comment(linker, "/INCREMENTAL")
+#endif
 
 /** enum for different types of results from a test. */
 typedef enum {
@@ -72,7 +77,7 @@ typedef struct {
  *
  * @return a new tapi_context_t structure.
  */
-TAPI_EXPORT tapi_context_t*
+TAPI_EXPORT tapi_context_t* TAPI
 tapi_init(void);
 
 /**
@@ -82,7 +87,7 @@ tapi_init(void);
  *
  * @param context the tapi context to be used.
  */
-TAPI_EXPORT void
+TAPI_EXPORT void TAPI
 tapi_run_tests(tapi_context_t* context);
 
 /**
@@ -93,7 +98,7 @@ tapi_run_tests(tapi_context_t* context);
  * @param name the name of the test.
  * @param function the test function to be used.
  */
-TAPI_EXPORT tapi_test_t*
+TAPI_EXPORT tapi_test_t* TAPI
 tapi_make_test(const char* name, tapi_test_func_t function);
 
 /**
@@ -103,7 +108,7 @@ tapi_make_test(const char* name, tapi_test_func_t function);
  *
  * @param context the tapi context containing all the data to be freed (this will be freed).
  */
-TAPI_EXPORT void
+TAPI_EXPORT void TAPI
 tapi_cleanup(tapi_context_t* context);
 
 /** concatenation implementation. */

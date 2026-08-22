@@ -1,22 +1,22 @@
 /**
  * @author Sean Hobeck
- * @date 2026-01-21
+ * @date 2026-07-27
  */
 #include "arch.h"
 
 /** @return the current architecture pair for capstone, gen. at compile time. */
 arch_t
 get_arch(void) {
-#ifdef __amd64__
+#if defined(__amd64__) || defined(_M_AMD64)
     return (arch_t) { .arch = CS_ARCH_X86, .mode = CS_MODE_64 };
 #endif
-#ifdef __i386__
+#if defined(__i386__) || defined(_M_IX86)
     return (arch_t) { .arch = CS_ARCH_X86, .mode = CS_MODE_32 };
 #endif
-#ifdef __aarch64__
+#if defined(__aarch64__) || defined(_M_ARM64) 
     return (arch_t) { .arch = CS_ARCH_AARCH64, .mode = CS_MODE_ARM };
 #endif
-#ifdef __arm__
+#if defined(__arm__) || defined(_M_ARM)
     return (arch_t) { .arch = CS_ARCH_ARM, .mode = CS_MODE_ARM };
 #endif
 }

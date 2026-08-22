@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-25
+ * @date 2026-08-05
  */
 #define _GNU_SOURCE /*! needed for dl_iterate_phdr. */
 #include "lnk.h"
@@ -23,6 +23,9 @@
 #include <link.h>
 #endif
 
+/*! uses cs_insn, cs_disas. */
+#include <capstone/capstone.h>
+
 /*! uses elf_t, elf_parse, ... */
 #include "elf.h"
 
@@ -30,9 +33,9 @@
 #include "intt.h"
 
 /*! uses map_t, ... */
-#include <capstone/capstone.h>
-
 #include "map.h"
+
+/*! uses sig_compare. */
 #include "sig.h"
 
 /* an internal list for all the plt entries. */
@@ -300,6 +303,40 @@ lnk_init(void) {
     free(dynstr_data);
     free(rela_data);
     free(plt_data);
+#elif defined(_WIN32)
+    /* create the map. */
+    table = map_make();
+
+    /* get the base module, dos and nt headers. */
+    PBYTE base_module = (PBYTE) GetModuleHandleA(0x0);
+    PIMAGE_DOS_HEADER dos_header = (PIMAGE_DOS_HEADER)(base_module);
+    PIMAGE_NT_HEADERS nt_header = (PIMAGE_NT_HEADERS)(base_module + dos_header->e_lfanew);
+    IMAGE_DATA_DIRECTORY directory = nt_header->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
+    if (!directory.VirtualAddress) {
+        /* NOLINTNEXTLINE */
+        fprintf_s(stderr, "tapi, lnk_init; could not resolve iat virtual address\n");
+        return;
+    }
+
+    /* iterate... */
+    PIMAGE_IMPORT_DESCRIPTOR desc_iter = (PIMAGE_IMPORT_DESCRIPTOR)(base_module + directory.VirtualAddress);
+    for (; desc_iter->Name; ++desc_iter) {
+
+        /* we need to calculate the original thunk address, sometimes desc_iter->FirstThunk == 0. */
+        PIMAGE_THUNK_DATA thunk_orig = (PIMAGE_THUNK_DATA)(base_module + desc_iter->OriginalFirstThunk),
+            thunk_first = (PIMAGE_THUNK_DATA)(base_module + desc_iter->FirstThunk);
+        if (!thunk_orig) thunk_orig = thunk_first;
+        for (; thunk_orig->u1.AddressOfData; ++thunk_orig, ++thunk_first) {
+            if (IMAGE_SNAP_BY_ORDINAL(thunk_orig->u1.Ordinal)) /* ordinal number instead of fun name. */
+                continue;
+
+            /* get the actual import, then make a entry within our lookup table. */
+            PIMAGE_IMPORT_BY_NAME import = (PIMAGE_IMPORT_BY_NAME)(base_module + thunk_orig->u1.AddressOfData);
+            map_push(table, import->Name, &thunk_first->u1.Function);
+        }
+    }
+#elif defined(__APPLE__)
+#error "tapi does not support macos/apple for automock resolving."
 #endif
 };
 
@@ -317,6 +354,41 @@ lnk_resolve(const char* name) {
         return 0x0;
     return entry->value;
 };
+
+#ifdef _WIN32
+/*! uses get_arch. */
+#include "arch.h"
+
+/**
+ * @brief quickly resolve a windows thunk.
+ *
+ * @param address the address of the thunk.
+ * @return the actual address of what is being called at the thunk.
+ */
+void*
+lnk_qr_thunk(void* address) {
+    /* to resolve these incremental thunks, we simply evaluate the address of the jmp. */
+    csh handle;
+    arch_t arch = get_arch(); /* we don't need to worry about arm32th (thank god). */
+    cs_open(arch.arch, arch.mode, &handle);
+    cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
+    cs_insn* insn = cs_malloc(handle);
+    if (!insn) {
+        cs_close(&handle);
+        /* NOLINTNEXTLINE */
+        fprintf(stderr, "tapi, lnk_qr_thunk; cs_malloc failed; could not allocate memory for "
+            "instructions.");
+        return 0;
+    }
+    
+    /* disassemble just the jump (e9 rel32). */
+    const uint8_t* bytes = (uint8_t*)address;
+    cs_disasm(handle, bytes, 5u, (uintptr_t)address, 1u, &insn);
+    if (!insn->op_str) return 0x0;
+    uintptr_t value = strtoll((char*)(insn->op_str + 2u), 0x0, 16u);
+    return value;
+};
+#endif  
 
 /** @brief clean up the internal plt_table. */
 void

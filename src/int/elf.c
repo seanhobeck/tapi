@@ -1,8 +1,9 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-16
+ * @date 2026-07-25
  */
 #include "elf.h"
+#ifdef __gnu_linux__
 
 /*! uses fprintf, stderr, fopen, fclose, fread, fseek, ftell. */
 #include <stdio.h>
@@ -331,3 +332,4 @@ elf_shdr_name(elf_t* elf, elf_shdr_t* shdr) {
     if (!memchr(s, 0, remaining)) return 0x0; /* no terminator in table. */
     return s;
 }
+#endif

@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-21
+ * @date 2026-07-25
  */
 #include <tapi/dyna.h>
 
@@ -16,6 +16,11 @@
 
 /*! uses memcpy. */
 #include <string.h>
+
+#ifdef _WIN32
+/*! uses SRWLOCKINIT, etc... */
+#include <windows.h>
+#endif
 /** \endcond */
 
 /**
@@ -31,7 +36,11 @@ tapi_dyna_create() {
     array->length = 0u;
     array->capacity = 0u;
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
     pthread_rwlock_init(&array->lock, 0x0);
+#else
+    array->lock = (SRWLOCK){ 0 };
+#endif
 #endif
     return array;
 }
@@ -46,7 +55,9 @@ tapi_dyna_free(tapi_dyna_t* array) {
     /* assert if the array is 0x0. */
     assert(array != 0x0);
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
     pthread_rwlock_destroy(&array->lock);
+#endif
 #endif
 
     /* free. */
@@ -65,7 +76,11 @@ tapi_dyna_push(tapi_dyna_t* array, void* data) {
     /* assert if the array or data == 0x0. */
     assert(array != 0x0 && data != 0x0);
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
     pthread_rwlock_wrlock(&array->lock);
+#else 
+    AcquireSRWLockExclusive(&array->lock);
+#endif
 #endif
 
     /* compare length and capacity. */
@@ -75,6 +90,13 @@ tapi_dyna_push(tapi_dyna_t* array, void* data) {
         if (!_data) {
             /* NOLINTNEXTLINE */
             fprintf(stderr, "tapi, dyna_push; realloc failed; could not allocate memory for push.");
+#ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
+            pthread_rwlock_unlock(&array->lock);
+#else
+            ReleaseSRWLockExclusive(&array->lock);
+#endif
+#endif
             return; /* do NOT exit on failure. */
         }
         array->data = _data;
@@ -82,7 +104,11 @@ tapi_dyna_push(tapi_dyna_t* array, void* data) {
     }
     array->data[array->length++] = data;
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
     pthread_rwlock_unlock(&array->lock);
+#else
+    ReleaseSRWLockExclusive(&array->lock);
+#endif
 #endif
 }
 
@@ -101,11 +127,19 @@ tapi_dyna_pop(tapi_dyna_t* array, size_t index) {
     /* assert if the array == 0x0. */
     assert(array != 0x0);
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
     pthread_rwlock_wrlock(&array->lock);
+#else
+    AcquireSRWLockExclusive(&array->lock);
+#endif
 #endif
     if (index >= array->length) {
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
         pthread_rwlock_unlock(&array->lock);
+#else
+        ReleaseSRWLockExclusive(&array->lock);
+#endif
 #endif
         return 0x0;
     }
@@ -118,7 +152,11 @@ tapi_dyna_pop(tapi_dyna_t* array, size_t index) {
         array->data[i - 1u] = array->data[i];
     array->length--;
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
     pthread_rwlock_unlock(&array->lock);
+#else
+    ReleaseSRWLockExclusive(&array->lock);
+#endif
 #endif
     return item;
 }
@@ -136,14 +174,30 @@ tapi_dyna_get(tapi_dyna_t* array, size_t index) {
     /* assert if the array == 0x0. */
     assert(array != 0x0);
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
     pthread_rwlock_rdlock(&array->lock);
+#else
+    AcquireSRWLockShared(&array->lock);
+#endif
 #endif
 
     /* if the index is out of bounds. */
-    if (index >= array->length)
-        return 0x0;
+    if (index >= array->length) {
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
+        pthread_rwlock_unlock(&array->lock);
+#else           
+        ReleaseSRWLockShared(&array->lock);
+#endif
+#endif
+        return 0x0;
+    }
+#ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
     pthread_rwlock_unlock(&array->lock);
+#else           
+    ReleaseSRWLockShared(&array->lock);
+#endif
 #endif
     return array->data[index];
 }
@@ -158,7 +212,11 @@ tapi_dyna_shrink(tapi_dyna_t* array) {
     /* assert if the array == 0x0. */
     assert(array != 0x0);
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
     pthread_rwlock_wrlock(&array->lock);
+#else
+    AcquireSRWLockExclusive(&array->lock);
+#endif
 #endif
 
     /* do a realloc down where capacity = length. */
@@ -166,12 +224,23 @@ tapi_dyna_shrink(tapi_dyna_t* array) {
     if (!_data) {
         /* NOLINTNEXTLINE */
         fprintf(stderr, "tapi, dyna_shrink; realloc failed; could not allocate memory for shrink.");
+#ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
+        pthread_rwlock_unlock(&array->lock);
+#else
+        ReleaseSRWLockExclusive(&array->lock);
+#endif
+#endif
         exit(EXIT_FAILURE); /* exit on failure. */
     }
     array->data = _data;
     array->capacity = array->length;
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
     pthread_rwlock_unlock(&array->lock);
+#else
+    ReleaseSRWLockExclusive(&array->lock);
+#endif
 #endif
 }
 
@@ -190,7 +259,11 @@ tapi_dyna_make(void** data, size_t length) {
     array->length = length;
     array->capacity = length;
 #ifdef TAPI_THREAD_SAFE
+#ifndef _WIN32
     pthread_rwlock_init(&array->lock, 0x0);
+#else
+    array->lock = (SRWLOCK){ 0 };
+#endif
 #endif
 
     /* copy and return. */

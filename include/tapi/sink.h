@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-26
+ * @date 2026-07-31
  */
 #ifndef TAPI_SINK_H
 #define TAPI_SINK_H
@@ -13,7 +13,7 @@
 /* we have to define this to use fileno(), as stream->_fileno is not universal across differing libc. */
 #define _GNU_SOURCE 200809L
 
-/*! uses TAPI_EXPORT. */
+/*! uses TAPI_EXPORT, TAPI. */
 #include <tapi/tapi.h>
 
 /*! uses FILE, struct _IO_FILE. */
@@ -59,7 +59,7 @@ typedef struct {
  *
  * @return a pointer to an allocated sink.
  */
-TAPI_EXPORT tapi_sink_t*
+TAPI_EXPORT tapi_sink_t* TAPI
 tapi_make_sink();
 
 /**
@@ -68,7 +68,7 @@ tapi_make_sink();
  * @param sink the sink to set the destination to.
  * @param length the size of the pre-allocated buffer.
  */
-TAPI_EXPORT void
+TAPI_EXPORT void TAPI
 tapi_setdbf_sink(tapi_sink_t* sink, size_t length);
 
 /**
@@ -77,7 +77,7 @@ tapi_setdbf_sink(tapi_sink_t* sink, size_t length);
  * @param sink the sink to set the destination to.
  * @param stream the pre-allocated or opened stream.
  */
-TAPI_EXPORT void
+TAPI_EXPORT void TAPI
 tapi_setdfp_sink(tapi_sink_t* sink, tapi_stream_t stream);
 
 /**
@@ -85,6 +85,6 @@ tapi_setdfp_sink(tapi_sink_t* sink, tapi_stream_t stream);
  *
  * @param sink the sink to be freed.
  */
-TAPI_EXPORT void
+TAPI_EXPORT void TAPI
 tapi_cleanup_sink(tapi_sink_t* sink);
 #endif /* TAPI_SINK_H */

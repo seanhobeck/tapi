@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-20
+ * @date 2026-08-20
  */
 /*! uses int. module to be tested. */
 #include "int/patch.h"
@@ -20,20 +20,35 @@
 /*! uses free. */
 #include <stdlib.h>
 
+/*! uses lnk_qr_thunk. */
+#include "int/lnk.h"
+
+/*! noinline macro. */
+#ifdef _WIN32
+#define TEST_NOINLINE __declspec(noinline)
+#define TEST_ADDRESSOF(function) lnk_qr_thunk(&function)
+#else
+#define TEST_NOINLINE __attribute__((noinline))
+#define TEST_ADDRESSOF(function) &function
+#endif
+
 /*! function we search for. */
-int
+TEST_NOINLINE int
+#ifdef _WIN32
+__cdecl
+#endif
 add(int a, int b) {
     return a + b;
 };
 
 /*! stub/mock replacement for add. */
-int
+TEST_NOINLINE int
 add_stub(int a, int b) {
     return a * b;
 }
 
 /*! example function to patch. */
-void
+TEST_NOINLINE void
 function() {
     int a = 200;
     int b = 300;
@@ -42,7 +57,7 @@ function() {
 };
 
 /*! another example function to patch. */
-void
+TEST_NOINLINE void
 function2() {
     int a = getc(stdin);
     int b = getchar();
@@ -52,11 +67,12 @@ function2() {
 }
 
 /*! another example function to patch (this time with inline assembly). */
-void
+TEST_NOINLINE void
 function3() {
     int a = getchar();
     int b = getchar();
     int c;
+#ifndef _WIN32
     __asm__ volatile(
 #ifdef __amd64__
     "mov %1, %%edi\n\t"
@@ -96,6 +112,21 @@ function3() {
     : "r0", "r1"
 #endif
     );
+#else
+#ifdef _M_IX86
+    __asm {
+        mov eax, b
+        push eax
+        mov eax, a
+        push eax
+        call add
+        add esp, 8
+        mov c, eax
+    }
+#else
+    c = add(a, b); /* no inline asm unfortunately. */
+#endif
+#endif
     printf("%d\n", c);
 }
 
@@ -105,15 +136,15 @@ function3() {
 void
 test_f1_success() {
     /* arrange. */
-    det_call_t* call = det_call_target(&function, &add);
+    det_call_t* call = det_call_target(TEST_ADDRESSOF(function), &add);
     tapi_context_t* context = tapi_init();
 
     /* act. */
     int32_t result = patch_call_target(context, call, &add_stub);
 
     /* assert. */
-    det_call_t* call2 = det_call_target(&function, &add);
-    det_call_t* call3 = det_call_target(&function, &add_stub);
+    det_call_t* call2 = det_call_target(TEST_ADDRESSOF(function), &add);
+    det_call_t* call3 = det_call_target(TEST_ADDRESSOF(function), &add_stub);
     assert(result == 0x1);
     assert(call2 == 0x0);
     assert(call3 != 0x0);
@@ -129,18 +160,18 @@ test_f1_success() {
 void
 test_f2_success() {
     /* arrange. */
-    det_call_t* call = det_call_target(&function2, &add);
+    det_call_t* call = det_call_target(TEST_ADDRESSOF(function2), &add);
     tapi_context_t* context = tapi_init();
 
     /* act. */
     int32_t result = patch_call_target(context, call, &add_stub);
-    det_call_t* call2 = det_call_target(&function2, &add);
+    det_call_t* call2 = det_call_target(TEST_ADDRESSOF(function2), &add);
     int32_t result2 = patch_call_target(context, call2, &add_stub);
 
     /* assert. */
-    det_call_t* call3 = det_call_target(&function2, &add);
-    det_call_t* call4 = det_call_target(&function2, &add_stub);
-    det_call_t* call5 = det_call_target(&function2, &add_stub);
+    det_call_t* call3 = det_call_target(TEST_ADDRESSOF(function2), &add);
+    det_call_t* call4 = det_call_target(TEST_ADDRESSOF(function2), &add_stub);
+    det_call_t* call5 = det_call_target(TEST_ADDRESSOF(function2), &add_stub);
     assert(result == 0x1);
     assert(result2 == 0x1);
     assert(call3 == 0x0);
@@ -160,25 +191,32 @@ test_f2_success() {
 void
 test_f3_success() {
     /* arrange. */
-    det_call_t* call = det_call_target(&function3, &add);
+    det_call_t* call = det_call_target(TEST_ADDRESSOF(function3), &add);
     tapi_context_t* context = tapi_init();
 
     /* act. */
     int32_t result = patch_call_target(context, call, &add_stub);
 
     /* assert. */
-    det_call_t* call2 = det_call_target(&function3, &add);
-    det_call_t* call3 = det_call_target(&function3, &add_stub);
+    det_call_t* call2 = det_call_target(TEST_ADDRESSOF(function3), &add);
+    det_call_t* call3 = det_call_target(TEST_ADDRESSOF(function3), &add_stub);
     assert(result == 0x1);
     assert(call2 == 0x0);
     assert(call3 != 0x0);
     free(call);
     free(call3);
     free(context);
-    printf("successfully replaced a singular call within a inline assembly function!\n");
+    printf("successfully replaced a singular call within a inline assembly function!\n\n");
 }
 
+#ifndef _WIN32
 int main() {
+#else
+/*! for test_patch. */
+#include "test_patch.h"
+
+int test_patch() {
+#endif
 #ifdef __amd64__
     printf("----src/int/patch.c: 'patch_call_target'(amd64) partial tests----\n");
 #endif

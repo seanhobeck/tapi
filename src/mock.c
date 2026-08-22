@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-21
+ * @date 2026-08-21
  */
 #include <tapi/mock.h>
 
@@ -20,8 +20,11 @@
 /*! uses patch_call_target. */
 #include "patch.h"
 
-/*! uses plt_resolve. */
+/*! uses lnk_resolve, lnk_qr_thunk. */
 #include "lnk.h"
+
+/*! uses reloc_lookup. */
+#include "reloc.h"
 
 /*! uses internal. */
 #include "int/intt.h"
@@ -134,10 +137,15 @@ tapi_mock_t*
 tapi_make_mock(void* orig, void* target, void* mocked, size_t call_index) {
     /* allocate the structure. */
     tapi_mock_t* mock = calloc(1u, sizeof *mock);
+#ifndef _WIN32
     mock->orig = orig;
+#else
+    mock->orig = lnk_qr_thunk(orig);  /* on windows, most calls are to the iat thunk and not to the function itself. */
+#endif
     mock->target = target;
     mock->mocked = mocked;
     mock->call_index = call_index;
+    mock->calls = tapi_dyna_create();
     mock->fun_size = det_function_size(orig, TAPI_MAX_DET_DEPTH);
     /* we are using a max of 4096 bytes (by default). */
     mock->type = call_index != 0u ? E_TAPI_MOCK_SPECIAL : E_TAPI_MOCK_REGULAR;
@@ -163,7 +171,11 @@ tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, \
     tapi_action_t action, bool set_errno) {
     /* allocate the structure. */
     tapi_mock_t* mock = calloc(1u, sizeof *mock);
+#ifndef _WIN32
     mock->orig = orig;
+#else
+    mock->orig = lnk_qr_thunk(orig); /* again most calls are to the thunk, no reloc is needed. */
+#endif
     mock->target = lnk_resolve(target_name);
     if (mock->target == 0x0) {
         fprintf(stderr, "tapi_make_auto_mock; failed to resolve " \
@@ -173,16 +185,17 @@ tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, \
     }
     mock->mocked = mocked;
     mock->call_index = 0u;
+    mock->calls = tapi_dyna_create();
     mock->fun_size = det_function_size(orig, TAPI_MAX_DET_DEPTH);
     /* we are using a max of 4096 bytes (by default). */
     mock->type = E_TAPI_MOCK_AUTO;
     /* simply iterate through the table of given autostubs, find it if possible. */
-    mock->a_data.info.autostub = 0x0;
-    mock->a_data.info.action = action;
-    mock->a_data.info.set_errno = set_errno;
+    mock->data.info.autostub = 0x0;
+    mock->data.info.action = action;
+    mock->data.info.set_errno = set_errno;
     for (size_t i = 0u; i < sizeof(autostub_table) / sizeof(tapi_autostub_t); i++) {
         if (!strcmp(target_name, autostub_table[i].name))
-            mock->a_data.info.autostub = &autostub_table[i];
+            mock->data.info.autostub = &autostub_table[i];
     }
     return mock;
 };
@@ -218,13 +231,15 @@ tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock) {
         memcpy(mock->orig_bytes, call->bytes, mock->size);
 
         /* apply the patch to the call, given the context. */
-        patch_call_target(context, call, mock->mocked);
+        int32_t result = patch_call_target(context, call, mock->mocked);
 
         /* we read the new bytes and store. */
         /* NOLINTNEXTLINE */
         memcpy(mock->mocked_bytes, mock->call, mock->size);
-        dyna_foreach(list, det_call_t*, call)
-            free(call);
+        tapi_dyna_push(mock->calls, call);
+        tapi_dyna_pop(list, mock->call_index - 1u);
+        dyna_foreach(list, det_call_t*, other)
+            free(other);
         dyna_endforeach(list)
         tapi_dyna_free(list);
         return;
@@ -232,10 +247,10 @@ tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock) {
 
 #ifndef TAPI_MINIMAL
     /* for every 'auto mock' we change the details of the internal table before the target is called. */
-    if (mock->type == E_TAPI_MOCK_AUTO && mock->a_data.info.autostub != 0x0) {
-        mock->a_data.info.autostub->action = mock->a_data.info.action;
-        mock->a_data.info.autostub->set_errno = mock->a_data.info.set_errno;
-        mock->mocked = mock->a_data.info.autostub->stub;
+    if (mock->type == E_TAPI_MOCK_AUTO && mock->data.info.autostub != 0x0) {
+        mock->data.info.autostub->action = mock->data.info.action;
+        mock->data.info.autostub->set_errno = mock->data.info.set_errno;
+        mock->mocked = mock->data.info.autostub->stub;
     }
 #endif
 
@@ -254,12 +269,13 @@ tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock) {
         memcpy(mock->orig_bytes, call->bytes, mock->size);
 
         /* apply the patch to the call, given the context. */
-        patch_call_target(context, call, mock->mocked);
+        int32_t result = patch_call_target(context, call, mock->mocked);
 
         /* we read the new bytes and store. */
         /* NOLINTNEXTLINE */
         memcpy(mock->mocked_bytes, mock->call, mock->size);
-        free(call);
+        tapi_dyna_push(mock->calls, call);
+        if (result == 0u) break;
     }
 };
 
@@ -276,35 +292,49 @@ tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock) {
     /* we can't restore a mock that hasn't been applied... */
     if (mock->type != E_TAPI_MOCK_AUTO && mock->call == 0x0) {
         /* NOLINTNEXTLINE */
-        fprintf(stderr, "tapi, mock_restore; cannot restore unapplied mock.\n");
+        fprintf(stderr, "tapi_cleanup_mock; cannot restore unapplied mock.\n");
         return;
     }
 
     /* is this a 'regular/auto mock', if so we have to replace every occurrence. */
     if (mock->type != E_TAPI_MOCK_SPECIAL) {
-        for (size_t i = 0u; i < mock->fun_size; i++) {
-            det_call_t* call = det_call_target(mock->orig, mock->target);
-            if (call == 0x0) break;
+        det_call_t* first = tapi_dyna_get(mock->calls, 0u);
+        dyna_foreach(mock->calls, det_call_t*, call)
+            /* we replace the call target with the original bytes, iff they are the
+             * same type of call (always except for x86 rip-based ind. calls). */
+            if (first->spec == call->spec) {
+                memcpy(call->call, mock->orig_bytes, call->size);
+                continue;
+            }
 
-            /* otherwise we re-patch it with the correct call. */
-            patch_call_target(context, call, mock->mocked);
-            free(call);
-        }
+            /* otherwise we re-patch it with the old call address and type we had. */
+            int32_t result = patch_call_target(context, call, mock->target);
+            if (result == 0u) {
+                /* NOLINTNEXTLINE */
+                fprintf(stderr, "tapi_cleanup_mock; cannot patch original target!\n");
+                break;
+            }
+        dyna_endforeach(mock->calls)
 
 #ifndef TAPI_MINIMAL
         /* reset the autostub. */
-        if (mock->a_data.info.autostub != 0x0) {
-            mock->a_data.info.autostub->action = 0x0;
-            mock->a_data.info.autostub->set_errno = false;
+        if (mock->data.info.autostub != 0x0) {
+            mock->data.info.autostub->action = 0x0;
+            mock->data.info.autostub->set_errno = false;
         }
+
+        /* free each call captured. */
+        dyna_foreach(mock->calls, det_call_t*, iter_call)
+            free(iter_call);
+        dyna_endforeach(mock->calls)
 #endif
-        free(mock);
     }
     else {
-        /* we then have to restore the bytes for future tests that could call that same function. */
-        det_call_t* call = det_call_target(mock->orig, mock->mocked);
-        patch_call_target(context, call, mock->target);
+        /* we then have to restore the call target for future tests. */
+        det_call_t* call = tapi_dyna_pop(mock->calls, 0u);
+        memcpy(call->call, mock->orig_bytes, call->size);
         free(call);
-        free(mock);
     }
+    tapi_dyna_free(mock->calls);
+    free(mock);
 };

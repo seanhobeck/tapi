@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-06-26
+ * @date 2026-08-04
  */
 #include <tapi/sink.h>
 
@@ -11,6 +11,16 @@
 /*! uses errno. */
 #include <errno.h>
 /** \endcond */
+#ifdef _WIN32
+/*! uses _sopen_s, rewind etc.. */
+#include <io.h>
+
+/*! uses _O_CREAT, etc... */
+#include <fcntl.h>
+
+/*! uses _S_IREAD, _S_IWRITE. */
+#include <sys/stat.h>
+#endif
 
 /**
  * @brief make a sink structure to be written to.
@@ -37,16 +47,7 @@ tapi_setdbf_sink(tapi_sink_t* sink, size_t length) {
     sink->buffer.length = 0u;
     sink->buffer.capacity = length;
     sink->type = E_TAPI_SINK_TYPE_BUF;
-
-    /* set the stream and then we are done. */
-    tapi_stream_t stream = fmemopen(sink->buffer.data, sink->buffer.length, "w");
-    if (stream == 0x0) {
-        /* NOLINTNEXTLINE */
-        fprintf(stderr, "tapi, sink_setdbf; fmemopen failed; could not open memory stream, was it "
-                        "allocated? errno: %d\n", errno);
-        return;
-    }
-    sink->stream = stream;
+    sink->stream = 0x0; /* we don't even use a memory stream, just straight read into the buffer. */
 }
 
 /**

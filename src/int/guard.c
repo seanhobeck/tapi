@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-17
+ * @date 2026-07-25
  */
 #include "guard.h"
 
@@ -19,7 +19,7 @@
 #include "intt.h"
 
 /*! uses dyna_t, etc... */
-#include "dyna.h"
+#include <tapi/dyna.h>
 
 /**
  * @brief close/ restore the write-protect guard.
@@ -36,7 +36,7 @@ guard_close(guard_t* guard) {
     }
 #else
     DWORD tmp;
-    if (VirtualProtect(guard->address, guard->length, guard->flags, &tmp) != 0x0) {
+    if (VirtualProtect(guard->address, guard->length, guard->flags, &tmp) == 0x0) {
         /* we can actually use MSVCs "safe" version for fprintf. */
         fprintf_s(stderr, "tapi, guard_close; VirtualProtect failed; could not close pguard.");
     }
@@ -56,7 +56,6 @@ guard_create(tapi_context_t* context, void* address, size_t length) {
     dyna_foreach(context->guards, guard_t*, guard)
         if (guard->address == address && guard->length == length) {
             guard->ref_count++;
-            return;
         }
     dyna_endforeach(context->guards);
 
@@ -77,8 +76,7 @@ guard_create(tapi_context_t* context, void* address, size_t length) {
     /* winapi doesn't care and does it for us. */
     guard->address = address;
     guard->length = length;
-    if (VirtualProtect(guard->address, length, PAGE_EXECUTE_READWRITE, &guard->flags) !=
-        0x0) {
+    if (VirtualProtect(guard->address, length, PAGE_EXECUTE_READWRITE, &guard->flags) == 0x0) {
         /* we can actually use MSVCs "safe" version for fprintf. */
         fprintf_s(stderr, "tapi, guard_create; mprotect failed; could not change page access for guard!");
 #endif
@@ -105,6 +103,7 @@ guard_cleanup(tapi_context_t* context) {
         guard_close(guard);
         free(guard);
     dyna_endforeach(context->guards);
+
     free(context->guards->data);
     free(context->guards);
 };

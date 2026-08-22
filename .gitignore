@@ -77,3 +77,4 @@ docs/xml
 # core dumps
 qemu_*.core
 log/
+vs/
