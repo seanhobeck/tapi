@@ -1,10 +1,10 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-08
+ * @date 2026-09-05
  */
 #ifndef ELF_H
 #define ELF_H
-#ifdef __gnu_linux__
+#ifdef __linux__
 /*! uses tapi_dyna_t. */
 #include <tapi/dyna.h>
 
@@ -193,5 +193,5 @@ elf_free(elf_t* elf);
  */
 const char*
 elf_shdr_name(elf_t* elf, elf_shdr_t* shdr);
-#endif /* __gnu_linux__ */
+#endif /* __linux__ */
 #endif /* ELF_H */

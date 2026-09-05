@@ -1,9 +1,9 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-25
+ * @date 2026-09-05
  */
 #include "elf.h"
-#ifdef __gnu_linux__
+#ifdef __linux__
 
 /*! uses fprintf, stderr, fopen, fclose, fread, fseek, ftell. */
 #include <stdio.h>

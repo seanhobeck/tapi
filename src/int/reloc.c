@@ -1,8 +1,8 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-21
+ * @date 2026-09-05
  */
-#ifdef __gnu_linux__
+#ifdef __linux__
 #define _DEFAULT_SOURCE /* required for htole16/32/64. */
 #endif
 #include "reloc.h"
@@ -50,7 +50,7 @@
 /*! uses map_t, etc... */
 #include "map.h"
 
-#ifdef __gnu_linux__
+#ifdef __linux__
 /*! uses htole16/32/64. */
 #include <endian.h>
 #elif defined(__APPLE__)
@@ -149,7 +149,7 @@ alloc_region(const void* target, size_t size, bool disp32) {
 
         /* check the upper and lower ranges. */
         if (e_intt_passed(rel_range_chk(target, upper, disp32))) {
-#ifdef __gnu_linux__
+#ifdef __linux__
             void* region = mmap((void*)upper, new_size, \
                 PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | \
                 MAP_FIXED_NOREPLACE, -1, 0x0);
@@ -163,7 +163,7 @@ alloc_region(const void* target, size_t size, bool disp32) {
 #endif
         }
         if (e_intt_passed(rel_range_chk(target, lower, disp32))) {
-#ifdef __gnu_linux__
+#ifdef __linux__
             void* region = mmap((void*)lower, new_size, \
                 PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | \
                 MAP_FIXED_NOREPLACE, -1, 0x0);
