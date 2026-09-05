@@ -30,7 +30,7 @@
  */
 /**
  * @author Sean Hobeck
- * @date 2026-07-27
+ * @date 2026-08-27
  */
 #include "map.h"
 
@@ -203,7 +203,8 @@ void
 map_push(map_t* map, const char* key, void* value) {
     /* check recursion depth. */
     static size_t depth = 1u;
-    if (depth > MAX_DEPTH) return;
+    if (depth > MAX_DEPTH)
+        return;
 
     /* find if the already existing entry is in there, if so evict. */
     assert(map != 0x0 && key != 0x0);
@@ -235,7 +236,7 @@ map_push(map_t* map, const char* key, void* value) {
     }
 
     /* o.w. we have to emplace based on cuckoo, first we check the load factor (opposite of ref). */
-    float alpha = map->count / map->size;
+    float alpha = (float)map->count / (float)map->size;
     if (alpha > 0.5f) {
 #ifdef TAPI_THREAD_SAFE
 #ifndef _WIN32
@@ -364,6 +365,7 @@ map_pop(map_t* map, const char* key) {
         entry_t* copy = calloc(1u, sizeof *copy);
         memcpy(copy, entry, sizeof *copy);
         free_entry(entry);
+        map->count -= 1u;
 #ifdef TAPI_THREAD_SAFE 
 #ifndef _WIN32
         pthread_rwlock_unlock(&map->lock);

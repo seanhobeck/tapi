@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-09
+ * @date 2026-09-05
  */
 #ifndef RELOC_H
 #define RELOC_H
@@ -15,7 +15,10 @@
 #include <stdint.h>
 
 /**
- * ...
+ * a data structure for representing a relocation call (sometimes referred to as a trampoline).
+ * this is done for when relative calls cannot reach the original call target, ie. on x86_64,
+ *  e8 rel32 can only hold 4-bytes with an address space of 8, thus if anything is not within
+ *  a 4-byte range it cannot be called without using a reloc.
  */
 typedef struct {
     void* caller, *callee; /* address of caller and callee of relocation. */

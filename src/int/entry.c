@@ -1,13 +1,13 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-08-05
+ * @date 2026-09-05
  */
 /*! uses lnk_init. */
 #include "lnk.h"
 
 /** @brief library entry point. */
-#ifdef __gnu_linux__
+#ifdef __linux__
 __attribute__((constructor))
 void lt_entry() {
     lnk_init();
@@ -29,7 +29,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstanceDll, DWORD dwReason, LPVOID lpvReserved) 
 }
 
 /** @brief library exit point. */
-#ifdef __gnu_linux__
+#ifdef __linux__
 __attribute__((destructor))
 #endif
 void lt_exit() {

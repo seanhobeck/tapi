@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-05
+ * @date 2026-09-05
  */
 #define _GNU_SOURCE /*! needed for dl_iterate_phdr. */
 #include "lnk.h"
@@ -17,7 +17,7 @@
 /*! uses bool, true, false. */
 #include <stdbool.h>
 
-#ifdef __gnu_linux__
+#ifdef __linux__
 /*! uses EM_..., ELF32/64_R_SYM/TYPE. */
 #include <linux/elf.h>
 #include <link.h>
@@ -41,7 +41,7 @@
 /* an internal list for all the plt entries. */
 internal map_t* table;
 
-#ifdef __gnu_linux__
+#ifdef __linux__
 /* the elf base address. */
 internal uintptr_t elf_address;
 
@@ -151,7 +151,7 @@ find_plt_sizes(elf_mach_t machine, uintptr_t plt0_address, uint8_t* data) {
 /** @brief fill the hashmap corresponding a name of a procedure to its stub within the plt. */
 void
 lnk_init(void) {
-#ifdef __gnu_linux__
+#ifdef __linux__
     /* only needs to be done once per process, not a per context type of thing. */
     dl_iterate_phdr(elf_baddr_callback, 0x0); /* get the elf base address. */
     elf_t* elf = elf_parse("/proc/self/exe");

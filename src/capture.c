@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-28
+ * @date 2026-09-05
  */
 #include <tapi/capture.h>
 
@@ -36,7 +36,7 @@ typedef ptrdiff_t ssize_t;
  * @param stream the stream to re-route data from.
  * @return a pointer to an allocated capture structure.
  */
-TAPI_HIDDEN tapi_capture_t*
+tapi_capture_t*
 tapi_make_capture(tapi_sink_t* sink, tapi_stream_t stream) {
     /* allocate the structure. */
     tapi_capture_t* capture = calloc(1u, sizeof *capture);
