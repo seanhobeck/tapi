@@ -9,6 +9,8 @@
  */
 #ifndef TAPI_DYNA_H
 #define TAPI_DYNA_H
+/*! uses TAPI_EXPORT, macros etc... */
+#include <tapi/platform.h>
 #ifndef TAPI_WINDOWS
 /*! uses pthread_rwlock. */
 #define _XOPEN_SOURCE 600u /* enables POSIX.1-2001 */
@@ -17,9 +19,6 @@
 /*! uses SRWLOCK. */
 #include <windows.h>
 #endif
-
-/*! uses TAPI_EXPORT, macros etc... */
-#include <tapi/platform.h>
 
 /*! uses size_t. */
 #include <stddef.h>
