@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-21
+ * @date 2026-09-05
  */
 #include "patch.h"
 
@@ -27,7 +27,7 @@
  */
 internal void
 flush_insn_cache(void* address, size_t size) {
-#ifdef _WIN32
+#ifdef TAPI_WINDOWS
     FlushInstructionCache(GetCurrentProcess(), address, size);
 #else
     __builtin___clear_cache(address, address + size);

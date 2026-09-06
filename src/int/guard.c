@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-25
+ * @date 2026-09-05
  */
 #include "guard.h"
 
@@ -10,7 +10,7 @@
 /*! uses fprintf, stderr. */
 #include <stdio.h>
 
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
 /*! uses mprotect. */
 #include <sys/mman.h>
 #endif
@@ -29,7 +29,7 @@
 internal void
 guard_close(guard_t* guard) {
     /* remove write protection on the pages. */
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     if (mprotect(guard->address, guard->length, PROT_READ | PROT_EXEC) != 0x0) {
         /* NOLINTNEXTLINE */
         fprintf(stderr, "tapi, guard_close; mprotect failed; could not close pguard.");
@@ -64,7 +64,7 @@ guard_create(tapi_context_t* context, void* address, size_t length) {
     guard->ref_count = 1;
 
     /* allow write protection on those pages. */
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     /* we find the relative page bounds. */
     guard->address = page_align_down(address, get_page_size());
     guard->length = length;

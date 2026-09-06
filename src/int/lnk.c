@@ -17,7 +17,7 @@
 /*! uses bool, true, false. */
 #include <stdbool.h>
 
-#ifdef __linux__
+#ifdef TAPI_LINUX
 /*! uses EM_..., ELF32/64_R_SYM/TYPE. */
 #include <linux/elf.h>
 #include <link.h>
@@ -41,7 +41,7 @@
 /* an internal list for all the plt entries. */
 internal map_t* table;
 
-#ifdef __linux__
+#ifdef TAPI_LINUX
 /* the elf base address. */
 internal uintptr_t elf_address;
 
@@ -151,7 +151,7 @@ find_plt_sizes(elf_mach_t machine, uintptr_t plt0_address, uint8_t* data) {
 /** @brief fill the hashmap corresponding a name of a procedure to its stub within the plt. */
 void
 lnk_init(void) {
-#ifdef __linux__
+#ifdef TAPI_LINUX
     /* only needs to be done once per process, not a per context type of thing. */
     dl_iterate_phdr(elf_baddr_callback, 0x0); /* get the elf base address. */
     elf_t* elf = elf_parse("/proc/self/exe");
@@ -303,7 +303,7 @@ lnk_init(void) {
     free(dynstr_data);
     free(rela_data);
     free(plt_data);
-#elif defined(_WIN32)
+#elif defined(TAPI_WINDOWS)
     /* create the map. */
     table = map_make();
 
@@ -335,7 +335,7 @@ lnk_init(void) {
             map_push(table, import->Name, &thunk_first->u1.Function);
         }
     }
-#elif defined(__APPLE__)
+#elif defined(TAPI_UNIX)
 #error "tapi does not support macos/apple for automock resolving."
 #endif
 };
@@ -355,7 +355,7 @@ lnk_resolve(const char* name) {
     return entry->value;
 };
 
-#ifdef _WIN32
+#ifdef TAPI_WINDOWS
 /*! uses get_arch. */
 #include "arch.h"
 

@@ -3,7 +3,7 @@
  * @date 2026-09-05
  */
 #include "elf.h"
-#ifdef __linux__
+#ifdef TAPI_LINUX
 
 /*! uses fprintf, stderr, fopen, fclose, fread, fseek, ftell. */
 #include <stdio.h>
@@ -91,7 +91,6 @@ elf_valid_ident(uint8_t* ident) {
 internal elf_t*
 elf_parse32(uint8_t* buffer, size_t size) {
     elf32_ehdr_t* ehdr = (elf32_ehdr_t*)buffer;
-    
     if (size < sizeof *ehdr) {
         fprintf(stderr, "tapi, elf_parse32; buffer too small for elf32 header.\n");
         return 0x0;

@@ -1,9 +1,11 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-27
+ * @date 2026-09-05
  */
 #ifndef INTT_H
 #define INTT_H
+/*! uses platform-specific macros. */
+#include <tapi/platform.h>
 
 /* internal specifier. */
 #define internal static
@@ -21,7 +23,7 @@ typedef enum {
 #include <stdint.h>
 
 /*! uses sysconf, _SC_PAGE_SIZE. */
-#ifdef _WIN32
+#ifdef TAPI_WINDOWS
 #include <windows.h>
 
 /*! uses size_t. */
@@ -34,7 +36,7 @@ typedef enum {
 
 /** @return page size on the given architecture, winapi and posix. */
 UNUSED static size_t get_page_size() {
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     static size_t page_size = 0u;
     long value = sysconf(_SC_PAGESIZE);
     if (page_size == 0u) {

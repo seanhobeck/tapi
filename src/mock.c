@@ -137,7 +137,7 @@ tapi_mock_t*
 tapi_make_mock(void* orig, void* target, void* mocked, size_t call_index) {
     /* allocate the structure. */
     tapi_mock_t* mock = calloc(1u, sizeof *mock);
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     mock->orig = orig;
 #else
     mock->orig = lnk_qr_thunk(orig);  /* on windows, most calls are to the iat thunk and not to the function itself. */
@@ -171,7 +171,7 @@ tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, \
     tapi_action_t action, bool set_errno) {
     /* allocate the structure. */
     tapi_mock_t* mock = calloc(1u, sizeof *mock);
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     mock->orig = orig;
 #else
     mock->orig = lnk_qr_thunk(orig); /* again most calls are to the thunk, no reloc is needed. */

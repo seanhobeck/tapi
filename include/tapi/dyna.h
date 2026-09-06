@@ -5,12 +5,11 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-08-20
+ * @date 2026-09-05
  */
 #ifndef TAPI_DYNA_H
 #define TAPI_DYNA_H
-
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
 /*! uses pthread_rwlock. */
 #define _XOPEN_SOURCE 600u /* enables POSIX.1-2001 */
 #include <pthread.h>
@@ -19,34 +18,12 @@
 #include <windows.h>
 #endif
 
+/*! uses TAPI_EXPORT, macros etc... */
+#include <tapi/platform.h>
+
 /*! uses size_t. */
 #include <stddef.h>
-
-/* for functions that are exported by tapi. */
-#if (defined(__GNUC__) || defined(__IBMC__))
-#define TAPI_EXPORT __attribute__((visibility("default")))
-#define TAPI
-#define TAPI_HIDDEN __attribute__((visibility("hidden")))
-#else
-/* if we are using msvc toolchain (winapi). */
-#if defined(_MSC_VER)
-#define TAPI_EXPORT __declspec(dllexport)
-#define TAPI __cdecl
-#define TAPI_HIDDEN
-#else
-#define TAPI_EXPORT
-#define TAPI
-#define TAPI_HIDDEN
-#endif
-#endif
 /** \endcond */
-
-/**
- * similarly to the `TAPI_MINIMAL` macro, `TAPI_THREAD_SAFE` adds locks to data structures (maps, lists)
- *  used internally by tapi. if you are testing within an environment that does not support POSIX.5+,
- *  then you can add the thread-safe=0 flag to your compilation process for tapi.
- */
-#define TAPI_THREAD_SAFE
 
 /**
  * @brief a dynamic array of pointers.
@@ -70,7 +47,7 @@ typedef struct {
     size_t length, capacity;
 #ifdef TAPI_THREAD_SAFE
     /** a read-write access lock to data (only one thread writes at a time). */
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     pthread_rwlock_t lock;
 #else
     SRWLOCK lock;

@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-06
+ * @date 2026-09-05
  */
 #include "det.h"
 
@@ -146,7 +146,7 @@ det_function_size(void* address, size_t max_size) {
                 /* common aarch64 prologues, stp x29, x30, [sp, ...]. */
                 is_prologue = sig_aarch64_chk(insn) == SIG_AARCH64_PROLOGUE;
             }
-#ifdef _WIN32 /* push ebp is a very common windows prologue for functions, and ret is a common epilogue (compared to leave on linux). */
+#ifdef TAPI_WINDOWS /* push ebp is a very common windows prologue for functions, and ret is a common epilogue (compared to leave on linux). */
             else if (architecture.arch == CS_ARCH_X86 && architecture.mode == CS_MODE_32) {
                 /* common ix86 prologues. push ebp, mov ebp, esp. */
                 is_prologue = sig_compare("push ebp", insn);
@@ -236,7 +236,7 @@ find_call_bx86(const void* target, det_call_t* call, const cs_insn* insn, const 
     /* we look for the target address. */
     uint64_t address = 0u;
     cs_x86* ops = &insn->detail->x86;
-#ifdef _WIN32
+#ifdef TAPI_WINDOWS
     /* indirect call rip + disp32. */
     if (sig_compare("call qword ptr [rip + 0x????????]", insn)) {
         uint64_t disp32 = insn->detail->x86.disp;

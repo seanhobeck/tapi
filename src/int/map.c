@@ -30,7 +30,7 @@
  */
 /**
  * @author Sean Hobeck
- * @date 2026-08-27
+ * @date 2026-09-05
  */
 #include "map.h"
 
@@ -94,7 +94,7 @@ fnv1a64(const char* string) {
  */
 internal uint64_t
 hash1(const char* string, const size_t table_size) {
-#if defined(__amd64__) || defined(__aarch64__)
+#if defined(TAPI_AMD64) || defined(TAPI_AARCH64)
     return fnv1a64(string) % table_size;
 #else
     return fnv1a32(string) % table_size;
@@ -110,7 +110,7 @@ hash1(const char* string, const size_t table_size) {
  */
 internal uint64_t
 hash2(const char* string, const size_t table_size) {
-#if defined(__amd64__) || defined(__aarch64__)
+#if defined(TAPI_AMD64) || defined(TAPI_AARCH64)
     return (fnv1a64(string) * PHI64) % table_size;
 #else
     return (fnv1a32(string) * PHI32) % table_size;
@@ -140,7 +140,7 @@ map_make(void) {
     map->t1 = calloc(16u, sizeof(entry_t));
     map->t2 = calloc(16u, sizeof(entry_t));
 #ifdef TAPI_THREAD_SAFE
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     pthread_rwlock_init(&map->lock, 0x0);
 #else
     SRWLOCK lock = { 0 };
@@ -210,7 +210,7 @@ map_push(map_t* map, const char* key, void* value) {
     assert(map != 0x0 && key != 0x0);
     entry_t* existing = map_lookup(map, key);
 #ifdef TAPI_THREAD_SAFE
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     pthread_rwlock_wrlock(&map->lock);
 #else
     AcquireSRWLockExclusive(&map->lock);
@@ -219,14 +219,14 @@ map_push(map_t* map, const char* key, void* value) {
     if (existing != 0x0) {
         free_entry(existing);
         existing->occupied = true;
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
         existing->key = strdup(key);
 #else
         existing->key = _strdup(key);
 #endif
         existing->value = value;
 #ifdef TAPI_THREAD_SAFE
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
         pthread_rwlock_unlock(&map->lock);
 #else
         ReleaseSRWLockExclusive(&map->lock);
@@ -239,7 +239,7 @@ map_push(map_t* map, const char* key, void* value) {
     float alpha = (float)map->count / (float)map->size;
     if (alpha > 0.5f) {
 #ifdef TAPI_THREAD_SAFE
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
         pthread_rwlock_unlock(&map->lock);
 #else
         ReleaseSRWLockExclusive(&map->lock);
@@ -247,7 +247,7 @@ map_push(map_t* map, const char* key, void* value) {
 #endif
         map_resize(map, map->size * 2u);
         #ifdef TAPI_THREAD_SAFE
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     pthread_rwlock_wrlock(&map->lock);
 #else
     AcquireSRWLockExclusive(&map->lock);
@@ -258,7 +258,7 @@ map_push(map_t* map, const char* key, void* value) {
     /* chain... */
     uint64_t iter = 0x0, table = 1u;
     void* iter_value = value;
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     char* iter_key = strdup(key);
 #else
     char* iter_key = _strdup(key);
@@ -274,7 +274,7 @@ map_push(map_t* map, const char* key, void* value) {
                 map->t1[iter].occupied = true;
                 map->count++;
 #ifdef TAPI_THREAD_SAFE 
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
                 pthread_rwlock_unlock(&map->lock);
 #else
                 ReleaseSRWLockExclusive(&map->lock);
@@ -302,7 +302,7 @@ map_push(map_t* map, const char* key, void* value) {
                 map->t2[iter].occupied = true;
                 map->count++;
 #ifdef TAPI_THREAD_SAFE 
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
                 pthread_rwlock_unlock(&map->lock);
 #else
                 ReleaseSRWLockExclusive(&map->lock);
@@ -326,7 +326,7 @@ map_push(map_t* map, const char* key, void* value) {
     /* if we couldn't emplace, resize to double and try again. */
     free(iter_key);
 #ifdef TAPI_THREAD_SAFE 
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     pthread_rwlock_unlock(&map->lock);
 #else
     ReleaseSRWLockExclusive(&map->lock);
@@ -355,7 +355,7 @@ map_pop(map_t* map, const char* key) {
     /* attempt to look up the entry. */
     entry_t* entry = map_lookup(map, key);
 #ifdef TAPI_THREAD_SAFE
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     pthread_rwlock_wrlock(&map->lock);
 #else
     AcquireSRWLockExclusive(&map->lock);
@@ -367,7 +367,7 @@ map_pop(map_t* map, const char* key) {
         free_entry(entry);
         map->count -= 1u;
 #ifdef TAPI_THREAD_SAFE 
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
         pthread_rwlock_unlock(&map->lock);
 #else
         ReleaseSRWLockExclusive(&map->lock);
@@ -376,7 +376,7 @@ map_pop(map_t* map, const char* key) {
         return copy;
     }
 #ifdef TAPI_THREAD_SAFE 
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     pthread_rwlock_unlock(&map->lock);
 #else
     ReleaseSRWLockExclusive(&map->lock);
@@ -397,7 +397,7 @@ map_lookup(map_t* map, const char* key) {
     /* check t1 then t2, very simple. */
     assert(map != 0x0 && key != 0x0);
 #ifdef TAPI_THREAD_SAFE
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     pthread_rwlock_rdlock(&map->lock);
 #else
     AcquireSRWLockShared(&map->lock);
@@ -406,7 +406,7 @@ map_lookup(map_t* map, const char* key) {
     uint64_t idx = hash1(key, map->size);
     if (map->t1[idx].occupied && strcmp(map->t1[idx].key, key) == 0) {
 #ifdef TAPI_THREAD_SAFE 
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
         pthread_rwlock_unlock(&map->lock);
 #else
         ReleaseSRWLockShared(&map->lock);
@@ -417,7 +417,7 @@ map_lookup(map_t* map, const char* key) {
     idx = hash2(key, map->size);
     if (map->t2[idx].occupied && strcmp(map->t2[idx].key, key) == 0) {
 #ifdef TAPI_THREAD_SAFE 
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
         pthread_rwlock_unlock(&map->lock);
 #else
         ReleaseSRWLockShared(&map->lock);
@@ -426,7 +426,7 @@ map_lookup(map_t* map, const char* key) {
         return &map->t2[idx];
     }
 #ifdef TAPI_THREAD_SAFE 
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     pthread_rwlock_unlock(&map->lock);
 #else
     ReleaseSRWLockShared(&map->lock);
@@ -447,7 +447,7 @@ map_cleanup(map_t* map) {
     /* make copy of the tables, then allocate new ones. */
     assert(map != 0x0);
 #ifdef TAPI_THREAD_SAFE
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     pthread_rwlock_wrlock(&map->lock);
 #else
     AcquireSRWLockExclusive(&map->lock);
@@ -459,7 +459,7 @@ map_cleanup(map_t* map) {
         if (map->t2[i].occupied) free_entry(&map->t2[i]);
     }
 #ifdef TAPI_THREAD_SAFE 
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     pthread_rwlock_unlock(&map->lock);
 #else
     ReleaseSRWLockExclusive(&map->lock);
