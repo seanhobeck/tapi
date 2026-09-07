@@ -1,9 +1,12 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-21
+ * @date 2026-09-05
  */
 #ifndef LNK_H
 #define LNK_H
+
+/*! uses platform-specific macros. */
+#include <tapi/platform.h>
 
 /** @brief fill the hashmap corresponding a name of a procedure to its stub within the plt/iat/got. */
 void
@@ -19,7 +22,7 @@ lnk_init(void);
 void*
 lnk_resolve(const char* name);
 
-#ifdef _WIN32
+#ifdef TAPI_WINDOWS
 /**
  * @brief quickly resolve a windows thunk.
  * 

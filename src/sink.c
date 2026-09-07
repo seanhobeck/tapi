@@ -11,7 +11,7 @@
 /*! uses errno. */
 #include <errno.h>
 /** \endcond */
-#ifdef _WIN32
+#ifdef TAPI_WINDOWS
 /*! uses _sopen_s, rewind etc.. */
 #include <io.h>
 

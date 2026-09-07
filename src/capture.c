@@ -8,7 +8,7 @@
 /*! uses calloc, close. */
 #include <stdlib.h>
 
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
 /*! uses pipe, dup, dup2. */
 #include <unistd.h>
 #else
@@ -44,7 +44,7 @@ tapi_make_capture(tapi_sink_t* sink, tapi_stream_t stream) {
     capture->stream = stream;
 
     /* open the streams. */
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     if (pipe(capture->fds) == -1) {
 #else
     if (_pipe(capture->fds, 4096u, _O_BINARY) == -1) {
@@ -56,7 +56,7 @@ tapi_make_capture(tapi_sink_t* sink, tapi_stream_t stream) {
 
     /* flush the stream. */
     fflush(stream);
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     capture->dst_fd = dup(fileno(stream));
 #else
     capture->dst_fd = _dup(_fileno(stream));
@@ -67,7 +67,7 @@ tapi_make_capture(tapi_sink_t* sink, tapi_stream_t stream) {
                         "stderr.\n");
         exit(EXIT_FAILURE);
     }
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     if (dup2(capture->fds[1], fileno(stream)) == -1) {
 #else
     if (_dup2(capture->fds[1], _fileno(stream)) == -1) {
@@ -79,7 +79,7 @@ tapi_make_capture(tapi_sink_t* sink, tapi_stream_t stream) {
     }
 
     /* pass the pipe write end, close the copy. */
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     close(capture->fds[1]);
 #else
     _close(capture->fds[1]);
@@ -98,7 +98,7 @@ void
 tapi_stop_capture(tapi_capture_t* capture) {
     /* flush the stream which we capture from. */
     fflush(capture->stream);
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     if (dup2(capture->dst_fd, fileno(capture->stream)) == -1) {
 #else
     if (_dup2(capture->dst_fd, _fileno(capture->stream)) == -1) {
@@ -108,7 +108,7 @@ tapi_stop_capture(tapi_capture_t* capture) {
                         "errno: %d\n", errno);
         return;
     }
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     close(capture->dst_fd);
 #else
     _close(capture->dst_fd);
@@ -120,7 +120,7 @@ tapi_stop_capture(tapi_capture_t* capture) {
 
     /* close writer side so pipe will hit EOF. */
     ssize_t n;
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     while ((n = read(capture->fds[0], buf, 4096u)) > 0l) {
 #else
     while ((n = _read(capture->fds[0], buf, 4096u)) > 0l) {
@@ -139,7 +139,7 @@ tapi_stop_capture(tapi_capture_t* capture) {
     }
 
     /* close our read pipe since we are done. */
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     close(capture->fds[0]);
 #else
     _close(capture->fds[0]);

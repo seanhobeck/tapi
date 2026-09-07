@@ -2,7 +2,9 @@
  * @author Sean Hobeck
  * @date 2026-09-05
  */
-#ifdef __linux__
+/*! uses platform-specific macros. */
+#include <tapi/platform.h>
+#ifdef TAPI_LINUX
 #define _DEFAULT_SOURCE /* required for htole16/32/64. */
 #endif
 #include "reloc.h"
@@ -13,7 +15,7 @@
 /*! uses uintptr. */
 #include <stdint.h>
 
-#ifdef _WIN32
+#ifdef TAPI_WINDOWS
 /*! uses virtualalloc. */
 #include <windows.h>
 #else
@@ -28,12 +30,12 @@
 #include "guard.h"
 
 /* max distance for a reloc. */
-#if defined(__amd64__) || defined(__i386__) || defined(_M_AMD64) || defined(_M_IX86)
+#if defined(TAPI_AMD64) || defined(TAPI_X86)
 #define MAX_DISTANCE 0x7fffffff
 #else
-#if defined(__aarch64__) || defined(_M_ARM64)
+#ifdef TAPI_AARCH64
 #define MAX_DISTANCE 0x8000000
-#elif defined(__arm__) || defined(_M_ARM)
+#elif defined(TAPI_ARM32)
 #define MAX_DISTANCE 0x2000000
 #endif
 #endif
@@ -50,7 +52,7 @@
 /*! uses map_t, etc... */
 #include "map.h"
 
-#ifdef __linux__
+#ifdef TAPI_LINUX
 /*! uses htole16/32/64. */
 #include <endian.h>
 #elif defined(__APPLE__)
@@ -67,7 +69,7 @@
 #elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
 /*! uses htole16/32/64. */
 #include <sys/endian.h>
-#elif defined(_WIN32)
+#elif defined(TAPI_WINDOWS)
 /*! uses uint16/32/64_t. */
 #include <stdint.h> 
 
@@ -93,7 +95,7 @@
  */
 internal e_intt_result_t
 rel_range_chk(const void* from, const uintptr_t to, bool disp32) {
-#if defined(__amd64__) || defined(__i386__) || defined(_M_AMD64) || defined(_M_IX86)
+#if defined(TAPI_AMD64) || defined(TAPI_X86)
     /* calculate the displacement. */
     int64_t offset = disp32 ? 6ll : 5ll;
     int64_t displacement = (int64_t)to - ((int64_t)from + offset); /*! assuming e8. */
@@ -101,13 +103,13 @@ rel_range_chk(const void* from, const uintptr_t to, bool disp32) {
 #else
     /* needs to be 4-byte aligned, not sure if mmap or virtualalloc handles this? */
     if (((uintptr_t)to & 3l) != 0x0) return false;
-#if defined(__aarch64__) || defined(_M_ARM64)
+#ifdef TAPI_AARCH64
     /* calculate the displacement. */
     int64_t displacement = (int64_t)to - (int64_t)from;
     if (displacement & 3l != 0x0) return false;
     int64_t imm26 = displacement / 4ll;
     return imm26 >= -(1ll << 25ll) && imm26 <= (1ll << 25ll) - 1ll;
-#elif defined(__arm__) || defined(_M_ARM)
+#elif defined(TAPI_ARM32)
     /* calculate the displacement. */
     uintptr_t from_ptr = (uintptr_t)from;
     from_ptr &= ~(uintptr_t)1u;
@@ -130,7 +132,7 @@ internal void*
 alloc_region(const void* target, size_t size, bool disp32) {
     /* getting the page size and step. */
     size_t page_size = get_page_size();
-#ifdef _WIN32
+#ifdef TAPI_WINDOWS
     SYSTEM_INFO si;
     GetSystemInfo(&si);
     size_t step = si.dwAllocationGranularity;
@@ -149,7 +151,7 @@ alloc_region(const void* target, size_t size, bool disp32) {
 
         /* check the upper and lower ranges. */
         if (e_intt_passed(rel_range_chk(target, upper, disp32))) {
-#ifdef __linux__
+#ifndef TAPI_WINDOWS
             void* region = mmap((void*)upper, new_size, \
                 PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | \
                 MAP_FIXED_NOREPLACE, -1, 0x0);
@@ -163,7 +165,7 @@ alloc_region(const void* target, size_t size, bool disp32) {
 #endif
         }
         if (e_intt_passed(rel_range_chk(target, lower, disp32))) {
-#ifdef __linux__
+#ifndef TAPI_WINDOWS
             void* region = mmap((void*)lower, new_size, \
                 PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | \
                 MAP_FIXED_NOREPLACE, -1, 0x0);
@@ -187,7 +189,7 @@ alloc_region(const void* target, size_t size, bool disp32) {
  */
 internal void
 free_region(reloc_t* reloc) {
-#ifdef _WIN32
+#ifdef TAPI_WINDOWS
     VirtualFree(reloc->callee, reloc->size, MEM_RELEASE); /* we could use this again soon. */
 #else
     munmap(reloc->callee, reloc->size);
@@ -214,7 +216,7 @@ reloc_make(void* address, void* target, bool thumb, bool disp32) {
     reloc_t* reloc = calloc(1u, sizeof *reloc);
     reloc->caller = address;
     reloc->callee = target;
-#if defined(__amd64__) || defined(_M_AMD64)
+#ifdef TAPI_AMD64
     reloc->size = 17u;
     reloc->bytes = calloc(1u,  reloc->size);
 
@@ -227,7 +229,7 @@ reloc_make(void* address, void* target, bool thumb, bool disp32) {
     *(uint64_t*)(bytes + 6u) = (uint64_t)reloc->callee;
     memcpy(reloc->bytes, bytes, reloc->size);
 #endif
-#if defined(__aarch64__) || defined(_M_ARM64)
+#ifdef TAPI_AARCH64
     reloc->size = 16u;
     reloc->bytes = calloc(1u,  reloc->size);
 
@@ -241,7 +243,7 @@ reloc_make(void* address, void* target, bool thumb, bool disp32) {
     *(uint64_t*)(bytes + 8u) = htole64((uint64_t)reloc->callee);
     memcpy(reloc->bytes, bytes, reloc->size);
 #endif
-#if defined(__i386) || defined(_M_IX86)
+#ifdef TAPI_X86
     /* todo; clobbering is possible with different calling conventions on win32, ie.
      *  cdecl vs. fastcall vs. stdcall. */
     reloc->size = 7u;
@@ -254,7 +256,7 @@ reloc_make(void* address, void* target, bool thumb, bool disp32) {
     *(uint32_t*)(bytes + 1u) = (uint32_t)reloc->callee;
     memcpy(reloc->bytes, bytes, reloc->size);
 #endif
-#if defined(__arm__) || defined(_M_ARM)
+#ifdef TAPI_ARM32
     /* if we are in thumb-mode, we need to set the reloc address to have the thumb-bit enabled. */
     reloc->size = 12u;
     reloc->bytes = calloc(1u,  reloc->size);
@@ -296,7 +298,7 @@ reloc_make(void* address, void* target, bool thumb, bool disp32) {
     memcpy(region_bytes, reloc->bytes, reloc->size);
 
     /* we now need to change this page to be executable. */
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     /* NOLINTNEXTLINE */
     if (mprotect(reloc->region, reloc->size, PROT_READ | PROT_WRITE | PROT_EXEC) != 0x0) {
         /* NOLINTNEXTLINE */
@@ -313,7 +315,7 @@ reloc_make(void* address, void* target, bool thumb, bool disp32) {
     }
 
     /* and then flush the instruction cache. */
-#ifdef _WIN32
+#ifdef TAPI_WINDOWS
     FlushInstructionCache(GetCurrentProcess(), reloc->region, reloc->size);
 #else
     __builtin___clear_cache(reloc->region, reloc->region + reloc->size);
@@ -327,7 +329,7 @@ reloc_make(void* address, void* target, bool thumb, bool disp32) {
     if (reloc_table == 0x0) reloc_table = map_make();
     map_push(reloc_table, buffer, reloc);
 
-#ifdef __arm__
+#ifdef TAPI_ARM32
     /* this prevents a sigill. */
     if (thumb) reloc->region = (void*)((uintptr_t)reloc->region | 1u);
 #endif
@@ -369,7 +371,7 @@ reloc_make_custom(void* address, void* target, size_t size, \
     memcpy(region_bytes, reloc->bytes, reloc->size);
 
     /* we now need to change this page to be executable. */
-#ifndef _WIN32
+#ifndef TAPI_WINDOWS
     /* NOLINTNEXTLINE */
     if (mprotect(reloc->region, reloc->size, PROT_READ | PROT_WRITE | PROT_EXEC) != 0x0) {
         /* NOLINTNEXTLINE */
@@ -386,7 +388,7 @@ reloc_make_custom(void* address, void* target, size_t size, \
     }
 
     /* and then flush the instruction cache. */
-#ifdef _WIN32
+#ifdef TAPI_WINDOWS
     FlushInstructionCache(GetCurrentProcess(), reloc->region, reloc->size);
 #else
     __builtin___clear_cache(reloc->region, reloc->region + reloc->size);

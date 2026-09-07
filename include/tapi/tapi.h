@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-07-31
+ * @date 2026-09-06
  */
 #ifndef TAPI_H
 #define TAPI_H
@@ -15,7 +15,7 @@
 /** \endcond */
 
 /*! if using windows/msvc you must define the macro below in order for easier call resolution. */
-#if defined(_MSC_VER)
+#if defined(TAPI_WINDOWS)
 #pragma comment(linker, "/INCREMENTAL")
 #endif
 

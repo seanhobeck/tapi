@@ -7,12 +7,12 @@
 #include "lnk.h"
 
 /** @brief library entry point. */
-#ifdef __linux__
+#ifdef TAPI_LINUX
 __attribute__((constructor))
 void lt_entry() {
     lnk_init();
     return;
-#elif defined(_WIN32)
+#elif defined(TAPI_WINDOWS)
 /*! uses BOOL, WINAPI(__stdcall), HINSTANCE, etc... */
 #include <windows.h>
 BOOL WINAPI DllMain(HINSTANCE hInstanceDll, DWORD dwReason, LPVOID lpvReserved) {
@@ -29,7 +29,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstanceDll, DWORD dwReason, LPVOID lpvReserved) 
 }
 
 /** @brief library exit point. */
-#ifdef __linux__
+#ifdef TAPI_LINUX
 __attribute__((destructor))
 #endif
 void lt_exit() {

@@ -4,7 +4,9 @@
  */
 #ifndef ELF_H
 #define ELF_H
-#ifdef __linux__
+/*! uses platform-specific macros. */
+#include <tapi/platform.h>
+#ifdef TAPI_LINUX
 /*! uses tapi_dyna_t. */
 #include <tapi/dyna.h>
 
