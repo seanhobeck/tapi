@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-08-18
+ * @date 2026-09-07
  */
 #ifndef TAPI_MOCK_H
 #define TAPI_MOCK_H
@@ -47,14 +47,43 @@ typedef e_tapi_action_result_t (*tapi_action_t)(void* blank, ...);
  *  functions can then be conditioned to fail under certain conditions, allowing testers to test
  *  for failures.
  *
- * list of currently supported autostubs for POSIX system/library calls:
- *  _________________________________________
- *  |system     | libc      | other         |
- *  =========================================
- *  |malloc     |           |               |1
- *  |calloc     |           |               |
- *  |free       |           |               |
- *  =========================================
+ * list of currently supported autostubs for POSIX & MSVC system/library calls:
+ *  _____________________________________
+ *  |system/libc    |msvc crt-equiv. api|
+ *  =====================================
+ *  |malloc         |.                  |
+ *  |calloc         |.                  |
+ *  |free           |.                  |
+ *  |realloc        |.                  |
+ *  |strlen         |.                  |
+ *  |strcmp         |.                  |
+ *  |strncmp        |.                  |
+ *  |strcpy         |strcpy_s           |
+ *  |strncpy        |strncpy_s          |
+ *  |memcpy         |memcpy_s           |
+ *  |memmove        |memmove_s          |
+ *  |memset         |.                  |
+ *  |strcat         |strcat_s           |
+ *  |strncat        |strncat_s          |
+ *  |printf         |printf_s           |
+ *  |fprintf        |fprintf_s          |
+ *  |sprintf        |sprintf_s          |
+ *  |snprintf       |_snprintf_s        |
+ *  |vsprintf       |vsprintf_s         |
+ *  |open           |_open              |
+ *  |fopen          |fopen_s            |
+ *  |freopen        |freopen_s          |
+ *  |read           |_read              |
+ *  |fread          |fread_s            |
+ *  |write          |_write             |
+ *  |fwrite         |.                  |
+ *  |close          |_close             |
+ *  |fclose         |.                  |
+ *  |getenv         |getenv_s           |
+ *  |getpid         |_getpid            |
+ *  |time           |.                  |
+ *  |rand           |rand_s             |
+ *  =====================================
  */
 typedef struct {
     /** pointer to the stub itself. */
