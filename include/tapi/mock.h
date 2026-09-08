@@ -63,14 +63,12 @@ typedef e_tapi_action_result_t (*tapi_action_t)(void* blank, ...);
  *  |memcpy         |memcpy_s           |
  *  |memmove        |memmove_s          |
  *  |memset         |.                  |
- *  |strcat         |strcat_s           |
- *  |strncat        |strncat_s          |
  *  |printf         |printf_s           |
  *  |fprintf        |fprintf_s          |
  *  |sprintf        |sprintf_s          |
  *  |snprintf       |_snprintf_s        |
  *  |vsprintf       |vsprintf_s         |
- *  |open           |_open              |
+ *  |open           |_sopen_s           |
  *  |fopen          |fopen_s            |
  *  |freopen        |freopen_s          |
  *  |read           |_read              |
@@ -79,8 +77,8 @@ typedef e_tapi_action_result_t (*tapi_action_t)(void* blank, ...);
  *  |fwrite         |.                  |
  *  |close          |_close             |
  *  |fclose         |.                  |
- *  |getenv         |getenv_s           |
- *  |getpid         |_getpid            |
+ *  |getenv         |n/a                |
+ *  |getpid         |n/a                |
  *  |time           |.                  |
  *  |rand           |rand_s             |
  *  =====================================
