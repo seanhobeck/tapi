@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-09-07
+ * @date 2026-09-09
  */
 #ifndef TAPI_MOCK_H
 #define TAPI_MOCK_H
@@ -25,18 +25,23 @@
  *  by adding the minimal=1 flag (for make) or -DMINIMIAL (for msvc) to your compilation process for tapi.
  */
 #ifndef TAPI_MINIMAL
-/** an enum for different results from an action. */
+/** an enum for different results from a condition. */
 typedef enum {
-    E_TAPI_ACTION_RESULT_ALLOW = 0x0, /* allow the mock to proceed as usual. */
-    E_TAPI_ACTION_RESULT_FAIL, /* force the mock to fail. */
-} e_tapi_action_result_t;
+    E_TAPI_CONDITION_ALLOW = 0x0, /* allow the mock to proceed as usual. */
+    E_TAPI_CONDITION_FAIL, /* force the mock to fail. */
+} e_tapi_condition_result_t;
 
-/** a function pointer for an action/ condition that is checked
- *  at the start of every autostub implemented by tapi. if an action
+/** a function type definition for a condition/ action checked
+ *  at the start of every autostub implemented by tapi. if a condition
  *  returns true, the autostub will trigger a failure, and henceforth
  *  the tested function will receive a failure from this special mock
- *  as well. */
-typedef e_tapi_action_result_t (*tapi_action_t)(void* blank, ...);
+ *  as well.
+ *
+ * note: if the autostub being used has variadic arguments (...), then
+ *  the expansion of the variadic arguments in the condition type defined
+ *  below will simply be the va_list containing all the variadic args
+ *  from the autostub being used. */
+typedef e_tapi_condition_result_t (*tapi_condition_t)(void* blank, ...);
 
 /**
  * @brief a structure to keep track of special mocks that can be automatically stubbed with
@@ -86,11 +91,11 @@ typedef e_tapi_action_result_t (*tapi_action_t)(void* blank, ...);
 typedef struct {
     /** pointer to the stub itself. */
     void* stub;
-    /** pointer to an action */
-    tapi_action_t action;
+    /** pointer to a condition */
+    tapi_condition_t condition;
     /** the name of the special function (library/system call). */
     char* name;
-    /** should we be setting errno on failure for this action? */
+    /** should we be setting errno on failure for this condition? */
     bool set_errno;
 } tapi_autostub_t;
 #endif
@@ -147,8 +152,8 @@ typedef struct {
         struct {
             /** a pointer to an autostub structure if found in tapi's internal table (see above). */
             tapi_autostub_t* autostub;
-            /** an action associated with an autostub structure. */
-            tapi_action_t action;
+            /** a condition associated with an autostub structure. */
+            tapi_condition_t condition;
             /** should errno be set by the autostub? */
             bool set_errno;
         } info;
@@ -181,13 +186,13 @@ tapi_make_mock(void* orig, void* target, void* mocked, size_t call_index);
  * @param target_name the target system/library call name.
  * @param mocked the function to replace the target call with. this should only be
  *  given if an autostub cannot be used on the specified system/library call (see more above).
- * @param action the action associated with the autostub used in this mock.
+ * @param condition the condition associated with the autostub used in this mock.
  * @param set_errno should the autostub associated with this mock set errno?
  * @return an allocated mock structure ready to be applied.
  */
 TAPI_EXPORT tapi_mock_t* TAPI
 tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, \
-    tapi_action_t action, bool set_errno);
+    tapi_condition_t condition, bool set_errno);
 #endif
 
 /** @note this means that we are using a maximum search len of 4096 bytes for determining a
@@ -223,16 +228,16 @@ tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock);
 TAPI_EXPORT void TAPI
 tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock);
 
-/** quickly create an action function to be used in an autostub. */
-#define tapi_action(action_name, ...) \
-    e_tapi_action_result_t action_name(void* blank, __VA_ARGS__)
+/** quickly create an condition function to be used in an autostub. */
+#define tapi_condition(condition_name, ...) \
+    e_tapi_condition_result_t condition_name(void* blank, __VA_ARGS__)
 
 /** quickly create a test with an automock to the test suite. */
 #define tapi_add_test_and_auto_mock(context, name, test_function, tested_function, target_name, \
-    stub_function, action, set_errno) \
+    stub_function, condition, set_errno) \
     tapi_test_t* TAPI_CONCAT(_gentest_, __LINE__) = tapi_make_test(name, test_function); \
     tapi_mock_t* TAPI_CONCAT(_genmock_, __LINE__) = tapi_make_auto_mock(tested_function, \
-        target_name, stub_function, action, set_errno); \
+        target_name, stub_function, condition, set_errno); \
     tapi_dyna_push(TAPI_CONCAT(_gentest_, __LINE__)->mocks, TAPI_CONCAT(_genmock_, __LINE__)); \
     tapi_dyna_push(context->tests, TAPI_CONCAT(_gentest_, __LINE__));
 

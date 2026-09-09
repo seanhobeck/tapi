@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-09-07
+ * @date 2026-09-09
  */
 #include "auto.h"
 
@@ -231,260 +231,260 @@ stub_rand_s(unsigned int* random_value);
 /** the internal autostub table used for automocks. */
 internal tapi_autostub_t autostub_table[43u] = {
     { /* malloc. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_malloc,
         .name = "malloc",
         .set_errno = false,
     },
     { /* calloc. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_calloc,
         .name = "calloc",
         .set_errno = false,
     },
     { /* free. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_free,
         .name = "free",
         .set_errno = false,
     },
     { /* realloc. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_realloc,
         .name = "realloc",
         .set_errno = false,
     },
     { /* strlen. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_strlen,
         .name = "strlen",
         .set_errno = false,
     },
     { /* strcmp. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_strcmp,
         .name = "strcmp",
         .set_errno = false,
     },
     { /* strncmp. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_strncmp,
         .name = "strncmp",
         .set_errno = false,
     },
     { /* strcpy. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_strcpy,
         .name = "strcpy",
         .set_errno = false,
     },
     { /* memcpy. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_memcpy,
         .name = "memcpy",
         .set_errno = false,
     },
     { /* memmove. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_memmove,
         .name = "memmove",
         .set_errno = false,
     },
     { /* printf. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_printf,
         .name = "printf",
         .set_errno = false,
     },
     { /* fprintf. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_fprintf,
         .name = "fprintf",
         .set_errno = false,
     },
     { /* sprintf. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_sprintf,
         .name = "sprintf",
         .set_errno = false,
     },
     { /* vsprintf. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_vsprintf,
         .name = "vsprintf",
         .set_errno = false,
     },
     { /* open. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_open,
         .name = "open",
         .set_errno = false,
     },
     { /* fopen. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_fopen,
         .name = "fopen",
         .set_errno = false,
     },
     { /* freopen. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_freopen,
         .name = "freopen",
         .set_errno = false,
     },
     { /* read. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_read,
         .name = "read",
         .set_errno = false,
     },
     { /* fread. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_fread,
         .name = "fread",
         .set_errno = false,
     },
     { /* write. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_write,
         .name = "write",
         .set_errno = false,
     },
     { /* fwrite. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_fwrite,
         .name = "fwrite",
         .set_errno = false,
     },
     { /* close. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_close,
         .name = "close",
         .set_errno = false,
     },
     { /* fclose. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_fclose,
         .name = "fclose",
         .set_errno = false,
     },
     { /* getenv. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_getenv,
         .name = "getenv",
         .set_errno = false,
     },
     { /* getpid. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_getpid,
         .name = "getpid",
         .set_errno = false,
     },
     { /* time. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_time,
         .name = "time",
         .set_errno = false,
     },
     { /* rand. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_rand,
         .name = "rand",
         .set_errno = false,
     },
 #ifdef TAPI_WINDOWS
     { /* strcpy_s. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_strcpy_s,
         .name = "strcpy_s",
         .set_errno = false,
     },
     { /* strncpy_s. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_strncpy_s,
         .name = "strncpy_s",
         .set_errno = false,
     },
     { /* memcpy_s. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_memcpy_s,
         .name = "memcpy_s",
         .set_errno = false,
     },
     { /* memmove_s. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_memmove_s,
         .name = "memmove_s",
         .set_errno = false,
     },
     { /* printf_s. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_printf_s,
         .name = "printf_s",
         .set_errno = false,
     },
     { /* sprintf_s. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_sprintf_s,
         .name = "sprintf_s",
         .set_errno = false,
     },
     { /* _snprintf_s. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_snprintf_s,
         .name = "_snprintf_s",
         .set_errno = false,
     },
     { /* vsprintf_s. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_vsprintf_s,
         .name = "vsprintf_s",
         .set_errno = false,
     },
     { /* _sopen_s. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_sopen_s,
         .name = "_sopen_s",
         .set_errno = false,
     },
     { /* fopen_s. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_fopen_s,
         .name = "fopen_s",
         .set_errno = false,
     },
     { /* freopen_s. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_freopen_s,
         .name = "freopen_s",
         .set_errno = false,
     },
     { /* _read. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub__read,
         .name = "_read",
         .set_errno = false,
     },
     { /* fread_s. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_fread_s,
         .name = "fread_s",
         .set_errno = false,
     },
     { /* _write. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub__write,
         .name = "_write",
         .set_errno = false,
     },
     { /* _close. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub__close,
         .name = "_close",
         .set_errno = false,
     },
     { /* rand_s. */
-        .action = 0x0,
+        .condition = 0x0,
         .stub = stub_rand_s,
         .name = "rand_s",
         .set_errno = false,
@@ -496,10 +496,10 @@ internal tapi_autostub_t autostub_table[43u] = {
 void*
 stub_malloc(size_t size) {
     tapi_autostub_t autostub = autostub_table[0u]; /* get the malloc autostub. */
-    if (autostub.action != 0x0) {
-        /* if there exists an action, we call it and from there check the result. */
-        e_tapi_action_result_t result = autostub.action(0x0, size);
-        if (result == E_TAPI_ACTION_RESULT_FAIL) {
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, size);
+        if (result == E_TAPI_CONDITION_FAIL) {
             /* regular fail on malloc, if set_errno then ENOMEM. */
             if (autostub.set_errno) errno = ENOMEM;
             return 0x0;
@@ -513,10 +513,10 @@ stub_malloc(size_t size) {
 void*
 stub_calloc(size_t nmemb, size_t size) {
     tapi_autostub_t autostub = autostub_table[1u]; /* get the calloc autostub. */
-    if (autostub.action != 0x0) {
-        /* if there exists an action, we call it and from there check the result. */
-        e_tapi_action_result_t result = autostub.action(0x0, nmemb, size);
-        if (result == E_TAPI_ACTION_RESULT_FAIL) {
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, nmemb, size);
+        if (result == E_TAPI_CONDITION_FAIL) {
             /* regular fail on calloc, if set_errno then ENOMEM... */
             if (autostub.set_errno) errno = ENOMEM;
             return 0x0;
@@ -530,10 +530,10 @@ stub_calloc(size_t nmemb, size_t size) {
 void
 stub_free(void* ptr) {
     tapi_autostub_t autostub = autostub_table[2u]; /* get the free autostub. */
-    if (autostub.action != 0x0) {
-        /* if there exists an action, we call it and from there check the result. */
-        e_tapi_action_result_t result = autostub.action(0x0, ptr);
-        if (result == E_TAPI_ACTION_RESULT_FAIL) {
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, ptr);
+        if (result == E_TAPI_CONDITION_FAIL) {
             /* regular fail on free... */
             return;
         }
@@ -546,10 +546,10 @@ stub_free(void* ptr) {
 void*
 stub_realloc(void* ptr, size_t size) {
     tapi_autostub_t autostub = autostub_table[3u]; /* get the realloc autostub. */
-    if (autostub.action != 0x0) {
-        /* if there exists an action, we call it and from there check the result. */
-        e_tapi_action_result_t result = autostub.action(0x0, ptr, size);
-        if (result == E_TAPI_ACTION_RESULT_FAIL) {
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, ptr, size);
+        if (result == E_TAPI_CONDITION_FAIL) {
             /* regular fail on realloc, if set_errno then ENOMEM... */
             if (autostub.set_errno) errno = ENOMEM;
             return 0x0;
@@ -563,10 +563,10 @@ stub_realloc(void* ptr, size_t size) {
 size_t
 stub_strlen(const char* s) {
     tapi_autostub_t autostub = autostub_table[4u]; /* get the strlen autostub. */
-    if (autostub.action != 0x0) {
-        /* if there exists an action, we call it and from there check the result. */
-        e_tapi_action_result_t result = autostub.action(0x0, s);
-        if (result == E_TAPI_ACTION_RESULT_FAIL) return 0x0;
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, s);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
     /* proceed as per usual. */
     return strlen(s);
@@ -576,10 +576,10 @@ stub_strlen(const char* s) {
 int
 stub_strcmp(const char* s1, const char* s2) {
     tapi_autostub_t autostub = autostub_table[5u]; /* get the strcmp autostub. */
-    if (autostub.action != 0x0) {
-        /* if there exists an action, we call it and from there check the result. */
-        e_tapi_action_result_t result = autostub.action(0x0, s1, s2);
-        if (result == E_TAPI_ACTION_RESULT_FAIL) return 0x0;
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, s1, s2);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
     /* proceed as per usual. */
     return strcmp(s1, s2);
@@ -589,10 +589,10 @@ stub_strcmp(const char* s1, const char* s2) {
 int
 stub_strncmp(const char* s1, const char* s2, size_t n) {
     tapi_autostub_t autostub = autostub_table[6u]; /* get the strncmp autostub. */
-    if (autostub.action != 0x0) {
-        /* if there exists an action, we call it and from there check the result. */
-        e_tapi_action_result_t result = autostub.action(0x0, s1, s2, n);
-        if (result == E_TAPI_ACTION_RESULT_FAIL) return 0x0;
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, s1, s2, n);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
     /* proceed as per usual. */
     return strncmp(s1, s2, n);
@@ -602,10 +602,10 @@ stub_strncmp(const char* s1, const char* s2, size_t n) {
 char*
 stub_strcpy(const char* s1, const char* s2) {
     tapi_autostub_t autostub = autostub_table[7u]; /* get the strcpy autostub. */
-    if (autostub.action != 0x0) {
-        /* if there exists an action, we call it and from there check the result. */
-        e_tapi_action_result_t result = autostub.action(0x0, s1, s2);
-        if (result == E_TAPI_ACTION_RESULT_FAIL) return 0x0;
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, s1, s2);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
     /* proceed as per usual. */
     return strcpy(s1, s2);
@@ -615,10 +615,10 @@ stub_strcpy(const char* s1, const char* s2) {
 char*
 stub_strncpy(const char* s1, const char* s2, size_t n) {
     tapi_autostub_t autostub = autostub_table[8u]; /* get the strncpy autostub. */
-    if (autostub.action != 0x0) {
-        /* if there exists an action, we call it and from there check the result. */
-        e_tapi_action_result_t result = autostub.action(0x0, s1, s2, n);
-        if (result == E_TAPI_ACTION_RESULT_FAIL) return 0x0;
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, s1, s2, n);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
     /* proceed as per usual. */
     return strncpy(s1, s2, n);
@@ -628,10 +628,10 @@ stub_strncpy(const char* s1, const char* s2, size_t n) {
 void*
 stub_memcpy(void* dest, const void* src, size_t n)  {
     tapi_autostub_t autostub = autostub_table[9u]; /* get the memcpy autostub. */
-    if (autostub.action != 0x0) {
-        /* if there exists an action, we call it and from there check the result. */
-        e_tapi_action_result_t result = autostub.action(0x0, dest, src, n);
-        if (result == E_TAPI_ACTION_RESULT_FAIL) return 0x0;
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, dest, src, n);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
     /* proceed as per usual. */
     return memcpy(dest, src, n);
@@ -641,10 +641,10 @@ stub_memcpy(void* dest, const void* src, size_t n)  {
 void*
 stub_memmove(void* dest, const void* src, size_t n) {
     tapi_autostub_t autostub = autostub_table[10u]; /* get the memmove autostub. */
-    if (autostub.action != 0x0) {
-        /* if there exists an action, we call it and from there check the result. */
-        e_tapi_action_result_t result = autostub.action(0x0, dest, src, n);
-        if (result == E_TAPI_ACTION_RESULT_FAIL) return 0x0;
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, dest, src, n);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
     /* proceed as per usual. */
     return memmove(dest, src, n);
@@ -654,10 +654,10 @@ stub_memmove(void* dest, const void* src, size_t n) {
 void*
 stub_memset(void* s, int c, size_t n) {
     tapi_autostub_t autostub = autostub_table[11u]; /* get the memset autostub. */
-    if (autostub.action != 0x0) {
-        /* if there exists an action, we call it and from there check the result. */
-        e_tapi_action_result_t result = autostub.action(0x0, s, c, n);
-        if (result == E_TAPI_ACTION_RESULT_FAIL) return 0x0;
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, s, c, n);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
     /* proceed as per usual. */
     return memset(s, c, n);
@@ -666,13 +666,13 @@ stub_memset(void* s, int c, size_t n) {
 /** @brief printf autostub used by tapi. */
 int
 stub_printf(const char* format, ...) {
-    tapi_autostub_t autostub = autostub_table[11u]; /* get the printf autostub. */
+    tapi_autostub_t autostub = autostub_table[12u]; /* get the printf autostub. */
     va_list list;
     va_start(list, format);
-    if (autostub.action != 0x0) {
-        /* if there exists an action, we call it and from there check the result. */
-        e_tapi_action_result_t result = autostub.action(0x0, );
-        if (result == E_TAPI_ACTION_RESULT_FAIL) return 0x0;
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, list);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
     /* proceed as per usual. */
     int retval = vprintf(format, list);

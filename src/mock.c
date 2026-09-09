@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-09-07
+ * @date 2026-09-09
  */
 #include <tapi/mock.h>
 
@@ -74,13 +74,13 @@ tapi_make_mock(void* orig, void* target, void* mocked, size_t call_index) {
  * @param target_name the target system/library call name.
  * @param mocked the function to replace the target call with. this should only be
  *  given if an autostub cannot be used on the specified system/library call (see more above).
- * @param action the action associated with the autostub used in this mock.
+ * @param condition the action associated with the autostub used in this mock.
  * @param set_errno should the autostub associated with this mock set errno?
  * @return an allocated mock structure ready to be applied.
  */
 tapi_mock_t*
 tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, \
-    tapi_action_t action, bool set_errno) {
+    tapi_condition_t condition, bool set_errno) {
     /* allocate the structure. */
     tapi_mock_t* mock = calloc(1u, sizeof *mock);
 #ifndef TAPI_WINDOWS
@@ -103,7 +103,7 @@ tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, \
     mock->type = E_TAPI_MOCK_AUTO;
     /* simply iterate through the table of given autostubs, find it if possible. */
     mock->data.info.autostub = 0x0;
-    mock->data.info.action = action;
+    mock->data.info.condition = condition;
     mock->data.info.set_errno = set_errno;
     mock->data.info.autostub = find_auto(mock->target);
     return mock;
@@ -157,7 +157,7 @@ tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock) {
 #ifndef TAPI_MINIMAL
     /* for every 'auto mock' we change the details of the internal table before the target is called. */
     if (mock->type == E_TAPI_MOCK_AUTO && mock->data.info.autostub != 0x0) {
-        mock->data.info.autostub->action = mock->data.info.action;
+        mock->data.info.autostub->condition = mock->data.info.condition;
         mock->data.info.autostub->set_errno = mock->data.info.set_errno;
         mock->mocked = mock->data.info.autostub->stub;
     }
@@ -228,7 +228,7 @@ tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock) {
 #ifndef TAPI_MINIMAL
         /* reset the autostub. */
         if (mock->data.info.autostub != 0x0) {
-            mock->data.info.autostub->action = 0x0;
+            mock->data.info.autostub->condition = 0x0;
             mock->data.info.autostub->set_errno = false;
         }
 
