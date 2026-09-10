@@ -760,24 +760,67 @@ stub_vsprintf(char* str, const char* format, va_list ap)  {
 /** @brief fopen autostub used by tapi. */
 FILE*
 stub_fopen(const char* filename, const char* mode) {
-
+    tapi_autostub_t autostub = autostub_table[17u]; /* get the fopen autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, filename, mode);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
+    }
+    /* proceed as per usual. */
+    return fopen(filename, mode);
 };
 
 /** @brief freopen autostub used by tapi. */
 FILE*
-stub_freopen(const char* filename, const char* mode, FILE* stream);
+stub_freopen(const char* filename, const char* mode, FILE* stream) {
+    tapi_autostub_t autostub = autostub_table[18u]; /* get the freopen autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, filename, mode, stream);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
+    }
+    /* proceed as per usual. */
+    return freopen(filename, mode, stream);
+};
 
 /** @brief fread autostub used by tapi. */
 size_t
-stub_fread(void* ptr, size_t size, size_t nmemb, FILE* stream);
+stub_fread(void* ptr, size_t size, size_t nmemb, FILE* stream) {
+    tapi_autostub_t autostub = autostub_table[19u]; /* get the fread autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, ptr, size, nmemb, stream);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
+    }
+    /* proceed as per usual. */
+    return fread(ptr, size, nmemb, stream);
+};
 
 /** @brief fwrite autostub used by tapi. */
 size_t
-stub_fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream);
+stub_fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream) {
+    tapi_autostub_t autostub = autostub_table[20u]; /* get the fwrite autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, ptr, size, nmemb, stream);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
+    }
+    /* proceed as per usual. */
+    return fwrite(ptr, size, nmemb, stream);
+};
 
 /** @brief close autostub used by tapi. */
 int
-stub_fclose(FILE* stream);
+stub_fclose(FILE* stream)  {
+    tapi_autostub_t autostub = autostub_table[21u]; /* get the fclose autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, stream);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
+    }
+    /* proceed as per usual. */
+    return fclose(stream);
+};
 
 /** @brief time autostub used by tapi. */
 time_t
