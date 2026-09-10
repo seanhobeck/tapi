@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-09-09
+ * @date 2026-09-10
  */
 #ifndef TAPI_MOCK_H
 #define TAPI_MOCK_H
@@ -52,40 +52,41 @@ typedef e_tapi_condition_result_t (*tapi_condition_t)(void* blank, ...);
  *  functions can then be conditioned to fail under certain conditions, allowing testers to test
  *  for failures.
  *
- * list of currently supported autostubs for POSIX & MSVC system/library calls:
+ * list of currently supported autostubs for POSIX (marked with 'p'), MSVC (marked with 'ms'),
+ *  and linux/unix (marked with 'l/u') system/library calls:
  *  _____________________________________
  *  |system/libc    |msvc crt-equiv. api|
  *  =====================================
- *  |malloc         |.                  |
- *  |calloc         |.                  |
- *  |free           |.                  |
- *  |realloc        |.                  |
- *  |strlen         |.                  |
- *  |strcmp         |.                  |
- *  |strncmp        |.                  |
- *  |strcpy         |strcpy_s           |
- *  |strncpy        |strncpy_s          |
- *  |memcpy         |memcpy_s           |
- *  |memmove        |memmove_s          |
- *  |memset         |.                  |
- *  |printf         |printf_s           |
- *  |fprintf        |fprintf_s          |
- *  |sprintf        |sprintf_s          |
- *  |snprintf       |_snprintf_s        |
- *  |vsprintf       |vsprintf_s         |
- *  |open           |_sopen_s           |
- *  |fopen          |fopen_s            |
- *  |freopen        |freopen_s          |
- *  |read           |_read              |
- *  |fread          |fread_s            |
- *  |write          |_write             |
- *  |fwrite         |.                  |
- *  |close          |_close             |
- *  |fclose         |.                  |
- *  |getenv         |n/a                |
- *  |getpid         |n/a                |
- *  |time           |.                  |
- *  |rand           |rand_s             |
+ *  |malloc(p)      |.                  |
+ *  |calloc(p)      |.                  |
+ *  |free(p)        |.                  |
+ *  |realloc(p)     |.                  |
+ *  |strlen(p)      |.                  |
+ *  |strcmp(p)      |.                  |
+ *  |strncmp(p)     |.                  |
+ *  |strcpy(p)      |strcpy_s(ms)       |
+ *  |strncpy(p)     |strncpy_s(ms)      |
+ *  |memcpy(p)      |memcpy_s(ms)       |
+ *  |memmove(p)     |memmove_s(ms)      |
+ *  |memset(p)      |.                  |
+ *  |printf(p)      |printf_s(ms)       |
+ *  |fprintf(p)     |fprintf_s(ms)      |
+ *  |sprintf(p)     |sprintf_s(ms)      |
+ *  |snprintf(p)    |_snprintf_s(ms)    |
+ *  |vsprintf(p)    |vsprintf_s(ms)     |
+ *  |open(l/u)      |_sopen_s(ms)       |
+ *  |fopen(p)       |fopen_s(ms)        |
+ *  |freopen(p)     |freopen_s(ms)      |
+ *  |read(l/u)      |_read(ms)          |
+ *  |fread(p)       |fread_s(ms)        |
+ *  |write(l/u)     |_write(ms)         |
+ *  |fwrite(p)      |.                  |
+ *  |close(l/u)     |_close(ms)         |
+ *  |fclose(p)      |.                  |
+ *  |getenv(l/u)    |n/a                |
+ *  |getpid(l/u)    |n/a                |
+ *  |time(p)        |.                  |
+ *  |rand(p)        |rand_s(ms)         |
  *  =====================================
  */
 typedef struct {

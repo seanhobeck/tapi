@@ -96,10 +96,6 @@ stub_snprintf(char* str, size_t size, const char* format, ...);
 int
 stub_vsprintf(char* str, const char* format, va_list ap);
 
-/** @brief open autostub used by tapi. */
-int
-stub_open(const char* pathname, int flags, ...);
-
 /** @brief fopen autostub used by tapi. */
 FILE*
 stub_fopen(const char* filename, const char* mode);
@@ -108,17 +104,9 @@ stub_fopen(const char* filename, const char* mode);
 FILE*
 stub_freopen(const char* filename, const char* mode, FILE* stream);
 
-/** @brief read autostub used by tapi. */
-ssize_t
-stub_read(int fd, const void* buf, size_t count);
-
 /** @brief fread autostub used by tapi. */
 size_t
 stub_fread(void* ptr, size_t size, size_t nmemb, FILE* stream);
-
-/** @brief write autostub used by tapi. */
-ssize_t
-stub_write(int fd, const void* buf, size_t count);
 
 /** @brief fwrite autostub used by tapi. */
 size_t
@@ -126,19 +114,7 @@ stub_fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream);
 
 /** @brief close autostub used by tapi. */
 int
-stub_close(int fd);
-
-/** @brief close autostub used by tapi. */
-int
 stub_fclose(FILE* stream);
-
-/** @brief getenv autostub used by tapi. */
-char*
-stub_getenv(const char* name);
-
-/** @brief getpid autostub used by tapi. */
-pid_t
-stub_getpid(void);
 
 /** @brief time autostub used by tapi. */
 time_t
@@ -148,7 +124,31 @@ stub_time(time_t* tloc);
 int
 stub_rand(void);
 
-#ifdef TAPI_WINDOWS
+#if defined(TAPI_LINUX) || defined(TAPI_UNIX)
+/** @brief open autostub used by tapi. */
+int
+stub_open(const char* pathname, int flags, ...);
+
+/** @brief read autostub used by tapi. */
+ssize_t
+stub_read(int fd, const void* buf, size_t count);
+
+/** @brief write autostub used by tapi. */
+ssize_t
+stub_write(int fd, const void* buf, size_t count);
+
+/** @brief close autostub used by tapi. */
+int
+stub_close(int fd);
+
+/** @brief getenv autostub used by tapi. */
+char*
+stub_getenv(const char* name);
+
+/** @brief getpid autostub used by tapi. */
+pid_t
+stub_getpid(void);
+#else
 /** @brief strcpy_s autostub used by tapi. */
 errno_t
 stub_strcpy_s(char* dest, rsize_t dest_size, const char* src);
@@ -314,10 +314,16 @@ internal tapi_autostub_t autostub_table[43u] = {
         .name = "vsprintf",
         .set_errno = false,
     },
-    { /* open. */
+    { /* time. */
         .condition = 0x0,
-        .stub = stub_open,
-        .name = "open",
+        .stub = stub_time,
+        .name = "time",
+        .set_errno = false,
+    },
+    { /* rand. */
+        .condition = 0x0,
+        .stub = stub_rand,
+        .name = "rand",
         .set_errno = false,
     },
     { /* fopen. */
@@ -332,22 +338,10 @@ internal tapi_autostub_t autostub_table[43u] = {
         .name = "freopen",
         .set_errno = false,
     },
-    { /* read. */
-        .condition = 0x0,
-        .stub = stub_read,
-        .name = "read",
-        .set_errno = false,
-    },
     { /* fread. */
         .condition = 0x0,
         .stub = stub_fread,
         .name = "fread",
-        .set_errno = false,
-    },
-    { /* write. */
-        .condition = 0x0,
-        .stub = stub_write,
-        .name = "write",
         .set_errno = false,
     },
     { /* fwrite. */
@@ -356,16 +350,35 @@ internal tapi_autostub_t autostub_table[43u] = {
         .name = "fwrite",
         .set_errno = false,
     },
-    { /* close. */
-        .condition = 0x0,
-        .stub = stub_close,
-        .name = "close",
-        .set_errno = false,
-    },
     { /* fclose. */
         .condition = 0x0,
         .stub = stub_fclose,
         .name = "fclose",
+        .set_errno = false,
+    },
+#if defined(TAPI_LINUX) || defined(TAPI_UNIX)
+    { /* open. */
+        .condition = 0x0,
+        .stub = stub_open,
+        .name = "open",
+        .set_errno = false,
+    },
+    { /* read. */
+        .condition = 0x0,
+        .stub = stub_read,
+        .name = "read",
+        .set_errno = false,
+    },
+    { /* write. */
+        .condition = 0x0,
+        .stub = stub_write,
+        .name = "write",
+        .set_errno = false,
+    },
+    { /* close. */
+        .condition = 0x0,
+        .stub = stub_close,
+        .name = "close",
         .set_errno = false,
     },
     { /* getenv. */
@@ -380,19 +393,7 @@ internal tapi_autostub_t autostub_table[43u] = {
         .name = "getpid",
         .set_errno = false,
     },
-    { /* time. */
-        .condition = 0x0,
-        .stub = stub_time,
-        .name = "time",
-        .set_errno = false,
-    },
-    { /* rand. */
-        .condition = 0x0,
-        .stub = stub_rand,
-        .name = "rand",
-        .set_errno = false,
-    },
-#ifdef TAPI_WINDOWS
+#else
     { /* strcpy_s. */
         .condition = 0x0,
         .stub = stub_strcpy_s,
@@ -671,8 +672,11 @@ stub_printf(const char* format, ...) {
     va_start(list, format);
     if (autostub.condition != 0x0) {
         /* if there exists a condition, we call it and from there check the result. */
-        e_tapi_condition_result_t result = autostub.condition(0x0, list);
-        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
+        e_tapi_condition_result_t result = autostub.condition(0x0, format, list);
+        if (result == E_TAPI_CONDITION_FAIL) {
+            va_end(list);
+            return 0x0;
+        }
     }
     /* proceed as per usual. */
     int retval = vprintf(format, list);
@@ -683,31 +687,74 @@ stub_printf(const char* format, ...) {
 /** @brief fprintf autostub used by tapi. */
 int
 stub_fprintf(FILE* stream, const char* format, ...) {
-
+    tapi_autostub_t autostub = autostub_table[13u]; /* get the fprintf autostub. */
+    va_list list;
+    va_start(list, format);
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, stream, format, list);
+        if (result == E_TAPI_CONDITION_FAIL) {
+            va_end(list);
+            return 0x0;
+        }
+    }
+    /* proceed as per usual. */
+    int retval = vfprintf(stream, format, list);
+    va_end(list);
+    return retval;
 };
 
 /** @brief sprintf autostub used by tapi. */
 int
 stub_sprintf(char* str, const char* format, ...) {
-
+    tapi_autostub_t autostub = autostub_table[14u]; /* get the sprintf autostub. */
+    va_list list;
+    va_start(list, format);
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, str, format, list);
+        if (result == E_TAPI_CONDITION_FAIL) {
+            va_end(list);
+            return 0x0;
+        }
+    }
+    /* proceed as per usual. */
+    int retval = vsprintf(str, format, list);
+    va_end(list);
+    return retval;
 };
 
 /** @brief snprintf autostub used by tapi. */
 int
 stub_snprintf(char* str, size_t size, const char* format, ...) {
-
+    tapi_autostub_t autostub = autostub_table[15u]; /* get the snprintf autostub. */
+    va_list list;
+    va_start(list, format);
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, str, size, format, list);
+        if (result == E_TAPI_CONDITION_FAIL) {
+            va_end(list);
+            return 0x0;
+        }
+    }
+    /* proceed as per usual. */
+    int retval = vsnprintf(str, size, format, list);
+    va_end(list);
+    return retval;
 };
 
 /** @brief vsprintf autostub used by tapi. */
 int
-stub_vsprintf(char* str, const char* format, va_list ap) {
-
-};
-
-/** @brief open autostub used by tapi. */
-int
-stub_open(const char* pathname, int flags, ...) {
-
+stub_vsprintf(char* str, const char* format, va_list ap)  {
+    tapi_autostub_t autostub = autostub_table[16u]; /* get the vsprintf autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, str, format, ap);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
+    }
+    /* proceed as per usual. */
+    return vsprintf(str, format, ap);
 };
 
 /** @brief fopen autostub used by tapi. */
@@ -718,69 +765,132 @@ stub_fopen(const char* filename, const char* mode) {
 
 /** @brief freopen autostub used by tapi. */
 FILE*
-stub_freopen(const char* filename, const char* mode, FILE* stream) {
-
-};
-
-/** @brief read autostub used by tapi. */
-ssize_t
-stub_read(int fd, const void* buf, size_t count) {
-
-};
+stub_freopen(const char* filename, const char* mode, FILE* stream);
 
 /** @brief fread autostub used by tapi. */
 size_t
-stub_fread(void* ptr, size_t size, size_t nmemb, FILE* stream) {
-
-};
-
-/** @brief write autostub used by tapi. */
-ssize_t
-stub_write(int fd, const void* buf, size_t count) {
-
-};
+stub_fread(void* ptr, size_t size, size_t nmemb, FILE* stream);
 
 /** @brief fwrite autostub used by tapi. */
 size_t
-stub_fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)  {
-
-};
+stub_fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream);
 
 /** @brief close autostub used by tapi. */
 int
-stub_close(int fd) {
-
-};
-
-/** @brief close autostub used by tapi. */
-int
-stub_fclose(FILE* stream) {
-
-};
-
-/** @brief getenv autostub used by tapi. */
-char*
-stub_getenv(const char* name) {
-
-};
-
-/** @brief getpid autostub used by tapi. */
-pid_t
-stub_getpid(void) {
-
-};
+stub_fclose(FILE* stream);
 
 /** @brief time autostub used by tapi. */
 time_t
-stub_time(time_t* tloc) {
-
-};
+stub_time(time_t* tloc);
 
 /** @brief rand autostub used by tapi. */
 int
-stub_rand(void) {
+stub_rand(void);
 
-};
+#if defined(TAPI_LINUX) || defined(TAPI_UNIX)
+/** @brief open autostub used by tapi. */
+int
+stub_open(const char* pathname, int flags, ...);
+
+/** @brief read autostub used by tapi. */
+ssize_t
+stub_read(int fd, const void* buf, size_t count);
+
+/** @brief write autostub used by tapi. */
+ssize_t
+stub_write(int fd, const void* buf, size_t count);
+
+/** @brief close autostub used by tapi. */
+int
+stub_close(int fd);
+
+/** @brief getenv autostub used by tapi. */
+char*
+stub_getenv(const char* name);
+
+/** @brief getpid autostub used by tapi. */
+pid_t
+stub_getpid(void);
+#else
+/** @brief strcpy_s autostub used by tapi. */
+errno_t
+stub_strcpy_s(char* dest, rsize_t dest_size, const char* src);
+
+/** @brief strncpy_s autostub used by tapi. */
+errno_t
+stub_strncpy_s(char* dest, size_t num_elems, \
+    const char* src, size_t count);
+
+/** @brief memcpy_s autostub used by tapi. */
+errno_t
+stub_memcpy_s(void* dest, size_t dest_size, \
+    const void* src, size_t count);
+
+/** @brief memmove_s autostub used by tapi. */
+errno_t
+stub_memmove_s(void* dest, size_t num_elems, \
+    const void* src, size_t count);
+
+/** @brief printf_s autostub used by tapi. */
+int
+stub_printf_s(const char* format, ...);
+
+/** @brief fprintf_s autostub used by tapi. */
+int
+stub_fprintf_s(FILE* stream, const char* format, ...);
+
+/** @brief sprintf_s autostub used by tapi. */
+int
+stub_sprintf_s(char* dest, size_t dest_size, \
+    const char* format, ...);
+
+/** @brief _snprintf_s autostub used by tapi. */
+int
+stub_snprintf_s(char* dest, size_t dest_size, \
+    size_t count, const char* format, ...);
+
+/** @brief vsprintf_s autostub used by tapi. */
+int
+stub_vsprintf_s(char* dest, size_t num_elems, \
+    const char* format, va_list ap);
+
+/** @brief _sopen_s autostub used by tapi. */
+errno_t
+stub_sopen_s(int* pfh, const char* filename, \
+    int oflag, int shflag, int pmode);
+
+/** @brief fopen_s autostub used by tapi. */
+errno_t
+stub_fopen_s(FILE** stream, const char* filename, \
+    const char* mode);
+
+/** @brief freopen_s autostub used by tapi. */
+errno_t
+stub_freopen_s(FILE** stream, const char* filename, \
+    const char* mode, FILE* old_stream);
+
+/** @brief _read autostub used by tapi. */
+int
+stub__read(const int fd, void* buffer, const unsigned int buffer_size);
+
+/** @brief fread_s autostub used by tapi. */
+size_t
+stub_fread_s(void* buffer, size_t buffer_size, \
+    size_t element_size, size_t count, FILE* stream);
+
+/** @brief _write autostub used by tapi. */
+int
+stub__write(const int fd, void* buffer, const unsigned int count);
+
+/** @brief _close autostub used by tapi. */
+int
+stub__close(const int fd);
+
+/** @brief rand_s autostub used by tapi. */
+errno_t
+stub_rand_s(unsigned int* random_value);
+#endif
+
 
 #endif
 /*! ----------------------==---------------------- !*/
