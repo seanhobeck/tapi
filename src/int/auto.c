@@ -946,7 +946,16 @@ stub_getpid(void) {
 #else
 /** @brief strcpy_s autostub used by tapi. */
 errno_t
-stub_strcpy_s(char* dest, rsize_t dest_size, const char* src);
+stub_strcpy_s(char* dest, rsize_t dest_size, const char* src) {
+    tapi_autostub_t autostub = autostub_table[24u]; /* get the strcpy_s autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, dest, dest_size, src);
+        if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
+    }
+    /* proceed as per usual. */
+    return strcpy_s(dest, dest_size, src);
+};
 
 /** @brief strncpy_s autostub used by tapi. */
 errno_t
