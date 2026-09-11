@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-09-09
+ * @date 2026-09-10
  */
 #include "auto.h"
 
@@ -21,6 +21,11 @@
 
 /*! uses va_list. */
 #include <stdarg.h>
+
+#ifdef TAPI_LINUX
+/*! uses O_CREAT, open, close, etc... */
+#include <fcntl.h>
+#endif
 
 /*! uses internal. */
 #include "intt.h"
@@ -131,7 +136,7 @@ stub_open(const char* pathname, int flags, ...);
 
 /** @brief read autostub used by tapi. */
 ssize_t
-stub_read(int fd, const void* buf, size_t count);
+stub_read(int fd, void* buf, size_t count);
 
 /** @brief write autostub used by tapi. */
 ssize_t
@@ -824,36 +829,120 @@ stub_fclose(FILE* stream)  {
 
 /** @brief time autostub used by tapi. */
 time_t
-stub_time(time_t* tloc);
+stub_time(time_t* tloc) {
+    tapi_autostub_t autostub = autostub_table[22u]; /* get the time autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, tloc);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
+    }
+    /* proceed as per usual. */
+    return time(tloc);
+};
 
 /** @brief rand autostub used by tapi. */
 int
-stub_rand(void);
+stub_rand(void) {
+    tapi_autostub_t autostub = autostub_table[23u]; /* get the rand autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
+    }
+    /* proceed as per usual. */
+    return rand();
+};
 
 #if defined(TAPI_LINUX) || defined(TAPI_UNIX)
 /** @brief open autostub used by tapi. */
 int
-stub_open(const char* pathname, int flags, ...);
+stub_open(const char* pathname, int flags, ...) {
+    tapi_autostub_t autostub = autostub_table[24u]; /* get the open autostub. */
+
+    /* get the mode (optional variadic param). */
+    mode_t mode = 0x0;
+    if (flags & O_CREAT) {
+        va_list list;
+        va_start(list, flags);
+        mode = va_arg(list, mode_t);
+        va_end(list);
+    }
+    /* if there exists a condition, we call it and from there check the result. */
+    if (autostub.condition != 0x0) {
+        e_tapi_condition_result_t result;
+        if (mode != 0x0) result = autostub.condition(0x0, pathname, flags, mode);
+        else result = autostub.condition(0x0, pathname, flags);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
+    }
+    /* proceed as per usual. */
+    if (mode != 0x0) return open(pathname, flags, mode);
+    return open(pathname, flags);
+};
 
 /** @brief read autostub used by tapi. */
 ssize_t
-stub_read(int fd, const void* buf, size_t count);
+stub_read(int fd, void* buf, size_t count)  {
+    tapi_autostub_t autostub = autostub_table[25u]; /* get the read autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, fd, buf, count);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
+    }
+    /* proceed as per usual. */
+    return read(fd, buf, count);
+};
 
 /** @brief write autostub used by tapi. */
 ssize_t
-stub_write(int fd, const void* buf, size_t count);
+stub_write(int fd, const void* buf, size_t count) {
+    tapi_autostub_t autostub = autostub_table[26u]; /* get the write autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, fd, buf, count);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
+    }
+    /* proceed as per usual. */
+    return write(fd, buf, count);
+};
 
 /** @brief close autostub used by tapi. */
 int
-stub_close(int fd);
+stub_close(int fd) {
+    tapi_autostub_t autostub = autostub_table[27u]; /* get the close autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, fd);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
+    }
+    /* proceed as per usual. */
+    return close(fd);
+};
 
 /** @brief getenv autostub used by tapi. */
 char*
-stub_getenv(const char* name);
+stub_getenv(const char* name) {
+    tapi_autostub_t autostub = autostub_table[28u]; /* get the getenv autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, name);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
+    }
+    /* proceed as per usual. */
+    return getenv(name);
+};
 
 /** @brief getpid autostub used by tapi. */
 pid_t
-stub_getpid(void);
+stub_getpid(void) {
+    tapi_autostub_t autostub = autostub_table[29u]; /* get the getpid autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0);
+        if (result == E_TAPI_CONDITION_FAIL) return 0x0;
+    }
+    /* proceed as per usual. */
+    return getpid();
+};
 #else
 /** @brief strcpy_s autostub used by tapi. */
 errno_t
