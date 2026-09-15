@@ -960,17 +960,44 @@ stub_strcpy_s(char* dest, rsize_t dest_size, const char* src) {
 /** @brief strncpy_s autostub used by tapi. */
 errno_t
 stub_strncpy_s(char* dest, size_t num_elems, \
-    const char* src, size_t count);
+    const char* src, size_t count) {
+    tapi_autostub_t autostub = autostub_table[25u]; /* get the strncpy_s autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, dest, dest_size, src);
+        if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
+    }
+    /* proceed as per usual. */
+    return strncpy_s(dest, num_elems, src, count);
+};
 
 /** @brief memcpy_s autostub used by tapi. */
 errno_t
 stub_memcpy_s(void* dest, size_t dest_size, \
-    const void* src, size_t count);
+    const void* src, size_t count) {
+    tapi_autostub_t autostub = autostub_table[26u]; /* get the memcpy_s autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, dest, dest_size, src, count);
+        if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
+    }
+    /* proceed as per usual. */
+    return memcpy_s(dest, dest_size, src, count);
+};
 
 /** @brief memmove_s autostub used by tapi. */
 errno_t
 stub_memmove_s(void* dest, size_t num_elems, \
-    const void* src, size_t count);
+    const void* src, size_t count) {
+    tapi_autostub_t autostub = autostub_table[27u]; /* get the memmove_s autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, dest, num_elems, src, count);
+        if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
+    }
+    /* proceed as per usual. */
+    return memmove_s(dest, num_elems, src, count);
+};
 
 /** @brief printf_s autostub used by tapi. */
 int
