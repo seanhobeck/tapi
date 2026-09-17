@@ -1001,26 +1001,104 @@ stub_memmove_s(void* dest, size_t num_elems, \
 
 /** @brief printf_s autostub used by tapi. */
 int
-stub_printf_s(const char* format, ...);
+stub_printf_s(const char* format, ...) {
+    tapi_autostub_t autostub = autostub_table[28u]; /* get the printf_s autostub. */
+    va_list list;
+    va_start(list, format);
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, format, list);
+        if (result == E_TAPI_CONDITION_FAIL) {
+            va_end(list);
+            return 0x0;
+        }
+    }
+    /* proceed as per usual. */
+    int retval = vprintf_s(format, list);
+    va_end(list);
+    return retval;
+};
 
 /** @brief fprintf_s autostub used by tapi. */
 int
-stub_fprintf_s(FILE* stream, const char* format, ...);
+stub_fprintf_s(FILE* stream, const char* format, ...)  {
+    tapi_autostub_t autostub = autostub_table[29u]; /* get the fprintf_s autostub. */
+    va_list list;
+    va_start(list, format);
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, stream, format, list);
+        if (result == E_TAPI_CONDITION_FAIL) {
+            va_end(list);
+            return 0x0;
+        }
+    }
+    /* proceed as per usual. */
+    int retval = vfprintf_s(stream, format, list);
+    va_end(list);
+    return retval;
+};
 
 /** @brief sprintf_s autostub used by tapi. */
 int
 stub_sprintf_s(char* dest, size_t dest_size, \
-    const char* format, ...);
+    const char* format, ...)  {
+    tapi_autostub_t autostub = autostub_table[30u]; /* get the sprintf_s autostub. */
+    va_list list;
+    va_start(list, format);
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, dest, dest_size, format, list);
+        if (result == E_TAPI_CONDITION_FAIL) {
+            va_end(list);
+            return 0x0;
+        }
+    }
+    /* proceed as per usual. */
+    int retval = vsprintf_s(dest, dest_size, format, list);
+    va_end(list);
+    return retval;
+};
 
 /** @brief _snprintf_s autostub used by tapi. */
 int
 stub_snprintf_s(char* dest, size_t dest_size, \
-    size_t count, const char* format, ...);
+    size_t count, const char* format, ...)  {
+    tapi_autostub_t autostub = autostub_table[31u]; /* get the snprintf_s autostub. */
+    va_list list;
+    va_start(list, format);
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, dest, dest_size, \
+            count, format, list);
+        if (result == E_TAPI_CONDITION_FAIL) {
+            va_end(list);
+            return 0x0;
+        }
+    }
+    /* proceed as per usual. */
+    int retval = vsprintf_s(dest, dest_size, count, format, list);
+    va_end(list);
+    return retval;
+};
 
 /** @brief vsprintf_s autostub used by tapi. */
 int
 stub_vsprintf_s(char* dest, size_t num_elems, \
-    const char* format, va_list ap);
+    const char* format, va_list ap) {
+    tapi_autostub_t autostub = autostub_table[32u]; /* get the vsprintf_s autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, dest, num_elems, \
+            format, ap);
+        if (result == E_TAPI_CONDITION_FAIL) {
+            va_end(list);
+            return 0x0;
+        }
+    }
+    /* proceed as per usual. */
+    return vsprintf_s(dest, num_elems, format, ap);
+};
 
 /** @brief _sopen_s autostub used by tapi. */
 errno_t
