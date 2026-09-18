@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-08-21
+ * @date 2026-09-09
  */
 #include <tapi/mock.h>
 
@@ -13,6 +13,9 @@
 
 /*! uses errno. */
 #include <errno.h>
+
+/*! uses find_auto. */
+#include "auto.h"
 
 /*! uses det_function_size. */
 #include "det.h"
@@ -29,97 +32,6 @@
 /*! uses internal. */
 #include "int/intt.h"
 /** \endcond */
-
-
-/*! -----------------autostubs------------------ !*/
-#ifndef TAPI_MINIMAL
-
-/** @brief malloc autostub used by tapi. */
-void*
-tapi_stub_malloc(size_t size);
-
-/** @brief calloc autostub used by tapi. */
-void*
-tapi_stub_calloc(size_t nmemb, size_t size);
-
-/** @brief free autostub used by tapi. */
-void
-tapi_stub_free(void* ptr);
-
-/** the internal autostub table used for automocks. */
-internal tapi_autostub_t autostub_table[3u] = {
-    { /* malloc. */
-        .action = 0x0,
-        .stub = tapi_stub_malloc,
-        .name = "malloc",
-        .set_errno = false,
-    },
-    { /* calloc. */
-        .action = 0x0,
-        .stub = tapi_stub_calloc,
-        .name = "calloc",
-        .set_errno = false,
-    },
-    { /* free. */
-        .action = 0x0,
-        .stub = tapi_stub_free,
-        .name = "free",
-        .set_errno = false,
-    }
-};
-
-/** @brief malloc autostub used by tapi. */
-void*
-tapi_stub_malloc(size_t size) {
-    tapi_autostub_t autostub = autostub_table[0u]; /* get the malloc autostub. */
-    if (autostub.action != 0x0) {
-        /* if there exists an action, we call it and from there check the result. */
-        e_tapi_action_result_t result = autostub.action(0x0, size);
-        if (result == E_TAPI_ACTION_RESULT_FAIL) {
-            /* regular fail on malloc, if set_errno then ENOMEM. */
-            if (autostub.set_errno) errno = ENOMEM;
-            return 0x0;
-        }
-    }
-    /* proceed as per usual. */
-    return malloc(size);
-};
-
-/** @brief calloc autostub used by tapi. */
-void*
-tapi_stub_calloc(size_t nmemb, size_t size) {
-    tapi_autostub_t autostub = autostub_table[1u]; /* get the calloc autostub. */
-    if (autostub.action != 0x0) {
-        /* if there exists an action, we call it and from there check the result. */
-        e_tapi_action_result_t result = autostub.action(0x0, nmemb, size);
-        if (result == E_TAPI_ACTION_RESULT_FAIL) {
-            /* regular fail on calloc, if set_errno then ENOMEM... */
-            if (autostub.set_errno) errno = ENOMEM;
-            return 0x0;
-        }
-    }
-    /* proceed as per usual. */
-    return calloc(nmemb, size);
-};
-
-/** @brief free autostub used by tapi. */
-void
-tapi_stub_free(void* ptr) {
-    tapi_autostub_t autostub = autostub_table[2u]; /* get the free autostub. */
-    if (autostub.action != 0x0) {
-        /* if there exists an action, we call it and from there check the result. */
-        e_tapi_action_result_t result = autostub.action(0x0, ptr);
-        if (result == E_TAPI_ACTION_RESULT_FAIL) {
-            /* regular fail on free... */
-            return;
-        }
-    }
-    /* proceed as per usual. */
-    free(ptr);
-};
-
-#endif
-/*! ----------------------==---------------------- !*/
 
 /**
  * @brief mock all/specified call occurrence(s) to a target with a call to a mocked function
@@ -162,13 +74,13 @@ tapi_make_mock(void* orig, void* target, void* mocked, size_t call_index) {
  * @param target_name the target system/library call name.
  * @param mocked the function to replace the target call with. this should only be
  *  given if an autostub cannot be used on the specified system/library call (see more above).
- * @param action the action associated with the autostub used in this mock.
+ * @param condition the action associated with the autostub used in this mock.
  * @param set_errno should the autostub associated with this mock set errno?
  * @return an allocated mock structure ready to be applied.
  */
 tapi_mock_t*
 tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, \
-    tapi_action_t action, bool set_errno) {
+    tapi_condition_t condition, bool set_errno) {
     /* allocate the structure. */
     tapi_mock_t* mock = calloc(1u, sizeof *mock);
 #ifndef TAPI_WINDOWS
@@ -191,12 +103,9 @@ tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, \
     mock->type = E_TAPI_MOCK_AUTO;
     /* simply iterate through the table of given autostubs, find it if possible. */
     mock->data.info.autostub = 0x0;
-    mock->data.info.action = action;
+    mock->data.info.condition = condition;
     mock->data.info.set_errno = set_errno;
-    for (size_t i = 0u; i < sizeof(autostub_table) / sizeof(tapi_autostub_t); i++) {
-        if (!strcmp(target_name, autostub_table[i].name))
-            mock->data.info.autostub = &autostub_table[i];
-    }
+    mock->data.info.autostub = find_auto(mock->target);
     return mock;
 };
 #endif
@@ -248,7 +157,7 @@ tapi_apply_mock(tapi_context_t* context, tapi_mock_t* mock) {
 #ifndef TAPI_MINIMAL
     /* for every 'auto mock' we change the details of the internal table before the target is called. */
     if (mock->type == E_TAPI_MOCK_AUTO && mock->data.info.autostub != 0x0) {
-        mock->data.info.autostub->action = mock->data.info.action;
+        mock->data.info.autostub->condition = mock->data.info.condition;
         mock->data.info.autostub->set_errno = mock->data.info.set_errno;
         mock->mocked = mock->data.info.autostub->stub;
     }
@@ -319,7 +228,7 @@ tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock) {
 #ifndef TAPI_MINIMAL
         /* reset the autostub. */
         if (mock->data.info.autostub != 0x0) {
-            mock->data.info.autostub->action = 0x0;
+            mock->data.info.autostub->condition = 0x0;
             mock->data.info.autostub->set_errno = false;
         }
 
