@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-09-10
+ * @date 2026-09-17
  */
 #include "auto.h"
 
@@ -30,7 +30,45 @@
 /*! uses internal. */
 #include "intt.h"
 
-/*! -----------------autostubs------------------ !*/
+/*! -----------------autostubs------------------ !
+ *
+ * list of currently supported autostubs for POSIX (marked with 'p'), MSVC (marked with 'ms'),
+ *  and linux/unix (marked with 'l/u') system/library calls:
+ *  _____________________________________
+ *  |system/libc    |msvc crt-equiv. api|
+ *  =====================================
+ *  |malloc(p)      |.                  |
+ *  |calloc(p)      |.                  |
+ *  |free(p)        |.                  |
+ *  |realloc(p)     |.                  |
+ *  |strlen(p)      |.                  |
+ *  |strcmp(p)      |.                  |
+ *  |strncmp(p)     |.                  |
+ *  |strcpy(p)      |strcpy_s(ms)       |
+ *  |strncpy(p)     |strncpy_s(ms)      |
+ *  |memcpy(p)      |memcpy_s(ms)       |
+ *  |memmove(p)     |memmove_s(ms)      |
+ *  |memset(p)      |.                  |
+ *  |printf(p)      |printf_s(ms)       |
+ *  |fprintf(p)     |fprintf_s(ms)      |
+ *  |sprintf(p)     |sprintf_s(ms)      |
+ *  |snprintf(p)    |_snprintf_s(ms)    |
+ *  |vsprintf(p)    |vsprintf_s(ms)     |
+ *  |open(l/u)      |_sopen_s(ms)       |
+ *  |fopen(p)       |fopen_s(ms)        |
+ *  |freopen(p)     |freopen_s(ms)      |
+ *  |read(l/u)      |_read(ms)          |
+ *  |fread(p)       |fread_s(ms)        |
+ *  |write(l/u)     |_write(ms)         |
+ *  |fwrite(p)      |.                  |
+ *  |close(l/u)     |_close(ms)         |
+ *  |fclose(p)      |.                  |
+ *  |getenv(l/u)    |n/a                |
+ *  |getpid(l/u)    |n/a                |
+ *  |time(p)        |.                  |
+ *  |rand(p)        |rand_s(ms)         |
+ *  =====================================
+ */
 #ifndef TAPI_MINIMAL
 
 /** @brief malloc autostub used by tapi. */
@@ -1103,38 +1141,111 @@ stub_vsprintf_s(char* dest, size_t num_elems, \
 /** @brief _sopen_s autostub used by tapi. */
 errno_t
 stub_sopen_s(int* pfh, const char* filename, \
-    int oflag, int shflag, int pmode);
+    int oflag, int shflag, int pmode) {
+    tapi_autostub_t autostub = autostub_table[33u]; /* get the sopen_s autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, pfh, filename, oflag, shflag, pmode);
+        if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
+    }
+    /* proceed as per usual. */
+    return sopen_s(pfh, filename, oflag, shflag, pmode);
+};
 
 /** @brief fopen_s autostub used by tapi. */
 errno_t
 stub_fopen_s(FILE** stream, const char* filename, \
-    const char* mode);
+    const char* mode) {
+    tapi_autostub_t autostub = autostub_table[34u]; /* get the fopen_s autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, stream, filename, mode);
+        if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
+    }
+    /* proceed as per usual. */
+    return fopen_s(stream, filename, mode);
+};
 
 /** @brief freopen_s autostub used by tapi. */
 errno_t
 stub_freopen_s(FILE** stream, const char* filename, \
-    const char* mode, FILE* old_stream);
+    const char* mode, FILE* old_stream) {
+    tapi_autostub_t autostub = autostub_table[35u]; /* get the freopen_s autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, stream, filename, mode, old_stream);
+        if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
+    }
+    /* proceed as per usual. */
+    return freopen_s(stream, filename, mode, old_stream);
+};
 
 /** @brief _read autostub used by tapi. */
 int
-stub__read(const int fd, void* buffer, const unsigned int buffer_size);
+stub__read(const int fd, void* buffer, const unsigned int buffer_size) {
+    tapi_autostub_t autostub = autostub_table[36u]; /* get the _read autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, fd, buffer, buffer_size);
+        if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
+    }
+    /* proceed as per usual. */
+    return _read(fd, buffer, buffer_size);
+};
 
 /** @brief fread_s autostub used by tapi. */
 size_t
 stub_fread_s(void* buffer, size_t buffer_size, \
-    size_t element_size, size_t count, FILE* stream);
+    size_t element_size, size_t count, FILE* stream) {
+    tapi_autostub_t autostub = autostub_table[37u]; /* get the fopen_s autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, buffer, buffer_size, \
+            element_size, count, stream);
+        if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
+    }
+    /* proceed as per usual. */
+    return fread_s(buffer, buffer_size, element_size, count, stream);
+};
 
 /** @brief _write autostub used by tapi. */
 int
-stub__write(const int fd, void* buffer, const unsigned int count);
+stub__write(const int fd, void* buffer, const unsigned int count) {
+    tapi_autostub_t autostub = autostub_table[38u]; /* get the _write autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, fd, buffer, count);
+        if (result == E_TAPI_CONDITION_FAIL) return EBADF;
+    }
+    /* proceed as per usual. */
+    return _write(fd, buffer, count);
+};
 
 /** @brief _close autostub used by tapi. */
 int
-stub__close(const int fd);
+stub__close(const int fd) {
+    tapi_autostub_t autostub = autostub_table[39u]; /* get the _close autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, fd);
+        if (result == E_TAPI_CONDITION_FAIL) return -1;
+    }
+    /* proceed as per usual. */
+    return _close(fd);
+};
 
 /** @brief rand_s autostub used by tapi. */
 errno_t
-stub_rand_s(unsigned int* random_value);
+stub_rand_s(unsigned int* random_value) {
+    tapi_autostub_t autostub = autostub_table[40u]; /* get the rand_s autostub. */
+    if (autostub.condition != 0x0) {
+        /* if there exists a condition, we call it and from there check the result. */
+        e_tapi_condition_result_t result = autostub.condition(0x0, random_value);
+        if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
+    }
+    /* proceed as per usual. */
+    return rand_s(random_value);
+};
 #endif
 
 
