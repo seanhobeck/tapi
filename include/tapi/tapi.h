@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-09-06
+ * @date 2026-09-17
  */
 #ifndef TAPI_H
 #define TAPI_H
@@ -38,6 +38,9 @@ typedef void (*tapi_gen_func_t)(void);
  * `tapi_context_t` is a data structure for storing data for tapi to use as a saved state of
  *  execution. this contains a list of tests, as well as a list of active memory guards that are
  *  currently in use.
+ *
+ * @see tapi_init()
+ * @see tapi_cleanup()
  */
 typedef struct {
     /** dynamic array of test pointers. */

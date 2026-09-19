@@ -60,4 +60,27 @@
 #define TAPI_UNIX
 #endif
 /** \endcond */
+
+/*! uses size_t. */
+#include <stddef.h>
+
+typedef void(TAPI *tapi_free_t)(void *ptr);
+typedef void*(TAPI *tapi_malloc_t)(size_t size);
+typedef void*(TAPI *tapi_calloc_t)(size_t nmemb, size_t size);
+typedef void*(TAPI *tapi_realloc_t)(void *ptr, size_t size);
+typedef int(TAPI *tapi_printf_t)(const char* format, ...);
+
+/**
+ * ...
+ */
+typedef struct {
+    tapi_free_t free;
+    tapi_malloc_t malloc;
+    tapi_calloc_t calloc;
+    tapi_realloc_t realloc;
+    tapi_printf_t printf;
+} tapi_mem_t;
+
+TAPI_EXPORT void
+tapi_set_user_defined_
 #endif /* TAPI_PLATFORM_H */
