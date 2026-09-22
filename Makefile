@@ -173,6 +173,7 @@ uninstall:
 .PHONY: test_native
 test_native: all
 	$(MAKE) -C tests/integration arch=$(arch) use_asan=$(use_asan)
+	$(MAKE) -C tests/smoke arch=$(arch) use_asan=$(use_asan)
 	$(MAKE) -C tests/unit arch=$(arch) use_asan=$(use_asan)
 
 .PHONY: test_all_arch

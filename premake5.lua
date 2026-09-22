@@ -113,6 +113,66 @@ project "tapi-integration"
 
 	filter {}
 
+project "tapi-integration"
+	kind "ConsoleApp"
+	language "C"
+	cdialect "C17"
+	location "vs"
+
+	files {
+		"tests/smoke/**.c",
+		"tests/smoke/**.h"
+	}
+
+	includedirs {
+		"include",
+		"src",
+		"src/int",
+		"vendor/capstone/include"
+	}
+
+	links {
+		"capstone",
+		"tapi"
+	}
+
+	dependson {
+		"tapi"
+	}
+
+	buildoptions { "/experimental:c11atomics" }
+	defines { "_CRT_SECURE_NO_WARNINGS" }
+	staticruntime "Off"
+	symbols "On"
+	optimize "Off"
+	runtime "Debug"
+
+	filter "platforms:Win32"
+		libdirs {
+			"vendor/capstone/buildwin32/Release",
+			"bin/win32/%{cfg.buildcfg}"
+		}
+		targetdir "bin/win32/%{cfg.buildcfg}/tests/smoke"
+		objdir "build/win32/%{cfg.buildcfg}/tests/smoke"
+		postbuildcommands {
+			"{COPYFILE} ../bin/win32/%{cfg.buildcfg}/tapi.dll %{cfg.targetdir}",
+			"{COPYFILE} ../bin/win32/%{cfg.buildcfg}/tapi.pdb %{cfg.targetdir}"
+		}
+
+	filter "platforms:x86_64"
+		libdirs {
+			"vendor/capstone/buildwin64/Release",
+			"bin/win64/%{cfg.buildcfg}"
+		}
+		targetdir "bin/win64/%{cfg.buildcfg}/tests/smoke"
+		objdir "build/win64/%{cfg.buildcfg}/tests/smoke"
+		postbuildcommands {
+			"{COPYFILE} ../bin/win64/%{cfg.buildcfg}/tapi.dll %{cfg.targetdir}",
+			"{COPYFILE} ../bin/win64/%{cfg.buildcfg}/tapi.pdb %{cfg.targetdir}"
+		}
+
+	filter {}
+
 project "tapi-unit"
 	kind "ConsoleApp"
 	language "C"
