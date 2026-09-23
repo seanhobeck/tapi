@@ -60,6 +60,7 @@ dkms.conf
 /tests/.idea
 /vendor/build
 /release
+/.cache
 tapi-*.tar.gz
 
 # test logs.
