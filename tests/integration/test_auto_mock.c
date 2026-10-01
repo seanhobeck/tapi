@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-03
+ * @date 2026-09-29
  */
 #include <tapi/tapi.h>
 
@@ -49,8 +49,8 @@ _target_function_2(int x) {
 
 /*! ----------------------==---------------------- !*/
 
-tapi_action(calloc_action_fail, ...) {
-    return E_TAPI_ACTION_RESULT_FAIL;
+tapi_condition(calloc_action_fail, ...) {
+    return E_TAPI_CONDITION_FAIL;
 }
 
 tapi_test(test_target_function_calloc_fail) {
@@ -72,11 +72,11 @@ tapi_test(test_target_function_calloc_fail_errno) {
     return E_TAPI_TEST_RESULT_PASSED;
 }
 
-tapi_action(calloc_action_conditional, ...) {
+tapi_condition(calloc_action_conditional, ...) {
     static int count = 0;
     count++;
-    if (count == 2) return E_TAPI_ACTION_RESULT_FAIL;
-    return E_TAPI_ACTION_RESULT_ALLOW;
+    if (count == 2) return E_TAPI_CONDITION_FAIL;
+    return E_TAPI_CONDITION_ALLOW;
 }
 
 tapi_test(test_target_function_calloc_fail_on_second) {
@@ -90,8 +90,8 @@ tapi_test(test_target_function_calloc_fail_on_second) {
     return E_TAPI_TEST_RESULT_PASSED;
 }
 
-tapi_action(malloc_action_fail, ...) {
-    return E_TAPI_ACTION_RESULT_FAIL;
+tapi_condition(malloc_action_fail, ...) {
+    return E_TAPI_CONDITION_FAIL;
 }
 
 tapi_test(test_target_function_malloc_fail) {
@@ -113,8 +113,8 @@ tapi_test(test_target_function_malloc_fail_errno) {
     return E_TAPI_TEST_RESULT_PASSED;
 }
 
-tapi_action(free_action_fail, ...) {
-    return E_TAPI_ACTION_RESULT_FAIL;
+tapi_condition(free_action_fail, ...) {
+    return E_TAPI_CONDITION_FAIL;
 }
 
 tapi_test(test_target_function_free_fail) {

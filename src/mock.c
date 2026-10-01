@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-09-09
+ * @date 2026-09-30 
  */
 #include <tapi/mock.h>
 
@@ -105,7 +105,7 @@ tapi_make_auto_mock(void* orig, const char* target_name, void* mocked, \
     mock->data.info.autostub = 0x0;
     mock->data.info.condition = condition;
     mock->data.info.set_errno = set_errno;
-    mock->data.info.autostub = find_auto(mock->target);
+    mock->data.info.autostub = find_auto(target_name);
     return mock;
 };
 #endif
