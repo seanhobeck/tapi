@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-03
+ * @date 2026-10-19
  */
 #include <tapi/tapi.h>
 
@@ -26,8 +26,6 @@
 #define TEST_NOINLINE __attribute__((noinline))
 #endif
 
-/*! -----------------tested functions------------------ !*/
-
 TEST_NOINLINE int 
 add(int a, int b) {
     return a + b;
@@ -46,8 +44,6 @@ targ_function() {
     d = sub(d, 11);
     return d + c;
 }
-
-/*! -----------------------tests--------------------- !*/
 
 tapi_stub_return_int(stub_add, 2);
 
@@ -88,8 +84,6 @@ tapi_test(test_target_sub_2) {
     tapi_assert(retval == 13);
     return E_TAPI_TEST_RESULT_PASSED;
 }
-
-/*! ----------------------==---------------------- !*/
 
 #ifndef _WIN32
 int main() {

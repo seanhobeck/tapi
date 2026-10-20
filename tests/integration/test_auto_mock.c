@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-09-29
+ * @date 2026-10-19
  */
 #include <tapi/tapi.h>
 
@@ -29,8 +29,6 @@
 #define TEST_NOINLINE __attribute__((noinline))
 #endif
 
-/*! -----------------tested functions------------------ !*/
-
 TEST_NOINLINE int
 _target_function(int x) {
     void* a = calloc(1u, x);
@@ -46,8 +44,6 @@ _target_function_2(int x) {
     free(mem);
     return mem;
 }
-
-/*! ----------------------==---------------------- !*/
 
 tapi_condition(calloc_action_fail, ...) {
     return E_TAPI_CONDITION_FAIL;

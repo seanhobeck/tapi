@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-09-17
+ * @date 2026-10-19
  */
 #include "auto.h"
 
@@ -558,15 +558,12 @@ void*
 stub_calloc(size_t nmemb, size_t size) {
     tapi_autostub_t autostub = autostub_table[1u]; /* get the calloc autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, nmemb, size);
         if (result == E_TAPI_CONDITION_FAIL) {
-            /* regular fail on calloc, if set_errno then ENOMEM... */
             if (autostub.set_errno) errno = ENOMEM;
             return 0x0;
         }
     }
-    /* proceed as per usual. */
     return calloc(nmemb, size);
 };
 
@@ -575,14 +572,11 @@ void
 stub_free(void* ptr) {
     tapi_autostub_t autostub = autostub_table[2u]; /* get the free autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, ptr);
         if (result == E_TAPI_CONDITION_FAIL) {
-            /* regular fail on free... */
             return;
         }
     }
-    /* proceed as per usual. */
     free(ptr);
 };
 
@@ -591,15 +585,12 @@ void*
 stub_realloc(void* ptr, size_t size) {
     tapi_autostub_t autostub = autostub_table[3u]; /* get the realloc autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, ptr, size);
         if (result == E_TAPI_CONDITION_FAIL) {
-            /* regular fail on realloc, if set_errno then ENOMEM... */
             if (autostub.set_errno) errno = ENOMEM;
             return 0x0;
         }
     }
-    /* proceed as per usual. */
     return realloc(ptr, size);
 };
 
@@ -608,11 +599,9 @@ size_t
 stub_strlen(const char* s) {
     tapi_autostub_t autostub = autostub_table[4u]; /* get the strlen autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, s);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return strlen(s);
 };
 
@@ -621,11 +610,9 @@ int
 stub_strcmp(const char* s1, const char* s2) {
     tapi_autostub_t autostub = autostub_table[5u]; /* get the strcmp autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, s1, s2);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return strcmp(s1, s2);
 };
 
@@ -634,11 +621,9 @@ int
 stub_strncmp(const char* s1, const char* s2, size_t n) {
     tapi_autostub_t autostub = autostub_table[6u]; /* get the strncmp autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, s1, s2, n);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return strncmp(s1, s2, n);
 };
 
@@ -647,11 +632,9 @@ char*
 stub_strcpy(const char* s1, const char* s2) {
     tapi_autostub_t autostub = autostub_table[7u]; /* get the strcpy autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, s1, s2);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return strcpy(s1, s2);
 };
 
@@ -660,11 +643,9 @@ char*
 stub_strncpy(const char* s1, const char* s2, size_t n) {
     tapi_autostub_t autostub = autostub_table[8u]; /* get the strncpy autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, s1, s2, n);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return strncpy(s1, s2, n);
 };
 
@@ -673,11 +654,9 @@ void*
 stub_memcpy(void* dest, const void* src, size_t n)  {
     tapi_autostub_t autostub = autostub_table[9u]; /* get the memcpy autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, dest, src, n);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return memcpy(dest, src, n);
 };
 
@@ -686,11 +665,9 @@ void*
 stub_memmove(void* dest, const void* src, size_t n) {
     tapi_autostub_t autostub = autostub_table[10u]; /* get the memmove autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, dest, src, n);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return memmove(dest, src, n);
 };
 
@@ -699,11 +676,9 @@ void*
 stub_memset(void* s, int c, size_t n) {
     tapi_autostub_t autostub = autostub_table[11u]; /* get the memset autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, s, c, n);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return memset(s, c, n);
 };
 
@@ -714,14 +689,12 @@ stub_printf(const char* format, ...) {
     va_list list;
     va_start(list, format);
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, format, list);
         if (result == E_TAPI_CONDITION_FAIL) {
             va_end(list);
             return 0x0;
         }
     }
-    /* proceed as per usual. */
     int retval = vprintf(format, list);
     va_end(list);
     return retval;
@@ -734,14 +707,12 @@ stub_fprintf(FILE* stream, const char* format, ...) {
     va_list list;
     va_start(list, format);
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, stream, format, list);
         if (result == E_TAPI_CONDITION_FAIL) {
             va_end(list);
             return 0x0;
         }
     }
-    /* proceed as per usual. */
     int retval = vfprintf(stream, format, list);
     va_end(list);
     return retval;
@@ -754,14 +725,12 @@ stub_sprintf(char* str, const char* format, ...) {
     va_list list;
     va_start(list, format);
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, str, format, list);
         if (result == E_TAPI_CONDITION_FAIL) {
             va_end(list);
             return 0x0;
         }
     }
-    /* proceed as per usual. */
     int retval = vsprintf(str, format, list);
     va_end(list);
     return retval;
@@ -774,14 +743,12 @@ stub_snprintf(char* str, size_t size, const char* format, ...) {
     va_list list;
     va_start(list, format);
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, str, size, format, list);
         if (result == E_TAPI_CONDITION_FAIL) {
             va_end(list);
             return 0x0;
         }
     }
-    /* proceed as per usual. */
     int retval = vsnprintf(str, size, format, list);
     va_end(list);
     return retval;
@@ -792,11 +759,9 @@ int
 stub_vsprintf(char* str, const char* format, va_list ap)  {
     tapi_autostub_t autostub = autostub_table[16u]; /* get the vsprintf autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, str, format, ap);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return vsprintf(str, format, ap);
 };
 
@@ -805,11 +770,9 @@ FILE*
 stub_fopen(const char* filename, const char* mode) {
     tapi_autostub_t autostub = autostub_table[17u]; /* get the fopen autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, filename, mode);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return fopen(filename, mode);
 };
 
@@ -818,11 +781,9 @@ FILE*
 stub_freopen(const char* filename, const char* mode, FILE* stream) {
     tapi_autostub_t autostub = autostub_table[18u]; /* get the freopen autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, filename, mode, stream);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return freopen(filename, mode, stream);
 };
 
@@ -831,11 +792,9 @@ size_t
 stub_fread(void* ptr, size_t size, size_t nmemb, FILE* stream) {
     tapi_autostub_t autostub = autostub_table[19u]; /* get the fread autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, ptr, size, nmemb, stream);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return fread(ptr, size, nmemb, stream);
 };
 
@@ -844,11 +803,9 @@ size_t
 stub_fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream) {
     tapi_autostub_t autostub = autostub_table[20u]; /* get the fwrite autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, ptr, size, nmemb, stream);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return fwrite(ptr, size, nmemb, stream);
 };
 
@@ -857,11 +814,9 @@ int
 stub_fclose(FILE* stream)  {
     tapi_autostub_t autostub = autostub_table[21u]; /* get the fclose autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, stream);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return fclose(stream);
 };
 
@@ -870,11 +825,9 @@ time_t
 stub_time(time_t* tloc) {
     tapi_autostub_t autostub = autostub_table[22u]; /* get the time autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, tloc);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return time(tloc);
 };
 
@@ -883,11 +836,9 @@ int
 stub_rand(void) {
     tapi_autostub_t autostub = autostub_table[23u]; /* get the rand autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return rand();
 };
 
@@ -912,7 +863,6 @@ stub_open(const char* pathname, int flags, ...) {
         else result = autostub.condition(0x0, pathname, flags);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     if (mode != 0x0) return open(pathname, flags, mode);
     return open(pathname, flags);
 };
@@ -922,11 +872,9 @@ ssize_t
 stub_read(int fd, void* buf, size_t count)  {
     tapi_autostub_t autostub = autostub_table[25u]; /* get the read autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, fd, buf, count);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return read(fd, buf, count);
 };
 
@@ -935,11 +883,9 @@ ssize_t
 stub_write(int fd, const void* buf, size_t count) {
     tapi_autostub_t autostub = autostub_table[26u]; /* get the write autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, fd, buf, count);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return write(fd, buf, count);
 };
 
@@ -948,11 +894,9 @@ int
 stub_close(int fd) {
     tapi_autostub_t autostub = autostub_table[27u]; /* get the close autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, fd);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return close(fd);
 };
 
@@ -961,11 +905,9 @@ char*
 stub_getenv(const char* name) {
     tapi_autostub_t autostub = autostub_table[28u]; /* get the getenv autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, name);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return getenv(name);
 };
 
@@ -974,11 +916,9 @@ pid_t
 stub_getpid(void) {
     tapi_autostub_t autostub = autostub_table[29u]; /* get the getpid autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0);
         if (result == E_TAPI_CONDITION_FAIL) return 0x0;
     }
-    /* proceed as per usual. */
     return getpid();
 };
 #else
@@ -987,11 +927,9 @@ errno_t
 stub_strcpy_s(char* dest, rsize_t dest_size, const char* src) {
     tapi_autostub_t autostub = autostub_table[24u]; /* get the strcpy_s autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, dest, dest_size, src);
         if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
     }
-    /* proceed as per usual. */
     return strcpy_s(dest, dest_size, src);
 };
 
@@ -1001,11 +939,9 @@ stub_strncpy_s(char* dest, size_t num_elems, \
     const char* src, size_t count) {
     tapi_autostub_t autostub = autostub_table[25u]; /* get the strncpy_s autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, dest, dest_size, src);
         if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
     }
-    /* proceed as per usual. */
     return strncpy_s(dest, num_elems, src, count);
 };
 
@@ -1015,11 +951,9 @@ stub_memcpy_s(void* dest, size_t dest_size, \
     const void* src, size_t count) {
     tapi_autostub_t autostub = autostub_table[26u]; /* get the memcpy_s autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, dest, dest_size, src, count);
         if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
     }
-    /* proceed as per usual. */
     return memcpy_s(dest, dest_size, src, count);
 };
 
@@ -1029,11 +963,9 @@ stub_memmove_s(void* dest, size_t num_elems, \
     const void* src, size_t count) {
     tapi_autostub_t autostub = autostub_table[27u]; /* get the memmove_s autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, dest, num_elems, src, count);
         if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
     }
-    /* proceed as per usual. */
     return memmove_s(dest, num_elems, src, count);
 };
 
@@ -1044,14 +976,12 @@ stub_printf_s(const char* format, ...) {
     va_list list;
     va_start(list, format);
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, format, list);
         if (result == E_TAPI_CONDITION_FAIL) {
             va_end(list);
             return 0x0;
         }
     }
-    /* proceed as per usual. */
     int retval = vprintf_s(format, list);
     va_end(list);
     return retval;
@@ -1064,14 +994,12 @@ stub_fprintf_s(FILE* stream, const char* format, ...)  {
     va_list list;
     va_start(list, format);
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, stream, format, list);
         if (result == E_TAPI_CONDITION_FAIL) {
             va_end(list);
             return 0x0;
         }
     }
-    /* proceed as per usual. */
     int retval = vfprintf_s(stream, format, list);
     va_end(list);
     return retval;
@@ -1085,14 +1013,12 @@ stub_sprintf_s(char* dest, size_t dest_size, \
     va_list list;
     va_start(list, format);
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, dest, dest_size, format, list);
         if (result == E_TAPI_CONDITION_FAIL) {
             va_end(list);
             return 0x0;
         }
     }
-    /* proceed as per usual. */
     int retval = vsprintf_s(dest, dest_size, format, list);
     va_end(list);
     return retval;
@@ -1106,7 +1032,6 @@ stub_snprintf_s(char* dest, size_t dest_size, \
     va_list list;
     va_start(list, format);
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, dest, dest_size, \
             count, format, list);
         if (result == E_TAPI_CONDITION_FAIL) {
@@ -1114,7 +1039,6 @@ stub_snprintf_s(char* dest, size_t dest_size, \
             return 0x0;
         }
     }
-    /* proceed as per usual. */
     int retval = vsprintf_s(dest, dest_size, count, format, list);
     va_end(list);
     return retval;
@@ -1126,7 +1050,6 @@ stub_vsprintf_s(char* dest, size_t num_elems, \
     const char* format, va_list ap) {
     tapi_autostub_t autostub = autostub_table[32u]; /* get the vsprintf_s autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, dest, num_elems, \
             format, ap);
         if (result == E_TAPI_CONDITION_FAIL) {
@@ -1134,7 +1057,6 @@ stub_vsprintf_s(char* dest, size_t num_elems, \
             return 0x0;
         }
     }
-    /* proceed as per usual. */
     return vsprintf_s(dest, num_elems, format, ap);
 };
 
@@ -1144,7 +1066,6 @@ stub_sopen_s(int* pfh, const char* filename, \
     int oflag, int shflag, int pmode) {
     tapi_autostub_t autostub = autostub_table[33u]; /* get the sopen_s autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, pfh, filename, oflag, shflag, pmode);
         if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
     }
@@ -1158,11 +1079,9 @@ stub_fopen_s(FILE** stream, const char* filename, \
     const char* mode) {
     tapi_autostub_t autostub = autostub_table[34u]; /* get the fopen_s autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, stream, filename, mode);
         if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
     }
-    /* proceed as per usual. */
     return fopen_s(stream, filename, mode);
 };
 
@@ -1172,11 +1091,9 @@ stub_freopen_s(FILE** stream, const char* filename, \
     const char* mode, FILE* old_stream) {
     tapi_autostub_t autostub = autostub_table[35u]; /* get the freopen_s autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, stream, filename, mode, old_stream);
         if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
     }
-    /* proceed as per usual. */
     return freopen_s(stream, filename, mode, old_stream);
 };
 
@@ -1185,11 +1102,9 @@ int
 stub__read(const int fd, void* buffer, const unsigned int buffer_size) {
     tapi_autostub_t autostub = autostub_table[36u]; /* get the _read autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, fd, buffer, buffer_size);
         if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
     }
-    /* proceed as per usual. */
     return _read(fd, buffer, buffer_size);
 };
 
@@ -1199,12 +1114,10 @@ stub_fread_s(void* buffer, size_t buffer_size, \
     size_t element_size, size_t count, FILE* stream) {
     tapi_autostub_t autostub = autostub_table[37u]; /* get the fopen_s autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, buffer, buffer_size, \
             element_size, count, stream);
         if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
     }
-    /* proceed as per usual. */
     return fread_s(buffer, buffer_size, element_size, count, stream);
 };
 
@@ -1213,11 +1126,9 @@ int
 stub__write(const int fd, void* buffer, const unsigned int count) {
     tapi_autostub_t autostub = autostub_table[38u]; /* get the _write autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, fd, buffer, count);
         if (result == E_TAPI_CONDITION_FAIL) return EBADF;
     }
-    /* proceed as per usual. */
     return _write(fd, buffer, count);
 };
 
@@ -1226,11 +1137,9 @@ int
 stub__close(const int fd) {
     tapi_autostub_t autostub = autostub_table[39u]; /* get the _close autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, fd);
         if (result == E_TAPI_CONDITION_FAIL) return -1;
     }
-    /* proceed as per usual. */
     return _close(fd);
 };
 
@@ -1239,16 +1148,12 @@ errno_t
 stub_rand_s(unsigned int* random_value) {
     tapi_autostub_t autostub = autostub_table[40u]; /* get the rand_s autostub. */
     if (autostub.condition != 0x0) {
-        /* if there exists a condition, we call it and from there check the result. */
         e_tapi_condition_result_t result = autostub.condition(0x0, random_value);
         if (result == E_TAPI_CONDITION_FAIL) return EINVAL;
     }
-    /* proceed as per usual. */
     return rand_s(random_value);
 };
 #endif
-
-
 #endif
 /*! ----------------------==---------------------- !*/
 

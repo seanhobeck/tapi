@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-03
+ * @date 2026-10-19
  */
 #include <tapi/tapi.h>
 
@@ -13,8 +13,6 @@
 #else
 #define TEST_NOINLINE __attribute__((noinline))
 #endif
-
-/*! -----------------tested functions------------------ !*/
 
 TEST_NOINLINE int 
 target_function(int x) {
@@ -145,9 +143,6 @@ conditional_caller(int use_target) {
     return 0;
 }
 
-/*! -----------------mock return values------------------ !*/
-
-#pragma region mock return values
 tapi_stub_return(tested_function_target, int, 0u);
 #if defined(__x86_64__) || defined(__i386__)  || defined(_M_AMD64) || defined(_M_IX86)
 tapi_stub_return(mock_asm_target_x86, int, 0x100);
@@ -159,9 +154,6 @@ tapi_stub_return(mock_asm_target_thumb, int, 0x100);
 #endif
 tapi_stub_return(mock_nested_target, int, 42);
 tapi_stub_return(mock_conditional_target, int, 999);
-#pragma endregion
-
-/*! -----------------------tests--------------------- !*/
 
 tapi_test(test_basic_mock){
     /* act & assert. */
@@ -213,8 +205,6 @@ tapi_test(test_conditional_mock){
     tapi_assert(result == 999);
     return E_TAPI_TEST_RESULT_PASSED;
 }
-
-/*! ----------------------==---------------------- !*/
 
 #ifndef _WIN32
 int main() {
