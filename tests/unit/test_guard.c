@@ -1,72 +1,26 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-20
+ * @date 2026-10-20
  */
-/*! uses int. module to be tested. */
 #include "int/guard.h"
-
-/*! uses tapi_context_t. */
-#include <tapi/tapi.h>
-
-/*! uses assert. */
-#include <assert.h>
-
-/*! uses size_t. */
-#include <stddef.h>
-
-/*! uses calloc, free. */
-#include <stdlib.h>
-
-/*! uses printf. */
-#include <stdio.h>
-
-/*! uses strcpy. */
-#include <string.h>
-
-/*! uses lnk_qr_thunk. */
 #include "int/lnk.h"
-
-/*! uses det_function_size. */
 #include "int/det.h"
-
-/*! noinline macro. */
-#ifdef _WIN32
-#define TEST_NOINLINE __declspec(noinline)
-#define TEST_ADDRESSOF(function) lnk_qr_thunk(&function)
-#else
-#define TEST_NOINLINE __attribute__((noinline))
-#define raddressof(function) &function
-#endif
-
-/*! uses VirtualQuery for windows. */
-#ifdef _WIN32
-#include <windows.h>
-#endif
-#ifdef __linux__
-#include <unistd.h>
-#endif
+#include "def.h"
 
 /*!
  * this is a function that results in a large amount of space allocated \
  *  due to casts, calculations and calls.
  */
-TEST_NOINLINE long
+test_noinline long
 some_function(int a, short b, char** c) {
     long d = a + b * **c;
     printf("this is the result of this function, %ld\n", d);
     short e = d * a;
     long f = (long)e - (long)&(*c);
     return f;
-};
-
-#ifndef _WIN32
-int main() {
-#else
-/*! for test_guard. */
-#include "test_guard.h"
+}
 
 int test_guard() {
-#endif
     /* guard_create unit tests. */
     printf("----src/int/guard.c: 'guard_create' unit tests----\n");
     tapi_context_t* context = calloc(1u, sizeof *context);
@@ -119,4 +73,4 @@ int test_guard() {
     }
 #endif
     return 0;
-};
+}

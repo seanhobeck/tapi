@@ -2,34 +2,9 @@
  * @author Sean Hobeck
  * @date 2026-10-19
  */
-#include <tapi/tapi.h>
+#include "def.h"
 
-/*! uses TAPI_ADD_TEST_AND_MOCK, etc... */
-#include <tapi/mock.h>
-
-/*! uses TAPI_CAPTURE. */
-#include <tapi/capture.h>
-
-/*! uses errno. */
-#include <errno.h>
-
-/*! uses free, calloc, malloc. */
-#include <stdlib.h>
-
-/*! uses strcmp. */
-#include <string.h>
-
-/*! uses snprintf. */
-#include <stdio.h>
-
-/*! noinline macro. */
-#ifdef _WIN32
-#define TEST_NOINLINE __declspec(noinline)
-#else
-#define TEST_NOINLINE __attribute__((noinline))
-#endif
-
-TEST_NOINLINE int
+test_noinline int
 _target_function(int x) {
     void* a = calloc(1u, x);
     if (a == 0x0) return -1;
@@ -37,7 +12,7 @@ _target_function(int x) {
     return 0;
 }
 
-TEST_NOINLINE void*
+test_noinline void*
 _target_function_2(int x) {
     void* mem = malloc(x);
     if (mem == 0x0) return 0x0;
@@ -123,11 +98,7 @@ tapi_test(test_target_function_free_fail) {
     return E_TAPI_TEST_RESULT_PASSED;
 }
 
-#ifndef _WIN32
-int main() {
-#else
 int test_auto_mock() {
-#endif
     tapi_context_t* context = tapi_init();
     tapi_add_test_and_auto_mock(context, "test_target_function_calloc_fail", \
         test_target_function_calloc_fail, _target_function, "calloc", 0x0, calloc_action_fail, false);

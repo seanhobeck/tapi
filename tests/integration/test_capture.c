@@ -1,23 +1,8 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-03
+ * @date 2026-10-20
  */
-#include <tapi/tapi.h>
-
-/*! uses tapi_capture_t, etc... */
-#include <tapi/capture.h>
-
-/*! uses tapi_sink_t, etc... */
-#include <tapi/sink.h>
-
-/*! uses printf. */
-#include <stdio.h>
-
-/*! uses strcmp, strlen. */
-#include <string.h>
-
-/*! uses calloc, free. */
-#include <stdlib.h>
+#include "def.h"
 
 tapi_test(test_capture_empty) {
     /* arrange + act. */
@@ -202,11 +187,7 @@ tapi_test(test_capture_whitespace) {
     return E_TAPI_TEST_RESULT_PASSED;
 }
 
-#ifndef _WIN32
-int main() {
-#else
 int test_capture() {
-#endif
     tapi_context_t* context = tapi_init();
     tapi_add_test(context, "test_empty", test_capture_empty);
     tapi_add_test(context, "test_single_line", test_capture_single_line);

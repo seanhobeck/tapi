@@ -1,25 +1,15 @@
 /**
  * @author Sean Hobeck
- * @date 2026-10-19
+ * @date 2026-10-20
  */
-#include <tapi/tapi.h>
+#include "def.h"
 
-/*! uses tapi_stub_return. */
-#include <tapi/mock.h>
-
-/*! noinline macro. */
-#ifdef _WIN32
-#define TEST_NOINLINE __declspec(noinline)
-#else
-#define TEST_NOINLINE __attribute__((noinline))
-#endif
-
-TEST_NOINLINE int 
+test_noinline int
 target_function(int x) {
     return ~x + 1u;
 }
 
-TEST_NOINLINE int 
+test_noinline int
 function() {
     int result1 = 0x10;
     int result2 = -0x1;
@@ -29,7 +19,7 @@ function() {
 }
 
 #if defined(__x86_64__) || defined(__i386__) || defined(_M_AMD64) || defined(_M_IX86)
-TEST_NOINLINE int 
+test_noinline int
 asm_target_x86(int x) {
     int result = 0;
 #ifndef _WIN32
@@ -46,7 +36,7 @@ asm_target_x86(int x) {
 #endif
 }
 
-TEST_NOINLINE int 
+test_noinline int
 asm_caller_x86() {
     int val = 0x42;
     /* direct call to test relative call detection and patching. */
@@ -54,7 +44,7 @@ asm_caller_x86() {
     return result + 1;
 }
 #elif defined(__aarch64__) || defined(_M_ARM64)
-TEST_NOINLINE int 
+test_noinline int
 asm_target_aarch64(int x) {
     int result;
 #ifndef _WIN32
@@ -68,14 +58,14 @@ asm_target_aarch64(int x) {
     return result;
 }
 
-TEST_NOINLINE int 
+test_noinline int
 asm_caller_aarch64() {
     int val = 0x42;
     int result = asm_target_aarch64(val);
     return result + 1;
 }
 #elif defined(__arm__) || defined(_M_ARM)
-TEST_NOINLINE int 
+test_noinline int
 asm_target_arm32(int x) {
     int result;
     __asm__ volatile(
@@ -86,7 +76,7 @@ asm_target_arm32(int x) {
     return result;
 }
 
-TEST_NOINLINE int 
+test_noinline int
 asm_caller_arm32() {
     int val = 0x42;
     int result = asm_target_arm32(val);
@@ -95,7 +85,7 @@ asm_caller_arm32() {
 
 
 __attribute__((target("thumb")))
-TEST_NOINLINE int 
+test_noinline int
 asm_target_thumb(int x) {
     int result;
     __asm__ volatile(
@@ -107,7 +97,7 @@ asm_target_thumb(int x) {
 }
 
 __attribute__((target("thumb")))
-TEST_NOINLINE int 
+test_noinline int
 asm_caller_thumb() {
     int val = 0x42;
     int result = asm_target_thumb(val);
@@ -115,27 +105,27 @@ asm_caller_thumb() {
 }
 #endif
 
-TEST_NOINLINE int 
+test_noinline int
 nested_target(int x) {
     return x * 2;
 }
 
-TEST_NOINLINE int 
+test_noinline int
 nested_middle(int x) {
     return nested_target(x) + 5;
 }
 
-TEST_NOINLINE int 
+test_noinline int
 nested_caller() {
     return nested_middle(10);
 }
 
-TEST_NOINLINE int 
+test_noinline int
 conditional_target(int x) {
     return x + 100;
 }
 
-TEST_NOINLINE int 
+test_noinline int
 conditional_caller(int use_target) {
     if (use_target) {
         return conditional_target(50);
@@ -206,11 +196,7 @@ tapi_test(test_conditional_mock){
     return E_TAPI_TEST_RESULT_PASSED;
 }
 
-#ifndef _WIN32
-int main() {
-#else
 int test_mock() {
-#endif
     /* basic test. */
     tapi_context_t* context = tapi_init();
     tapi_add_test_and_mock(context, "test_basic_mock", test_basic_mock, function, \

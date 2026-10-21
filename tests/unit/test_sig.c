@@ -1,27 +1,11 @@
 /**
  * @author Sean Hobeck
- * @date 2026-07-30
+ * @date 2026-10-20
  */
-/*! uses int. module to be tested. */
-#include "int/sig.h"
-
-/*! uses arch_t, get_arch. */
-#include "int/arch.h"
-
-/*! uses assert. */
-#include <assert.h>
-
-/*! uses size_t. */
-#include <stddef.h>
-
-/*! uses printf. */
-#include <stdio.h>
-
-/*! uses strcpy. */
-#include <string.h>
-
-/*! uses cs_insn. */
 #include <capstone/capstone.h>
+#include "int/sig.h"
+#include "int/arch.h"
+#include "def.h"
 
 /**
  * @brief test 'sig_compare' with an example cs_insn with a short mnemonic.
@@ -38,7 +22,7 @@ test_strcmp_short(csh handle) {
     assert(sig_compare(a, b));
     cs_free(b, 1);
     printf("correctly compared two strings without '?' of a short length!\n");
-};
+}
 
 /**
  * @brief test 'sig_compare' with an example cs_insn with a medium mnemonic.
@@ -55,7 +39,7 @@ test_strcmp_med(csh handle) {
     assert(sig_compare(a, b));
     cs_free(b, 1);
     printf("correctly compared two strings without '?' of a medium length!\n");
-};
+}
 
 /**
  * @brief test 'sig_compare' with an example cs_insn with a medium mnemonic and medium op_str.
@@ -72,7 +56,7 @@ test_strcmp_med_with_op(csh handle) {
     assert(sig_compare(a, b));
     cs_free(b, 1);
     printf("correctly compared two strings without '?' of a medium mnemonic and op_str length!\n");
-};
+}
 
 /**
  * @brief test 'sig_compare' with an example cs_insn with a long mnemonic.
@@ -89,7 +73,7 @@ test_strcmp_long(csh handle) {
     assert(sig_compare(a, b));
     cs_free(b, 1);
     printf("correctly compared two strings without '?' of a long length!\n");
-};
+}
 
 /**
  * @brief test 'sig_compare' with an example cs_insn with a long mnemonic and long op_str.
@@ -106,7 +90,7 @@ test_strcmp_long_with_op(csh handle) {
     assert(sig_compare(a, b));
     cs_free(b, 1);
     printf("correctly compared two strings without '?' of a long mnemonic and op_str length!\n");
-};
+}
 
 /**
  * @brief test 'sig_compare' with an example cs_insn with a '?' in the mnemonic.
@@ -123,7 +107,7 @@ test_strcmp_mnemonic(csh handle) {
     assert(sig_compare(a, b));
     cs_free(b, 1);
     printf("correctly compared two strings with a '?' in the mnemonic!\n");
-};
+}
 
 /**
  * @brief test 'sig_compare' with an example cs_insn with a '?' in the mnemonic.
@@ -140,7 +124,7 @@ test_strcmp_mnemonic_min(csh handle) {
     assert(sig_compare(a, b));
     cs_free(b, 1);
     printf("correctly compared two strings with a min of 1 '?' in the mnemonic!\n");
-};
+}
 
 /**
  * @brief test 'sig_compare' with an example cs_insn with a '?' in the mnemonic.
@@ -157,7 +141,7 @@ test_strcmp_mnemonic_max(csh handle) {
     assert(sig_compare(a, b));
     cs_free(b, 1);
     printf("correctly compared two strings with a max of 8 '?' in the mnemonic!\n");
-};
+}
 
 /**
  * @brief test 'sig_compare' with an example cs_insn with a '?' in the op_str.
@@ -174,7 +158,7 @@ test_strcmp_op_str(csh handle) {
     assert(sig_compare(a, b));
     cs_free(b, 1);
     printf("correctly compared two strings with a '?' in the op_str!\n");
-};
+}
 
 /**
  * @brief test 'sig_compare' with an example cs_insn with a '?' in the op_str.
@@ -191,7 +175,7 @@ test_strcmp_op_str_min(csh handle) {
     assert(sig_compare(a, b));
     cs_free(b, 1);
     printf("correctly compared two strings with a min of 1 '?' in the op_str!\n");
-};
+}
 
 /**
  * @brief test 'sig_compare' with an example cs_insn with a '?' in the op_str.
@@ -208,7 +192,7 @@ test_strcmp_op_str_max(csh handle) {
     assert(sig_compare(a, b));
     cs_free(b, 1);
     printf("correctly compared two strings with a min of 8 '?' in the op_str!\n");
-};
+}
 
 /*! @note below are some tests for the specific common sequences for armhf or aarch64. */
 
@@ -224,7 +208,7 @@ test_armhf_chk_1(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_PROLOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (push: 1) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -238,7 +222,7 @@ test_armhf_chk_2(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_PROLOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (push: 2) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -252,7 +236,7 @@ test_armhf_chk_3(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_PROLOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (push: 3) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -266,7 +250,7 @@ test_armhf_chk_4(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_PROLOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (push: 4) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -280,7 +264,7 @@ test_armhf_chk_5(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_PROLOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (sub: 1) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -294,7 +278,7 @@ test_armhf_chk_6(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_PROLOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (sub: 2) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -308,7 +292,7 @@ test_armhf_chk_7(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_UNRECOGNIZED);
     cs_free(insn, 1);
     printf("correctly checked fake armhf (sub: 3?) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -322,7 +306,7 @@ test_armhf_chk_8(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_PROLOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (stmdb: 1) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -336,7 +320,7 @@ test_armhf_chk_9(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_PROLOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (stmdb: 2) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -350,7 +334,7 @@ test_armhf_chk_10(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_PROLOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (stmdb: 3) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -364,7 +348,7 @@ test_armhf_chk_11(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_PROLOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (stmdb: 4) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -378,7 +362,7 @@ test_armhf_chk_12(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_EPILOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (pop: 1) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -392,7 +376,7 @@ test_armhf_chk_13(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_EPILOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (pop: 2) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -406,7 +390,7 @@ test_armhf_chk_14(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_EPILOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (pop: 3) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -420,7 +404,7 @@ test_armhf_chk_15(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_EPILOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (pop: 4) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -434,7 +418,7 @@ test_armhf_chk_16(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_EPILOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (add: 1) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -448,7 +432,7 @@ test_armhf_chk_17(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_UNRECOGNIZED);
     cs_free(insn, 1);
     printf("correctly checked fake armhf (add: 2?) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -462,7 +446,7 @@ test_armhf_chk_18(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_EPILOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (ldmia: 1) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -476,7 +460,7 @@ test_armhf_chk_19(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_EPILOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (ldmia: 2) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -490,7 +474,7 @@ test_armhf_chk_20(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_EPILOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (ldmia: 3) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -504,7 +488,7 @@ test_armhf_chk_21(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_EPILOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (ldmia: 4) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -518,7 +502,7 @@ test_armhf_chk_22(csh handle) {
     assert(sig_armhf_chk(insn) == SIG_ARMHF_EPILOGUE);
     cs_free(insn, 1);
     printf("correctly checked armhf (ldmia: 5) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -532,7 +516,7 @@ test_aarch64_chk_1(csh handle) {
     assert(sig_aarch64_chk(insn) == SIG_AARCH64_PROLOGUE);
     cs_free(insn, 1);
     printf("correctly checked aarch64 (sub: 1) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -546,7 +530,7 @@ test_aarch64_chk_2(csh handle) {
     assert(sig_aarch64_chk(insn) == SIG_AARCH64_PROLOGUE);
     cs_free(insn, 1);
     printf("correctly checked aarch64 (sub: 2) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -560,7 +544,7 @@ test_aarch64_chk_3(csh handle) {
     assert(sig_aarch64_chk(insn) == SIG_AARCH64_PROLOGUE);
     cs_free(insn, 1);
     printf("correctly checked aarch64 (stp: 1) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -574,7 +558,7 @@ test_aarch64_chk_4(csh handle) {
     assert(sig_aarch64_chk(insn) == SIG_AARCH64_PROLOGUE);
     cs_free(insn, 1);
     printf("correctly checked aarch64 (stp: 2) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -588,7 +572,7 @@ test_aarch64_chk_5(csh handle) {
     assert(sig_aarch64_chk(insn) == SIG_AARCH64_PROLOGUE);
     cs_free(insn, 1);
     printf("correctly checked aarch64 (paciasp) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -602,7 +586,7 @@ test_aarch64_chk_6(csh handle) {
     assert(sig_aarch64_chk(insn) == SIG_AARCH64_EPILOGUE);
     cs_free(insn, 1);
     printf("correctly checked aarch64 (add: 1) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -616,7 +600,7 @@ test_aarch64_chk_7(csh handle) {
     assert(sig_aarch64_chk(insn) == SIG_AARCH64_EPILOGUE);
     cs_free(insn, 1);
     printf("correctly checked aarch64 (add: 2) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -630,7 +614,7 @@ test_aarch64_chk_8(csh handle) {
     assert(sig_aarch64_chk(insn) == SIG_AARCH64_EPILOGUE);
     cs_free(insn, 1);
     printf("correctly checked aarch64 (ldp: 1) instruction!\n");
-};
+}
 
 /* ... */
 void
@@ -644,16 +628,9 @@ test_aarch64_chk_9(csh handle) {
     assert(sig_aarch64_chk(insn) == SIG_AARCH64_EPILOGUE);
     cs_free(insn, 1);
     printf("correctly checked aarch64 (autiasp) instruction!\n");
-};
-
-#ifndef _WIN32
-int main() {
-#else
-/*! for test_sig. */
-#include "test_sig.h"
+}
 
 int test_sig() {
-#endif
     /* open with architecture etc... */
     cs_arch arch;
     cs_mode mode;
@@ -735,4 +712,4 @@ int test_sig() {
     /* close the capstone engine. */
     cs_close(&handle);
     return 0;
-};
+}

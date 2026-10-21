@@ -1,37 +1,15 @@
 /**
  * @author Sean Hobeck
- * @date 2026-10-19
+ * @date 2026-10-20
  */
-#include <tapi/tapi.h>
+#include "def.h"
 
-/*! uses TAPI_ADD_TEST_AND_MOCK, etc... */
-#include <tapi/mock.h>
-
-/*! uses TAPI_CAPTURE. */
-#include <tapi/capture.h>
-
-/*! uses free, calloc, malloc. */
-#include <stdlib.h>
-
-/*! uses strcmp. */
-#include <string.h>
-
-/*! uses snprintf. */
-#include <stdio.h>
-
-/*! noinline macro. */
-#ifdef _WIN32
-#define TEST_NOINLINE __declspec(noinline)
-#else
-#define TEST_NOINLINE __attribute__((noinline))
-#endif
-
-TEST_NOINLINE int 
+test_noinline int
 add(int a, int b) {
     return a + b;
 }
 
-TEST_NOINLINE int 
+test_noinline int
 sub(int a, int b) {
     return a - b;
 }
@@ -85,11 +63,7 @@ tapi_test(test_target_sub_2) {
     return E_TAPI_TEST_RESULT_PASSED;
 }
 
-#ifndef _WIN32
-int main() {
-#else
 int test_special_mock() {
-#endif
     tapi_context_t* context = tapi_init();
     tapi_add_test_and_special_mock(context, "test_target_add_call_1", \
         test_target_add_1, targ_function, add, stub_add, 1);

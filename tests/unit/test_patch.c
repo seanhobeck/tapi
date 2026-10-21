@@ -1,63 +1,38 @@
 /**
  * @author Sean Hobeck
- * @date 2026-08-20
+ * @date 2026-10-20
  */
-/*! uses int. module to be tested. */
 #include "int/patch.h"
-
-/*! uses arch_t, get_arch. */
 #include "int/arch.h"
-
-/*! uses assert. */
-#include <assert.h>
-
-/*! uses int32_t. */
-#include <stdint.h>
-
-/*! uses printf. */
-#include <stdio.h>
-
-/*! uses free. */
-#include <stdlib.h>
-
-/*! uses lnk_qr_thunk. */
 #include "int/lnk.h"
-
-/*! noinline macro. */
-#ifdef _WIN32
-#define TEST_NOINLINE __declspec(noinline)
-#define TEST_ADDRESSOF(function) lnk_qr_thunk(&function)
-#else
-#define TEST_NOINLINE __attribute__((noinline))
-#define TEST_ADDRESSOF(function) &function
-#endif
+#include "def.h"
 
 /*! function we search for. */
-TEST_NOINLINE int
+test_noinline int
 #ifdef _WIN32
 __cdecl
 #endif
 add(int a, int b) {
     return a + b;
-};
+}
 
 /*! stub/mock replacement for add. */
-TEST_NOINLINE int
+test_noinline int
 add_stub(int a, int b) {
     return a * b;
 }
 
 /*! example function to patch. */
-TEST_NOINLINE void
+test_noinline void
 function() {
     int a = 200;
     int b = 300;
     int c = add(a, b);
     printf("%d\n", c);
-};
+}
 
 /*! another example function to patch. */
-TEST_NOINLINE void
+test_noinline void
 function2() {
     int a = getc(stdin);
     int b = getchar();
@@ -67,7 +42,7 @@ function2() {
 }
 
 /*! another example function to patch (this time with inline assembly). */
-TEST_NOINLINE void
+test_noinline void
 function3() {
     int a = getchar();
     int b = getchar();
@@ -136,15 +111,15 @@ function3() {
 void
 test_f1_success() {
     /* arrange. */
-    det_call_t* call = det_call_target(TEST_ADDRESSOF(function), &add);
+    det_call_t* call = det_call_target(test_addressof(function), &add);
     tapi_context_t* context = tapi_init();
 
     /* act. */
     int32_t result = patch_call_target(context, call, &add_stub);
 
     /* assert. */
-    det_call_t* call2 = det_call_target(TEST_ADDRESSOF(function), &add);
-    det_call_t* call3 = det_call_target(TEST_ADDRESSOF(function), &add_stub);
+    det_call_t* call2 = det_call_target(test_addressof(function), &add);
+    det_call_t* call3 = det_call_target(test_addressof(function), &add_stub);
     assert(result == 0x1);
     assert(call2 == 0x0);
     assert(call3 != 0x0);
@@ -160,18 +135,18 @@ test_f1_success() {
 void
 test_f2_success() {
     /* arrange. */
-    det_call_t* call = det_call_target(TEST_ADDRESSOF(function2), &add);
+    det_call_t* call = det_call_target(test_addressof(function2), &add);
     tapi_context_t* context = tapi_init();
 
     /* act. */
     int32_t result = patch_call_target(context, call, &add_stub);
-    det_call_t* call2 = det_call_target(TEST_ADDRESSOF(function2), &add);
+    det_call_t* call2 = det_call_target(test_addressof(function2), &add);
     int32_t result2 = patch_call_target(context, call2, &add_stub);
 
     /* assert. */
-    det_call_t* call3 = det_call_target(TEST_ADDRESSOF(function2), &add);
-    det_call_t* call4 = det_call_target(TEST_ADDRESSOF(function2), &add_stub);
-    det_call_t* call5 = det_call_target(TEST_ADDRESSOF(function2), &add_stub);
+    det_call_t* call3 = det_call_target(test_addressof(function2), &add);
+    det_call_t* call4 = det_call_target(test_addressof(function2), &add_stub);
+    det_call_t* call5 = det_call_target(test_addressof(function2), &add_stub);
     assert(result == 0x1);
     assert(result2 == 0x1);
     assert(call3 == 0x0);
@@ -191,15 +166,15 @@ test_f2_success() {
 void
 test_f3_success() {
     /* arrange. */
-    det_call_t* call = det_call_target(TEST_ADDRESSOF(function3), &add);
+    det_call_t* call = det_call_target(test_addressof(function3), &add);
     tapi_context_t* context = tapi_init();
 
     /* act. */
     int32_t result = patch_call_target(context, call, &add_stub);
 
     /* assert. */
-    det_call_t* call2 = det_call_target(TEST_ADDRESSOF(function3), &add);
-    det_call_t* call3 = det_call_target(TEST_ADDRESSOF(function3), &add_stub);
+    det_call_t* call2 = det_call_target(test_addressof(function3), &add);
+    det_call_t* call3 = det_call_target(test_addressof(function3), &add_stub);
     assert(result == 0x1);
     assert(call2 == 0x0);
     assert(call3 != 0x0);
