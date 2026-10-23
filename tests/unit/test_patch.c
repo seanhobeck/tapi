@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-10-20
+ * @date 2026-10-23
  */
 #include "int/patch.h"
 #include "int/arch.h"
@@ -9,9 +9,6 @@
 
 /*! function we search for. */
 test_noinline int
-#ifdef _WIN32
-__cdecl
-#endif
 add(int a, int b) {
     return a + b;
 }
@@ -184,14 +181,7 @@ test_f3_success() {
     printf("successfully replaced a singular call within a inline assembly function!\n\n");
 }
 
-#ifndef _WIN32
 int main() {
-#else
-/*! for test_patch. */
-#include "test_patch.h"
-
-int test_patch() {
-#endif
 #ifdef __amd64__
     printf("----src/int/patch.c: 'patch_call_target'(amd64) partial tests----\n");
 #endif

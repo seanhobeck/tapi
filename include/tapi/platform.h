@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-09-05
+ * @date 2026-10-23
  */
 #ifndef TAPI_PLATFORM_H
 #define TAPI_PLATFORM_H
@@ -22,16 +22,19 @@
 #define TAPI_EXPORT __attribute__((visibility("default")))
 #define TAPI
 #define TAPI_HIDDEN __attribute__((visibility("hidden")))
+#define TAPI_MAYBE_UNUSED __attribute__((__unused__))
 #else
 /* if we are using msvc toolchain (winapi). */
 #if defined(_MSC_VER)
 #define TAPI_EXPORT __declspec(dllexport)
 #define TAPI __cdecl
 #define TAPI_HIDDEN
+#define TAPI_MAYBE_UNUSED
 #else
 #define TAPI_EXPORT
 #define TAPI
 #define TAPI_HIDDEN
+#define TAPI_MAYBE_UNUSED
 #endif
 #endif
 

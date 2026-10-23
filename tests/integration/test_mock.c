@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-10-20
+ * @date 2026-10-23
  */
 #include "def.h"
 
@@ -196,7 +196,7 @@ tapi_test(test_conditional_mock){
     return E_TAPI_TEST_RESULT_PASSED;
 }
 
-int test_mock() {
+int main() {
     /* basic test. */
     tapi_context_t* context = tapi_init();
     tapi_add_test_and_mock(context, "test_basic_mock", test_basic_mock, function, \

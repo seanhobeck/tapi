@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-10-20
+ * @date 2026-10-23
  */
 #include "def.h"
 
@@ -187,7 +187,7 @@ tapi_test(test_capture_whitespace) {
     return E_TAPI_TEST_RESULT_PASSED;
 }
 
-int test_capture() {
+int main() {
     tapi_context_t* context = tapi_init();
     tapi_add_test(context, "test_empty", test_capture_empty);
     tapi_add_test(context, "test_single_line", test_capture_single_line);

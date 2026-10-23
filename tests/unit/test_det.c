@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-10-20
+ * @date 2026-10-23
  */
 #include "int/det.h"
 #include "def.h"
@@ -343,7 +343,7 @@ test_ct_recursive_itself(void) {
     printf("correctly determined a relative call to self at: 0x%p!\n\n", target->call);
 }
 
-int test_det() {
+int main() {
     /* det_function_size unit tests (some arch rely on src/int/sig). */
     printf("----src/int/det.c: 'det_function_size' unit tests----\n");
     test_fs_general();

@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-10-19
+ * @date 2026-10-23
  */
 #include "def.h"
 
@@ -98,7 +98,7 @@ tapi_test(test_target_function_free_fail) {
     return E_TAPI_TEST_RESULT_PASSED;
 }
 
-int test_auto_mock() {
+int main() {
     tapi_context_t* context = tapi_init();
     tapi_add_test_and_auto_mock(context, "test_target_function_calloc_fail", \
         test_target_function_calloc_fail, _target_function, "calloc", 0x0, calloc_action_fail, false);

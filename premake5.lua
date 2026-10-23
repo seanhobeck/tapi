@@ -53,177 +53,197 @@ project "tapi"
 
 	filter {}
 
-project "tapi-integration"
-	kind "ConsoleApp"
-	language "C"
-	cdialect "C17"
-	location "vs"
+-- creating our unit, integration and smoke tests, we need a executable for each one.
+local unit_tests = os.matchfiles("tests/unit/test_*.c")
+local integration_tests = os.matchfiles("tests/integration/test_*.c")
+local smoke_tests = os.matchfiles("tests/smoke/test_*.c")
 
-	files {
-		"tests/integration/**.c",
-		"tests/integration/**.h"
-	}
+for _, test in ipairs(unit_tests) do
+    test_name = path.getbasename(test)
 
-	includedirs {
-		"include",
-		"src",
-		"src/int",
-		"vendor/capstone/include"
-	}
+    -- create a project...
+    project "tapi-unit"
+    	kind "ConsoleApp"
+    	language "C"
+    	cdialect "C17"
+    	location "vs"
 
-	links {
-		"capstone",
-		"tapi"
-	}
+    	files {
+    		"tests/unit/**.c",
+    		"tests/unit/**.h",
+    		"src/int/det.c",
+    		"src/int/patch.c",
+    		"src/int/guard.c",
+    		"src/int/arch.c",
+    		"src/int/reloc.c",
+    		"src/int/sig.c",
+    		"src/int/map.c",
+    		"src/int/lnk.c",
+    		"src/dyna.c",
+    		"src/tapi.c",
+    		"src/mock.c",
+    		"src/capture.c",
+    		"src/sink.c"
+    	}
 
-	dependson {
-		"tapi"
-	}
+    	includedirs {
+    		"include",
+    		"src",
+    		"src/int",
+    		"tests/unit/",
+    		"vendor/capstone/include"
+    	}
 
-	buildoptions { "/experimental:c11atomics" }
-	defines { "_CRT_SECURE_NO_WARNINGS" }
-	staticruntime "Off"
-	symbols "On"
-	optimize "Off"
-	runtime "Debug"
+    	links {
+    		"capstone"
+    	}
 
-	filter "platforms:Win32"
-		libdirs { 
-			"vendor/capstone/buildwin32/Release",
-			"bin/win32/%{cfg.buildcfg}"
-		}
-		targetdir "bin/win32/%{cfg.buildcfg}/tests/integration"
-		objdir "build/win32/%{cfg.buildcfg}/tests/integration"
-		postbuildcommands { 
-			"{COPYFILE} ../bin/win32/%{cfg.buildcfg}/tapi.dll %{cfg.targetdir}",
-			"{COPYFILE} ../bin/win32/%{cfg.buildcfg}/tapi.pdb %{cfg.targetdir}"
-		}
-	
-	filter "platforms:x86_64" 
-		libdirs { 
-			"vendor/capstone/buildwin64/Release",
-			"bin/win64/%{cfg.buildcfg}"
-		}
-		targetdir "bin/win64/%{cfg.buildcfg}/tests/integration"
-		objdir "build/win64/%{cfg.buildcfg}/tests/integration"
-		postbuildcommands { 
-			"{COPYFILE} ../bin/win64/%{cfg.buildcfg}/tapi.dll %{cfg.targetdir}",
-			"{COPYFILE} ../bin/win64/%{cfg.buildcfg}/tapi.pdb %{cfg.targetdir}"
-		}
+    	buildoptions { "/experimental:c11atomics" }
+    	defines { "_CRT_SECURE_NO_WARNINGS" }
+    	staticruntime "Off"
+    	symbols "On"
+    	optimize "Off"
+    	runtime "Debug"
 
-	filter {}
+    	filter "platforms:Win32"
+    		libdirs { "vendor/capstone/buildwin32/Release" }
+    		targetdir "bin/win32/%{cfg.buildcfg}/tests/unit"
+    		objdir "build/win32/%{cfg.buildcfg}/tests/unit" .. test_name
 
-project "tapi-integration"
-	kind "ConsoleApp"
-	language "C"
-	cdialect "C17"
-	location "vs"
+    	filter "platforms:x86_64"
+    		libdirs { "vendor/capstone/buildwin64/Release" }
+    		targetdir "bin/win64/%{cfg.buildcfg}/tests/unit"
+    		objdir "build/win64/%{cfg.buildcfg}/tests/unit" .. test_name
 
-	files {
-		"tests/smoke/**.c",
-		"tests/smoke/**.h"
-	}
+    	filter {}
+end
 
-	includedirs {
-		"include",
-		"src",
-		"src/int",
-		"vendor/capstone/include"
-	}
+for _, test in ipairs(integration_tests) do
+    test_name = path.getbasename(test)
 
-	links {
-		"capstone",
-		"tapi"
-	}
+    -- create a project...
+    project (test_name)
+    	kind "ConsoleApp"
+    	language "C"
+    	cdialect "C17"
+    	location "vs"
 
-	dependson {
-		"tapi"
-	}
+    	files {
+    		test,
+    		"tests/integration/def.h"
+    	}
 
-	buildoptions { "/experimental:c11atomics" }
-	defines { "_CRT_SECURE_NO_WARNINGS" }
-	staticruntime "Off"
-	symbols "On"
-	optimize "Off"
-	runtime "Debug"
+    	includedirs {
+    		"include",
+    		"src",
+    		"src/int",
+    		"vendor/capstone/include"
+    	}
 
-	filter "platforms:Win32"
-		libdirs {
-			"vendor/capstone/buildwin32/Release",
-			"bin/win32/%{cfg.buildcfg}"
-		}
-		targetdir "bin/win32/%{cfg.buildcfg}/tests/smoke"
-		objdir "build/win32/%{cfg.buildcfg}/tests/smoke"
-		postbuildcommands {
-			"{COPYFILE} ../bin/win32/%{cfg.buildcfg}/tapi.dll %{cfg.targetdir}",
-			"{COPYFILE} ../bin/win32/%{cfg.buildcfg}/tapi.pdb %{cfg.targetdir}"
-		}
+    	links {
+    		"capstone",
+    		"tapi"
+    	}
 
-	filter "platforms:x86_64"
-		libdirs {
-			"vendor/capstone/buildwin64/Release",
-			"bin/win64/%{cfg.buildcfg}"
-		}
-		targetdir "bin/win64/%{cfg.buildcfg}/tests/smoke"
-		objdir "build/win64/%{cfg.buildcfg}/tests/smoke"
-		postbuildcommands {
-			"{COPYFILE} ../bin/win64/%{cfg.buildcfg}/tapi.dll %{cfg.targetdir}",
-			"{COPYFILE} ../bin/win64/%{cfg.buildcfg}/tapi.pdb %{cfg.targetdir}"
-		}
+    	dependson {
+    		"tapi"
+    	}
 
-	filter {}
+    	buildoptions { "/experimental:c11atomics" }
+    	defines { "_CRT_SECURE_NO_WARNINGS" }
+    	staticruntime "Off"
+    	symbols "On"
+    	optimize "Off"
+    	runtime "Debug"
 
-project "tapi-unit"
-	kind "ConsoleApp"
-	language "C"
-	cdialect "C17"
-	location "vs"
+    	filter "platforms:Win32"
+    		libdirs {
+    			"vendor/capstone/buildwin32/Release",
+    			"bin/win32/%{cfg.buildcfg}"
+    		}
+    		targetdir "bin/win32/%{cfg.buildcfg}/tests/integration/"
+    		objdir "build/win32/%{cfg.buildcfg}/tests/integration" .. test_name
+    		postbuildcommands {
+    			"{COPYFILE} ../bin/win32/%{cfg.buildcfg}/tapi.dll %{cfg.targetdir}",
+    			"{COPYFILE} ../bin/win32/%{cfg.buildcfg}/tapi.pdb %{cfg.targetdir}"
+    		}
 
-	files {
-		"tests/unit/**.c",
-		"tests/unit/**.h",
-		"src/int/det.c",
-		"src/int/patch.c",
-		"src/int/guard.c",
-		"src/int/arch.c",
-		"src/int/reloc.c",
-		"src/int/sig.c",
-		"src/int/map.c",
-		"src/int/lnk.c",
-		"src/dyna.c",
-		"src/tapi.c",
-		"src/mock.c",
-		"src/capture.c",
-		"src/sink.c"
-	}
+    	filter "platforms:x86_64"
+    		libdirs {
+    			"vendor/capstone/buildwin64/Release",
+    			"bin/win64/%{cfg.buildcfg}"
+    		}
+    		targetdir "bin/win64/%{cfg.buildcfg}/tests/integration"
+    		objdir "build/win64/%{cfg.buildcfg}/tests/integration" .. test_name
+    		postbuildcommands {
+    			"{COPYFILE} ../bin/win64/%{cfg.buildcfg}/tapi.dll %{cfg.targetdir}",
+    			"{COPYFILE} ../bin/win64/%{cfg.buildcfg}/tapi.pdb %{cfg.targetdir}"
+    		}
 
-	includedirs {
-		"include",
-		"src",
-		"src/int",
-		"tests/unit/",
-		"vendor/capstone/include"
-	}
+    	filter {}
+end
 
-	links {
-		"capstone"
-	}
+for _, test in ipairs(smoke_tests) do
+    test_name = path.getbasename(test)
 
-	buildoptions { "/experimental:c11atomics" }
-	defines { "_CRT_SECURE_NO_WARNINGS" }
-	staticruntime "Off"
-	symbols "On"
-	optimize "Off"
-	runtime "Debug"
+    -- create a project...
+    project (test_name)
+    	kind "ConsoleApp"
+    	language "C"
+    	cdialect "C17"
+    	location "vs"
 
-	filter "platforms:Win32"
-		libdirs { "vendor/capstone/buildwin32/Release" }
-		targetdir "bin/win32/%{cfg.buildcfg}/tests/unit"
-		objdir "build/win32/%{cfg.buildcfg}/tests/unit"
-	
-	filter "platforms:x86_64" 
-		libdirs { "vendor/capstone/buildwin64/Release" }
-		targetdir "bin/win64/%{cfg.buildcfg}/tests/unit"
-		objdir "build/win64/%{cfg.buildcfg}/tests/unit"
+    	files {
+    		"tests/smoke/**.c",
+    		"tests/smoke/**.h"
+    	}
 
-	filter {}
+    	includedirs {
+    		"include",
+    		"src",
+    		"src/int",
+    		"vendor/capstone/include"
+    	}
+
+    	links {
+    		"capstone",
+    		"tapi"
+    	}
+
+    	dependson {
+    		"tapi"
+    	}
+
+    	buildoptions { "/experimental:c11atomics" }
+    	defines { "_CRT_SECURE_NO_WARNINGS" }
+    	staticruntime "Off"
+    	symbols "On"
+    	optimize "Off"
+    	runtime "Debug"
+
+    	filter "platforms:Win32"
+    		libdirs {
+    			"vendor/capstone/buildwin32/Release",
+    			"bin/win32/%{cfg.buildcfg}"
+    		}
+    		targetdir "bin/win32/%{cfg.buildcfg}/tests/smoke"
+    		objdir "build/win32/%{cfg.buildcfg}/tests/smoke" .. test_name
+    		postbuildcommands {
+    			"{COPYFILE} ../bin/win32/%{cfg.buildcfg}/tapi.dll %{cfg.targetdir}",
+    			"{COPYFILE} ../bin/win32/%{cfg.buildcfg}/tapi.pdb %{cfg.targetdir}"
+    		}
+
+    	filter "platforms:x86_64"
+    		libdirs {
+    			"vendor/capstone/buildwin64/Release",
+    			"bin/win64/%{cfg.buildcfg}"
+    		}
+    		targetdir "bin/win64/%{cfg.buildcfg}/tests/smoke"
+    		objdir "build/win64/%{cfg.buildcfg}/tests/smoke" .. test_name
+    		postbuildcommands {
+    			"{COPYFILE} ../bin/win64/%{cfg.buildcfg}/tapi.dll %{cfg.targetdir}",
+    			"{COPYFILE} ../bin/win64/%{cfg.buildcfg}/tapi.pdb %{cfg.targetdir}"
+    		}
+
+    	filter {}
+end

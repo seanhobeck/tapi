@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-10-20
+ * @date 2026-10-23
  */
 #include <capstone/capstone.h>
 #include "int/sig.h"
@@ -630,7 +630,7 @@ test_aarch64_chk_9(csh handle) {
     printf("correctly checked aarch64 (autiasp) instruction!\n");
 }
 
-int test_sig() {
+int main() {
     /* open with architecture etc... */
     cs_arch arch;
     cs_mode mode;

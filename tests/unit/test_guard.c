@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-10-20
+ * @date 2026-10-23
  */
 #include "int/guard.h"
 #include "int/lnk.h"
@@ -20,7 +20,7 @@ some_function(int a, short b, char** c) {
     return f;
 }
 
-int test_guard() {
+int main() {
     /* guard_create unit tests. */
     printf("----src/int/guard.c: 'guard_create' unit tests----\n");
     tapi_context_t* context = calloc(1u, sizeof *context);

@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-10-20
+ * @date 2026-10-23
  */
 #include "def.h"
 
@@ -63,7 +63,7 @@ tapi_test(test_target_sub_2) {
     return E_TAPI_TEST_RESULT_PASSED;
 }
 
-int test_special_mock() {
+int main() {
     tapi_context_t* context = tapi_init();
     tapi_add_test_and_special_mock(context, "test_target_add_call_1", \
         test_target_add_1, targ_function, add, stub_add, 1);

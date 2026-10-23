@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-10-20
+ * @date 2026-10-23
  */
 #include "int/map.h"
 #include "def.h"
@@ -356,7 +356,7 @@ test_map_lookup_nonexistent_item(void) {
     printf("correctly looked up a non-existent item from a map!\n");
 }
 
-int test_map() {
+int main() {
     /* map_push tests. */
     printf("----src/int/map.c: 'push' unit tests----\n");
     test_map_push_single_item();

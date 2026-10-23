@@ -1,35 +1,11 @@
 /**
  * @author Sean Hobeck
- * @date 2026-10-20
+ * @date 2026-10-23
  */
 #define _DEFAULT_SOURCE
 #include "int/det.h"
 #include "int/reloc.h"
 #include "def.h"
-
-#ifdef __linux__
-#include <endian.h>
-#elif defined(__APPLE__)
-#include <libkern/OSByteOrder.h>
-
-/* redef. */
-#define htole16 OSSwapHostToLittleInt16
-#define htole32 OSSwapHostToLittleInt32
-#define htole64 OSSwapHostToLittleInt64
-#define le16toh OSSwapLittleToHostInt16
-#define le32toh OSSwapLittleToHostInt32
-#define le64toh OSSwapLittleToHostInt64
-#elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
-#include <sys/endian.h>
-#elif defined(_WIN32)
-#define htole16(x) ((uint16_t)(x))
-#define htole32(x) ((uint32_t)(x))
-#define htole64(x) ((uint64_t)(x))
-#define le16toh(x) ((uint16_t)(x))
-#define le32toh(x) ((uint32_t)(x))
-#define le64toh(x) ((uint64_t)(x))
-#else
-#endif
 
 /* calculating some random value. */
 test_noinline int
@@ -73,7 +49,7 @@ test_reloc_find_first(void) {
         0xf3, 0x0f, 0x1e, 0xfa, \
         0x49, 0xbb, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, \
         0x41, 0xff, 0xe3
-    }
+    };
     *(uint64_t*)(bytes + 6u) = (uint64_t)test_addressof(function_far);
     assert(memcmp(first->bytes, bytes, first->size) == 0);
 #endif
@@ -81,7 +57,7 @@ test_reloc_find_first(void) {
     /* ldr x17, #8 / br x17 / .quad target. */
     uint8_t bytes[8u] = {
         0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
-    }
+    };
     *(uint32_t*)(bytes) = htole32(0x58000051);
     *(uint32_t*)(bytes + 4u) = htole32(0xd61f0220);
     assert(memcmp(first->bytes, bytes, 8u) == 0);
@@ -90,7 +66,7 @@ test_reloc_find_first(void) {
     /* mov eax, imm32 / jmp eax. */
     uint8_t bytes[7u] = {
         0xb8, 0x0, 0x0, 0x0, 0x0, 0xff, 0xe0
-    }
+    };
     *(uint32_t*)(bytes + 1u) = (uint32_t)test_addressof(function_far);
     assert(memcmp(first->bytes, bytes, first->size) == 0);
 #endif
@@ -101,14 +77,14 @@ test_reloc_find_first(void) {
             0xdf, 0xf8, 0x04, 0xc0, /* ldr.w ip, [pc, #4] / ... */
             0x60, 0x47, /* bx ip / ... */
             0x0, 0xbf, /* nop / .dword target. */
-        }
+        };
         assert(memcmp(first->bytes, bytes, 8u) == 0);
     }
     else {
         /* ldr r12, [pc + 0x8] / bx r12 / .dword target. */
         uint8_t bytes[12u] = {
             0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
-        }
+        };
         *(uint32_t*)(bytes) = htole32(0xe59fc000);
         *(uint32_t*)(bytes + 4u) = htole32(0xe12fff1c);
         assert(memcmp(first->bytes, bytes, 8u) == 0);
@@ -134,7 +110,7 @@ test_reloc_find_second(void) {
     printf("correctly found a existing reloc.\n");
 }
 
-int test_reloc() {
+int main() {
     /* reloc_make tests. */
     printf("----src/int/reloc.c: 'make/find' unit tests----\n");
     test_reloc_find_first();

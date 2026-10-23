@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-09-17
+ * @date 2026-10-23
  */
 #ifndef TAPI_MOCK_H
 #define TAPI_MOCK_H
@@ -194,7 +194,7 @@ tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock);
 
 /** quickly create an condition function to be used in an autostub. */
 #define tapi_condition(condition_name, ...) \
-    e_tapi_condition_result_t condition_name(void* blank, __VA_ARGS__)
+    e_tapi_condition_result_t condition_name(TAPI_MAYBE_UNUSED void* blank, __VA_ARGS__)
 
 /** quickly create a test with an automock to the test suite. */
 #define tapi_add_test_and_auto_mock(context, name, test_function, tested_function, target_name, \

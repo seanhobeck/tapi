@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-10-20
+ * @date 2026-10-23
  */
 #ifndef DEF_H
 #define DEF_H
@@ -32,5 +32,29 @@
 #endif
 #define test_noinline __attribute__((noinline))
 #define test_addressof(function) &function
+#endif
+
+#ifdef __linux__
+#include <endian.h>
+#elif defined(__APPLE__)
+#include <libkern/OSByteOrder.h>
+
+/* redef. */
+#define htole16 OSSwapHostToLittleInt16
+#define htole32 OSSwapHostToLittleInt32
+#define htole64 OSSwapHostToLittleInt64
+#define le16toh OSSwapLittleToHostInt16
+#define le32toh OSSwapLittleToHostInt32
+#define le64toh OSSwapLittleToHostInt64
+#elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
+#include <sys/endian.h>
+#elif defined(_WIN32)
+#define htole16(x) ((uint16_t)(x))
+#define htole32(x) ((uint32_t)(x))
+#define htole64(x) ((uint64_t)(x))
+#define le16toh(x) ((uint16_t)(x))
+#define le32toh(x) ((uint32_t)(x))
+#define le64toh(x) ((uint64_t)(x))
+#else
 #endif
 #endif /* DEF_H. */
