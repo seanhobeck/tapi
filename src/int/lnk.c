@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-09-05
+ * @date 2026-11-11
  */
 #define _GNU_SOURCE /*! needed for dl_iterate_phdr. */
 #include "lnk.h"
