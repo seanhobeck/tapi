@@ -265,7 +265,7 @@ lnk_init(void) {
 
                 /* calculate the name for the symbol. */
                 char* name = (char*)dynstr_data + sym[sym_idx].st_name;
-                if (!name || name[0] == '\0' || name[0] == '_') continue;
+                if (!name || name[0] == '\0') continue;
                 if (strstr(name, "tapi_")) continue; /* we want to ignore tapi symbols. */
 
                 /* calculate the associated stub address. */
@@ -273,7 +273,9 @@ lnk_init(void) {
                 void* assoc_addr = (void*)(elf_address + plt_address + offset);
 
                 /* create a plt entry and add it. */
-                map_push(table, name, assoc_addr);
+                if (!strcmp(name, "fopen64")) map_push(table, "fopen", assoc_addr);
+                else if (!strcmp(name, "__time64")) map_push(table, "time", assoc_addr);
+                else map_push(table, name, assoc_addr);
             }
         }
         else {
@@ -284,15 +286,17 @@ lnk_init(void) {
 
                 /* calculate the name for the symbol. */
                 char* name = (char*)dynstr_data + sym[sym_idx].st_name;
-                if (!name || name[0] == '\0' || name[0] == '_') continue;
+                if (!name || name[0] == '\0') continue;
                 if (strstr(name, "tapi_")) continue; /* we want to ignore tapi symbols. */
 
                 /* calculate the associated stub address. */
                 uintptr_t offset = info->first + info->entry * i;
                 void* assoc_addr = (void*)(elf_address + plt_address + offset);
 
-                /* create a plt entry and add it. */
-                map_push(table, name, assoc_addr);
+                /* create a plt entry and add it (exception for certain cases TODO: add list of exceptions). */
+                if (!strcmp(name, "fopen64")) map_push(table, "fopen", assoc_addr);
+                else if (!strcmp(name, "__time64")) map_push(table, "time", assoc_addr);
+                else map_push(table, name, assoc_addr);
             }
         }
     }

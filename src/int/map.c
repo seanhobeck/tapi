@@ -30,7 +30,7 @@
  */
 /**
  * @author Sean Hobeck
- * @date 2026-09-05
+ * @date 2026-11-11
  */
 #include "map.h"
 
@@ -42,6 +42,8 @@
 
 /*! calloc, free. */
 #include <stdlib.h>
+
+#include <stdio.h>
 
 /*! strcmp on hashes. */
 #include <string.h>
@@ -117,6 +119,188 @@ hash2(const char* string, const size_t table_size) {
 #endif
 }
 
+/* the max number of chaining operations that an insert will go through. */
+#define MAX_CHAIN 128u
+
+/* the max depth of recursion on push/insertion. */
+#define MAX_DEPTH 24u
+
+/**
+ * @brief attempt to insert and chain a entry into the map using cuckoo hashing.
+ *
+ * @param map the map to insert into.
+ * @param pending the entry to insert, or the victim entry on failure.
+ * @return true if inserted, false if MAX_CHAIN was reached.
+ */
+internal bool
+insert_and_chain(map_t* map, entry_t* pending) {
+    /* chain... */
+#ifdef TAPI_THREAD_SAFE
+#ifndef TAPI_WINDOWS
+    pthread_rwlock_wrlock(&map->lock);
+#else
+    AcquireSRWLockExclusive(&map->lock);
+#endif
+#endif
+    uint64_t iter = 0x0, table = 1u;
+    for (size_t chain = 0u; chain < MAX_CHAIN; chain++) {
+        /* if we are on t1. */
+        if (table == 1u) {
+            iter = hash1(pending->key, map->size);
+            if (!map->t1[iter].occupied) {
+                /* emplace and we are done. */
+                map->t1[iter] = *pending;
+                map->count++;
+#ifdef TAPI_THREAD_SAFE
+#ifndef TAPI_WINDOWS
+                pthread_rwlock_unlock(&map->lock);
+#else
+                ReleaseSRWLockExclusive(&map->lock);
+#endif
+#endif
+                return true;
+            }
+
+            /* set the new iteration values then swap to t2. */
+            entry_t* entry = &map->t1[iter];
+            entry_t tmp = *entry;
+            *entry = *pending;
+            *pending = tmp;
+            table = 2u;
+        } else {
+            /* if we are on t2. */
+            iter = hash2(pending->key, map->size);
+            if (!map->t2[iter].occupied) {
+                /* emplace and we are done. */
+                map->t2[iter] = *pending;
+                map->count++;
+#ifdef TAPI_THREAD_SAFE
+#ifndef TAPI_WINDOWS
+                pthread_rwlock_unlock(&map->lock);
+#else
+                ReleaseSRWLockExclusive(&map->lock);
+#endif
+#endif
+                return true;
+            }
+            /* set the new iteration values then swap to t1. */
+            entry_t* entry = &map->t2[iter];
+            entry_t tmp = *entry;
+            *entry = *pending;
+            *pending = tmp;
+            table = 1u;
+        }
+    }
+#ifdef TAPI_THREAD_SAFE
+#ifndef TAPI_WINDOWS
+    pthread_rwlock_unlock(&map->lock);
+#else
+    ReleaseSRWLockExclusive(&map->lock);
+#endif
+#endif
+    return false;
+}
+
+/**
+ * @brief attempt to rebuild the entire map using cuckoo hashing while also
+ *  not evicting any data.
+ *
+ * @param map the map to be rebuilt.
+ * @param new_size the new size to be rebuilt to.
+ * @param extra an extra entry to be inserted as well.
+ */
+internal void
+rebuild(map_t* map, size_t new_size, entry_t* extra) {
+    /* make copies of the tables. */
+    entry_t* c1 = map->t1, *c2 = map->t2;
+    size_t size = map->size;
+#ifdef TAPI_THREAD_SAFE
+#ifndef TAPI_WINDOWS
+    pthread_rwlock_wrlock(&map->lock);
+#else
+    AcquireSRWLockExclusive(&map->lock);
+#endif
+#endif
+    for (;;) {
+        /* allocate new tables as well as a temporary map. */
+        map_t tmp = { 0 };
+#ifdef TAPI_THREAD_SAFE
+#ifndef TAPI_WINDOWS
+        pthread_rwlock_init(&tmp.lock, 0x0);
+#else
+        SRWLOCK lock = { 0 };
+        tmp.lock = lock;
+#endif
+#endif
+        tmp.t1 = calloc(new_size, sizeof(entry_t));
+        tmp.t2 = calloc(new_size, sizeof(entry_t));
+        tmp.size = new_size;
+
+        /* reinsert all original entries. */
+        bool success = true;
+        for (size_t i = 0u; i < size; i++) {
+            /* check the old t1 entry, then t2 as well. */
+            if (c1[i].occupied) {
+                entry_t pending = c1[i];
+                if (!insert_and_chain(&tmp, &pending)) {
+                    success = false;
+                    break;
+                }
+            }
+            if (c2[i].occupied) {
+                entry_t pending = c2[i];
+                if (!insert_and_chain(&tmp, &pending)) {
+                    success = false;
+                    break;
+                }
+            }
+        }
+
+        /* attempt to put the extra entry in as well. */
+        if (success && extra != 0x0) {
+            entry_t pending = *extra;
+            if (!insert_and_chain(&tmp, &pending))
+                success = false;
+        }
+
+        /* if it worked, set and return the map. */
+        if (success) {
+            map->t1 = tmp.t1;
+            map->t2 = tmp.t2;
+            map->size = new_size;
+            map->count = tmp.count;
+            free(c1);
+            free(c2);
+#ifdef TAPI_THREAD_SAFE
+#ifndef TAPI_WINDOWS
+            pthread_rwlock_unlock(&map->lock);
+#else
+            ReleaseSRWLockExclusive(&map->lock);
+#endif
+#endif
+            return;
+        }
+
+        /* if we failed, discard the temporary arrays and try again. */
+        free(tmp.t1);
+        free(tmp.t2);
+
+        /* try again with a larger capacity. */
+        if (new_size > SIZE_MAX / 2u) {
+            fprintf(stderr, "tapi, _map_rebuild; size exceeded SIZE_MAX\n");
+#ifdef TAPI_THREAD_SAFE
+#ifndef TAPI_WINDOWS
+            pthread_rwlock_unlock(&map->lock);
+#else
+            ReleaseSRWLockExclusive(&map->lock);
+#endif
+#endif
+            return;
+        }
+        new_size *= 2u;
+    }
+}
+
 /**
  * @brief free an entry from a map.
  *
@@ -144,10 +328,11 @@ map_make(void) {
     pthread_rwlock_init(&map->lock, 0x0);
 #else
     SRWLOCK lock = { 0 };
+    map->lock = lock;
 #endif
 #endif
     return map;
-};
+}
 
 /**
  * @brief resize the map to a new size within t1 and t2, this also rehashes all
@@ -158,37 +343,10 @@ map_make(void) {
  */
 void
 map_resize(map_t* map, size_t new_size) {
-    /* make copy of the tables, then allocate new ones. */
+    /* we simply call rebuild and do not specify a victim. */
     assert(map != 0x0);
-
-    /* no locks need to be added here since exclusive is already done on map_push. */
-    entry_t* c1 = map->t1, *c2 = map->t2;
-    size_t size = map->size;
-    map->t1 = calloc(new_size, sizeof(entry_t));
-    map->t2 = calloc(new_size, sizeof(entry_t));
-    map->size = new_size;
-    map->count = 0u;
-
-    /* reiterate... */
-    for (size_t i = 0u; i < size; i++) {
-        if (c1[i].occupied) {
-            map_push(map, c1[i].key, c1[i].value);
-            free_entry(&c1[i]);
-        }
-        if (c2[i].occupied) {
-            map_push(map, c2[i].key, c2[i].value);
-            free_entry(&c2[i]);
-        }
-    }
-    free(c1);
-    free(c2);
-};
-
-/* the max number of chaining operations that an insert will go through. */
-#define MAX_CHAIN 128u
-
-/* the max depth of recursion on push/insertion. */
-#define MAX_DEPTH 24u
+    rebuild(map, new_size, 0x0);
+}
 
 /**
  * @brief attempt to push an entry onto the map with a given key-value pair.
@@ -201,28 +359,16 @@ map_resize(map_t* map, size_t new_size) {
  */
 void
 map_push(map_t* map, const char* key, void* value) {
-    /* check recursion depth. */
-    static size_t depth = 1u;
-    if (depth > MAX_DEPTH)
-        return;
-
     /* find if the already existing entry is in there, if so evict. */
     assert(map != 0x0 && key != 0x0);
     entry_t* existing = map_lookup(map, key);
+    if (existing != 0x0) {
 #ifdef TAPI_THREAD_SAFE
 #ifndef TAPI_WINDOWS
-    pthread_rwlock_wrlock(&map->lock);
+        pthread_rwlock_wrlock(&map->lock);
 #else
-    AcquireSRWLockExclusive(&map->lock);
+        AcquireSRWLockExclusive(&map->lock);
 #endif
-#endif
-    if (existing != 0x0) {
-        free_entry(existing);
-        existing->occupied = true;
-#ifndef TAPI_WINDOWS
-        existing->key = strdup(key);
-#else
-        existing->key = _strdup(key);
 #endif
         existing->value = value;
 #ifdef TAPI_THREAD_SAFE
@@ -236,110 +382,25 @@ map_push(map_t* map, const char* key, void* value) {
     }
 
     /* o.w. we have to emplace based on cuckoo, first we check the load factor (opposite of ref). */
-    float alpha = (float)map->count / (float)map->size;
-    if (alpha > 0.5f) {
-#ifdef TAPI_THREAD_SAFE
+    float alpha = (float)(map->count + 1) / (float)(map->size * 2);
+    if (alpha > 0.5f) map_resize(map, map->size * 2u);
+
+    /* we chain and insert, attempting to put a new entry in without evicting another. */
+    entry_t pending = {
 #ifndef TAPI_WINDOWS
-        pthread_rwlock_unlock(&map->lock);
+        .key = strdup(key),
 #else
-        ReleaseSRWLockExclusive(&map->lock);
+        .key = _strdup(key),
 #endif
-#endif
-        map_resize(map, map->size * 2u);
-        #ifdef TAPI_THREAD_SAFE
-#ifndef TAPI_WINDOWS
-    pthread_rwlock_wrlock(&map->lock);
-#else
-    AcquireSRWLockExclusive(&map->lock);
-#endif
-#endif
+        .value = value,
+        .occupied = true
+    };
+    /* if we couldn't emplace, rebuild to double orig. size and try again. */
+    if (!insert_and_chain(map, &pending)) {
+        /* we successfully inserted without evicting another entry! */
+        rebuild(map, map->size * 2u, &pending);
     }
-
-    /* chain... */
-    uint64_t iter = 0x0, table = 1u;
-    void* iter_value = value;
-#ifndef TAPI_WINDOWS
-    char* iter_key = strdup(key);
-#else
-    char* iter_key = _strdup(key);
-#endif
-    for (size_t chain = 0u; chain < MAX_CHAIN; chain++) {
-        /* if we are on t1. */
-        if (table == 1u) {
-            iter = hash1(iter_key, map->size);
-            if (!map->t1[iter].occupied) {
-                /* emplace and we are done. */
-                map->t1[iter].key = iter_key;
-                map->t1[iter].value = iter_value;
-                map->t1[iter].occupied = true;
-                map->count++;
-#ifdef TAPI_THREAD_SAFE 
-#ifndef TAPI_WINDOWS
-                pthread_rwlock_unlock(&map->lock);
-#else
-                ReleaseSRWLockExclusive(&map->lock);
-#endif
-#endif
-                return;
-            }
-            entry_t* entry = &map->t1[iter];
-            char* temp_key = entry->key;
-            void* temp_value = entry->value;
-            entry->key = iter_key;
-            entry->value = iter_value;
-
-            /* set the new iteration values then swap to t2. */
-            iter_key = temp_key;
-            iter_value = temp_value;
-            table = 2u;
-        } else {
-            /* if we are on t2. */
-            iter = hash2(iter_key, map->size);
-            if (!map->t2[iter].occupied) {
-                /* emplace and we are done. */
-                map->t2[iter].key = iter_key;
-                map->t2[iter].value = iter_value;
-                map->t2[iter].occupied = true;
-                map->count++;
-#ifdef TAPI_THREAD_SAFE 
-#ifndef TAPI_WINDOWS
-                pthread_rwlock_unlock(&map->lock);
-#else
-                ReleaseSRWLockExclusive(&map->lock);
-#endif
-#endif
-                return;
-            }
-            entry_t* entry = &map->t2[iter];
-            char* temp_key = entry->key;
-            void* temp_value = entry->value;
-            entry->key = iter_key;
-            entry->value = iter_value;
-
-            /* set the new iteration values then swap to t1. */
-            iter_key = temp_key;
-            iter_value = temp_value;
-            table = 1u;
-        }
-    }
-
-    /* if we couldn't emplace, resize to double and try again. */
-    free(iter_key);
-#ifdef TAPI_THREAD_SAFE 
-#ifndef TAPI_WINDOWS
-    pthread_rwlock_unlock(&map->lock);
-#else
-    ReleaseSRWLockExclusive(&map->lock);
-#endif
-#endif
-    /* shouldn't recurse very far but still possible. */
-    if (depth < MAX_DEPTH) {
-        depth++;
-        map_resize(map, map->size * 2u);
-        map_push(map, key, value);
-        depth--;
-    }
-};
+}
 
 /**
  * @brief attempt to pop an entry from the map with a key from the possible
@@ -363,8 +424,9 @@ map_pop(map_t* map, const char* key) {
 #endif
     if (entry != 0x0) {
         entry_t* copy = calloc(1u, sizeof *copy);
-        memcpy(copy, entry, sizeof *copy);
-        free_entry(entry);
+        *copy = *entry;
+        entry->key = entry->value = 0x0;
+        entry->occupied = false;
         map->count -= 1u;
 #ifdef TAPI_THREAD_SAFE 
 #ifndef TAPI_WINDOWS
@@ -383,7 +445,7 @@ map_pop(map_t* map, const char* key) {
 #endif
 #endif
     return 0x0; /* not found :( */
-};
+}
 
 /**
  * @brief attempt to look up an entry based on its key.
@@ -433,7 +495,7 @@ map_lookup(map_t* map, const char* key) {
 #endif
 #endif
     return 0x0; /* not found :( */
-};
+}
 
 /**
  * @brief cleanup all items and entries within the map. this removes all
@@ -458,14 +520,15 @@ map_cleanup(map_t* map) {
         if (map->t1[i].occupied) free_entry(&map->t1[i]);
         if (map->t2[i].occupied) free_entry(&map->t2[i]);
     }
+    free(map->t1);
+    free(map->t2);
 #ifdef TAPI_THREAD_SAFE 
 #ifndef TAPI_WINDOWS
     pthread_rwlock_unlock(&map->lock);
+    pthread_rwlock_destroy(&map->lock);
 #else
     ReleaseSRWLockExclusive(&map->lock);
 #endif
 #endif
-    free(map->t1);
-    free(map->t2);
     free(map);
-};
+}
