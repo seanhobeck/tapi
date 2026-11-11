@@ -5,7 +5,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-10-23
+ * @date 2026-11-11
  */
 #ifndef TAPI_MOCK_H
 #define TAPI_MOCK_H
@@ -199,11 +199,11 @@ tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock);
 /** quickly create a test with an automock to the test suite. */
 #define tapi_add_test_and_auto_mock(context, name, test_function, tested_function, target_name, \
     stub_function, condition, set_errno) \
-    tapi_test_t* TAPI_CONCAT(_gentest_, __LINE__) = tapi_make_test(name, test_function); \
-    tapi_mock_t* TAPI_CONCAT(_genmock_, __LINE__) = tapi_make_auto_mock(tested_function, \
+    tapi_test_t* TAPI_CONCAT(_gentest_, test_function) = tapi_make_test(name, test_function); \
+    tapi_mock_t* TAPI_CONCAT(_genmock_, test_function) = tapi_make_auto_mock(tested_function, \
         target_name, stub_function, condition, set_errno); \
-    tapi_dyna_push(TAPI_CONCAT(_gentest_, __LINE__)->mocks, TAPI_CONCAT(_genmock_, __LINE__)); \
-    tapi_dyna_push(context->tests, TAPI_CONCAT(_gentest_, __LINE__));
+    tapi_dyna_push(TAPI_CONCAT(_gentest_, test_function)->mocks, TAPI_CONCAT(_genmock_, test_function)); \
+    tapi_dyna_push(context->tests, TAPI_CONCAT(_gentest_, test_function));
 
 /** quickly create a simple stub to return a given value. */
 #define tapi_stub_return(func_name, return_type, return_value) \
@@ -228,18 +228,18 @@ tapi_cleanup_mock(tapi_context_t* context, tapi_mock_t* mock);
 /** quickly add a test with a mock to the test suite. */
 #define tapi_add_test_and_mock(context, name, test_function, tested_function, target_function, \
     stub_function) \
-    tapi_test_t* TAPI_CONCAT(_gentest_, __LINE__) = tapi_make_test(name, test_function); \
-    tapi_mock_t* TAPI_CONCAT(_genmock_, __LINE__) = tapi_make_mock(tested_function, \
+    tapi_test_t* TAPI_CONCAT(_gentest_, test_function) = tapi_make_test(name, test_function); \
+    tapi_mock_t* TAPI_CONCAT(_genmock_, test_function) = tapi_make_mock(tested_function, \
         target_function, stub_function, 0u); \
-    tapi_dyna_push(TAPI_CONCAT(_gentest_, __LINE__)->mocks, TAPI_CONCAT(_genmock_, __LINE__)); \
-    tapi_dyna_push(context->tests, TAPI_CONCAT(_gentest_, __LINE__));
+    tapi_dyna_push(TAPI_CONCAT(_gentest_, test_function)->mocks, TAPI_CONCAT(_genmock_, test_function)); \
+    tapi_dyna_push(context->tests, TAPI_CONCAT(_gentest_, test_function));
 
 /** quickly add a test with a mock on the n-th call to the test suite. */
 #define tapi_add_test_and_special_mock(context, name, test_function, tested_function, \
     target_function, stub_function, n) \
-    tapi_test_t* TAPI_CONCAT(_gentest_, __LINE__) = tapi_make_test(name, test_function); \
-    tapi_mock_t* TAPI_CONCAT(_genmock_, __LINE__) = tapi_make_mock(tested_function, \
+    tapi_test_t* TAPI_CONCAT(_gentest_, test_function) = tapi_make_test(name, test_function); \
+    tapi_mock_t* TAPI_CONCAT(_genmock_, test_function) = tapi_make_mock(tested_function, \
         target_function, stub_function, n); \
-    tapi_dyna_push(TAPI_CONCAT(_gentest_, __LINE__)->mocks, TAPI_CONCAT(_genmock_, __LINE__)); \
-    tapi_dyna_push(context->tests, TAPI_CONCAT(_gentest_, __LINE__));
+    tapi_dyna_push(TAPI_CONCAT(_gentest_, test_function)->mocks, TAPI_CONCAT(_genmock_, test_function)); \
+    tapi_dyna_push(context->tests, TAPI_CONCAT(_gentest_, test_function));
 #endif /* TAPI_MOCK_H */

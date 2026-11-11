@@ -17,6 +17,8 @@ run_per_arch qemu-amd64 x86_64-linux-gnu x86_64/tests/integration/test_capture i
 run_per_arch qemu-amd64 x86_64-linux-gnu x86_64/tests/integration/test_mock int_test_mock
 run_per_arch qemu-amd64 x86_64-linux-gnu x86_64/tests/integration/test_special_mock int_test_special_mock
 run_per_arch qemu-amd64 x86_64-linux-gnu x86_64/tests/integration/test_auto_mock int_test_auto_mock
+# the one smoke test as well, others are ran on independent systems for testing.
+run_per_arch qemu-amd64 x86_64-linux-gnu x86_64/tests/smoke/test_posix smoke_test_posix
 
 # run x86_64 UNIT tests.
 run_per_arch qemu-amd64 x86_64-linux-gnu x86_64/tests/unit/test_det unit_test_det

@@ -1,5 +1,5 @@
 # compiler and compiler flags (we use libasan for address detection and leaks).
-cflags := -g -O0 -Wall -Wextra -std=c17 \
+cflags := -g -O0 -Wall -Wextra -std=c17 -fno-builtin \
 # -fsanitize=address,leak,undefined -fno-omit-frame-pointer
 # ^ removing comment and including libasan will cause errors for
 #	non-native architectures being ran in qemu, you can also enable this

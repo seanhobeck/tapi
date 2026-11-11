@@ -20,7 +20,7 @@ ifeq ($(arch),x86_64)
 endif
 
 # compilation, release, minimal, thread-safe, and asan flags.
-cflags := -std=c99 -Wall -Wextra -g -O0 -fPIC
+cflags := -std=c99 -Wall -Wextra -g -O0 -fPIC -fno-builtin
 release ?= 0
 minimal ?= 0
 thread-safe ?= 1
