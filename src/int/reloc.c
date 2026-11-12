@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-09-05
+ * @date 2026-11-12
  */
 /*! uses platform-specific macros. */
 #include <tapi/platform.h>
@@ -24,7 +24,7 @@
 #endif
 
 /*! uses internal, get_page_size, etc... */
-#include "intt.h"
+#include "def.h"
 
 /*! uses guard_make, etc... */
 #include "guard.h"
@@ -289,7 +289,7 @@ reloc_make(void* address, void* target, bool thumb, bool disp32) {
     /* allocate the region and then copy it over. */
     reloc->region = alloc_region(address, reloc->size, disp32);
     if (reloc->region == 0x0) {
-        fprintf(stderr, "tapi, reloc_make; unable to find region in given relative call range!\n");
+        fprintf(stderr, "reloc_make; unable to find region in given relative call range!\n");
         free(reloc->bytes);
         free(reloc);
         return 0x0;
@@ -302,7 +302,7 @@ reloc_make(void* address, void* target, bool thumb, bool disp32) {
     /* NOLINTNEXTLINE */
     if (mprotect(reloc->region, reloc->size, PROT_READ | PROT_WRITE | PROT_EXEC) != 0x0) {
         /* NOLINTNEXTLINE */
-        fprintf(stderr, "tapi, reloc_make; mprotect failed; could not protect region!");
+        fprintf(stderr, "reloc_make; mprotect failed; could not protect region!");
 #else
         /* winapi doesn't care and does it for us. */
         DWORD old;
@@ -362,7 +362,7 @@ reloc_make_custom(void* address, void* target, size_t size, \
     /* allocate the region and then copy it over. */
     reloc->region = alloc_region(address, reloc->size, disp32);
     if (reloc->region == 0x0) {
-        fprintf(stderr, "tapi, reloc_make; unable to find region in given relative call range!\n");
+        fprintf(stderr, "reloc_make; unable to find region in given relative call range!\n");
         free(reloc->bytes);
         free(reloc);
         return 0x0;
@@ -375,7 +375,7 @@ reloc_make_custom(void* address, void* target, size_t size, \
     /* NOLINTNEXTLINE */
     if (mprotect(reloc->region, reloc->size, PROT_READ | PROT_WRITE | PROT_EXEC) != 0x0) {
         /* NOLINTNEXTLINE */
-        fprintf(stderr, "tapi, reloc_make; mprotect failed; could not protect region!");
+        fprintf(stderr, "reloc_make; mprotect failed; could not protect region!");
 #else
         /* winapi doesn't care and does it for us. */
     DWORD old;
@@ -423,8 +423,8 @@ reloc_find(void* address, void* target, bool thumb, bool disp32) {
 
     /* attempt to read, if found return it o.w. make one. */
     if (reloc_table == 0x0) reloc_table = map_make();
-    entry_t* found = (entry_t*)map_lookup(reloc_table, buffer);
-    if (found != 0x0) return (reloc_t*) found->value;
+    entry_t* found = map_lookup(reloc_table, buffer);
+    if (found != 0x0) return found->value;
     return reloc_make(address, target, thumb, disp32);
 };
 

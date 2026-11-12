@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-09-05
+ * @date 2026-11-12
  */
 /*! uses lnk_init. */
 #include "lnk.h"
@@ -11,7 +11,6 @@
 __attribute__((constructor))
 void lt_entry() {
     lnk_init();
-    return;
 #elif defined(TAPI_WINDOWS)
 /*! uses BOOL, WINAPI(__stdcall), HINSTANCE, etc... */
 #include <windows.h>

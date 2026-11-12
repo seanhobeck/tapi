@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-09-05
+ * @date 2026-11-12
  */
 #include "guard.h"
 
@@ -16,7 +16,7 @@
 #endif
 
 /*! uses internal, page_align_down, get_page_size, etc... */
-#include "intt.h"
+#include "def.h"
 
 /*! uses dyna_t, etc... */
 #include <tapi/dyna.h>
@@ -32,13 +32,13 @@ guard_close(guard_t* guard) {
 #ifndef TAPI_WINDOWS
     if (mprotect(guard->address, guard->length, PROT_READ | PROT_EXEC) != 0x0) {
         /* NOLINTNEXTLINE */
-        fprintf(stderr, "tapi, guard_close; mprotect failed; could not close pguard.");
+        fprintf(stderr, "guard_close; mprotect failed; could not close pguard.");
     }
 #else
     DWORD tmp;
     if (VirtualProtect(guard->address, guard->length, guard->flags, &tmp) == 0x0) {
         /* we can actually use MSVCs "safe" version for fprintf. */
-        fprintf_s(stderr, "tapi, guard_close; VirtualProtect failed; could not close pguard.");
+        fprintf_s(stderr, "guard_close; VirtualProtect failed; could not close pguard.");
     }
 #endif
 }
@@ -71,14 +71,14 @@ guard_create(tapi_context_t* context, void* address, size_t length) {
     /* NOLINTNEXTLINE */
     if (mprotect(guard->address, guard->length, PROT_READ | PROT_WRITE | PROT_EXEC) != 0x0) {
         /* NOLINTNEXTLINE */
-        fprintf(stderr, "tapi, guard_create; mprotect failed; could not change page access for guard!");
+        fprintf(stderr, "guard_create; mprotect failed; could not change page access for guard!");
 #else
     /* winapi doesn't care and does it for us. */
     guard->address = address;
     guard->length = length;
     if (VirtualProtect(guard->address, length, PAGE_EXECUTE_READWRITE, &guard->flags) == 0x0) {
         /* we can actually use MSVCs "safe" version for fprintf. */
-        fprintf_s(stderr, "tapi, guard_create; mprotect failed; could not change page access for guard!");
+        fprintf_s(stderr, "guard_create; mprotect failed; could not change page access for guard!");
 #endif
         free(guard);
         return;

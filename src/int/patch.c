@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-09-05
+ * @date 2026-11-12
  */
 #include "patch.h"
 
@@ -14,7 +14,7 @@
 #include "guard.h"
 
 /*! uses internal. */
-#include "intt.h"
+#include "def.h"
 
 /*! uses reloc_t, reloc_find. */
 #include "reloc.h"

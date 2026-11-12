@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-09-05
+ * @date 2026-11-12
  */
 #include "elf.h"
 #ifdef TAPI_LINUX
@@ -18,7 +18,7 @@
 #include <stdbool.h>
 
 /*! uses internal. */
-#include "intt.h"
+#include "def.h"
 
 /** elf magic number. */
 #define ELF_MAGIC 0x464c457fu /* 0x7f 'E' 'L' 'F' */
@@ -92,7 +92,7 @@ internal elf_t*
 elf_parse32(uint8_t* buffer, size_t size) {
     elf32_ehdr_t* ehdr = (elf32_ehdr_t*)buffer;
     if (size < sizeof *ehdr) {
-        fprintf(stderr, "tapi, elf_parse32; buffer too small for elf32 header.\n");
+        fprintf(stderr, "elf_parse32; buffer too small for elf32 header.\n");
         return 0x0;
     }
 
@@ -170,7 +170,7 @@ internal elf_t*
 elf_parse64(uint8_t* buffer, size_t size) {
     elf64_ehdr_t* ehdr = (elf64_ehdr_t*)buffer;
     if (size < sizeof *ehdr) {
-        fprintf(stderr, "tapi, elf_parse64; buffer too small for elf64 header.\n");
+        fprintf(stderr, "elf_parse64; buffer too small for elf64 header.\n");
         return 0x0;
     }
 
@@ -232,7 +232,7 @@ elf_parse(const char* path) {
     /* open the file. */
     FILE* file = fopen(path, "rb");
     if (!file) {
-        fprintf(stderr, "tapi, elf_parse; could not open file %s.\n", path);
+        fprintf(stderr, "elf_parse; could not open file %s.\n", path);
         return 0x0;
     }
 
@@ -244,12 +244,12 @@ elf_parse(const char* path) {
     /* read the file into a buffer. */
     uint8_t* buffer = malloc(size);
     if (!buffer) {
-        fprintf(stderr, "tapi, elf_parse; malloc failed; could not allocate memory for buffer.\n");
+        fprintf(stderr, "elf_parse; malloc failed; could not allocate memory for buffer.\n");
         fclose(file);
         return 0x0;
     }
     if (fread(buffer, 1u, size, file) != size) {
-        fprintf(stderr, "tapi, elf_parse; fread failed; could not read file %s.\n", path);
+        fprintf(stderr, "elf_parse; fread failed; could not read file %s.\n", path);
         free(buffer);
         fclose(file);
         return 0x0;
@@ -258,7 +258,7 @@ elf_parse(const char* path) {
 
     /* check if the elf is valid. */
     if (size < EI_NIDENT || !e_intt_passed(elf_valid_ident(buffer))) {
-        fprintf(stderr, "tapi, elf_parse; invalid elf file %s.\n", path);
+        fprintf(stderr, "elf_parse; invalid elf file %s.\n", path);
         free(buffer);
         return 0x0;
     }
@@ -267,7 +267,7 @@ elf_parse(const char* path) {
     elf_t* elf = 0x0;
     if (buffer[EI_CLASS] == ELF_CLASS_32) elf = elf_parse32(buffer, size);
     else if (buffer[EI_CLASS] == ELF_CLASS_64) elf = elf_parse64(buffer, size);
-    else fprintf(stderr, "tapi, elf_parse; unsupported elf class %d.\n", buffer[EI_CLASS]);
+    else fprintf(stderr, "elf_parse; unsupported elf class %d.\n", buffer[EI_CLASS]);
 
     /* store path in elf structure. */
     if (elf) {

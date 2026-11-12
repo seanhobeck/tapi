@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-05-19
+ * @date 2026-11-12
  */
 #include "sig.h"
 
@@ -14,7 +14,7 @@
 #include <string.h>
 
 /*! @uses internal. */
-#include "intt.h"
+#include "def.h"
 
 /**
  * @brief format a single instruction into a string for display.
@@ -27,7 +27,7 @@ format_insn(cs_insn* insn) {
     /* allocate buffer for formatted line. */
     char* line = calloc(1u, 192u); /* 160 is max for op_str, and 32 is max for mnemonic in capstone. */
     if (!line) {
-        fprintf(stderr, "tapi, format_insn; calloc failed; could not allocate memory for line.\n");
+        fprintf(stderr, "format_insn; calloc failed; could not allocate memory for line.\n");
         return 0x0;
     }
 

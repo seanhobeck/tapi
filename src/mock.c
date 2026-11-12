@@ -1,7 +1,7 @@
 /**
  * \cond
  * @author Sean Hobeck
- * @date 2026-09-30 
+ * @date 2026-11-12
  */
 #include <tapi/mock.h>
 
@@ -30,7 +30,7 @@
 #include "reloc.h"
 
 /*! uses internal. */
-#include "int/intt.h"
+#include "int/def.h"
 /** \endcond */
 
 /**

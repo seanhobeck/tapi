@@ -30,7 +30,7 @@
  */
 /**
  * @author Sean Hobeck
- * @date 2026-11-11
+ * @date 2026-11-12
  */
 #include "map.h"
 
@@ -49,7 +49,7 @@
 #include <string.h>
 
 /*! internal. */
-#include "intt.h"
+#include "def.h"
 
 /* all copied from the repos in the ref below. */
 #define FNV1A32_BASIS 0x811c9dc5
@@ -287,7 +287,7 @@ rebuild(map_t* map, size_t new_size, entry_t* extra) {
 
         /* try again with a larger capacity. */
         if (new_size > SIZE_MAX / 2u) {
-            fprintf(stderr, "tapi, _map_rebuild; size exceeded SIZE_MAX\n");
+            fprintf(stderr, "rebuild; size exceeded SIZE_MAX\n");
 #ifdef TAPI_THREAD_SAFE
 #ifndef TAPI_WINDOWS
             pthread_rwlock_unlock(&map->lock);

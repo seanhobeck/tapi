@@ -1,6 +1,6 @@
 /**
  * @author Sean Hobeck
- * @date 2026-09-05
+ * @date 2026-11-12
  */
 #include "det.h"
 
@@ -14,7 +14,7 @@
 #include <capstone/capstone.h>
 
 /*! uses internal. */
-#include "intt.h"
+#include "def.h"
 
 /*! uses arch_t, get_arch. */
 #include "arch.h"
@@ -90,7 +90,7 @@ det_function_size(void* address, size_t max_size) {
     if (!insn) {
         cs_close(&handle);
         /* NOLINTNEXTLINE */
-        fprintf(stderr, "tapi, det_function_size; cs_malloc failed; could not allocate memory for "
+        fprintf(stderr, "det_function_size; cs_malloc failed; could not allocate memory for "
                         "instructions.");
         return 0;
     }
@@ -209,7 +209,7 @@ det_function_size(void* address, size_t max_size) {
         /* sanity bounds. */
         if (size >= max_size) {
             /* NOLINTNEXTLINE */
-            fprintf(stderr, "tapi, det_function_size; warning; hit max search size of %zu bytes\n",
+            fprintf(stderr, "det_function_size; warning; hit max search size of %zu bytes\n",
                 max_size);
             break;
         }
@@ -472,7 +472,7 @@ det_call_targets(void* source, const void* target) {
     det_call_t* call = calloc(1u, sizeof *call);
     if (call == 0x0) {
         /* NOLINTNEXTLINE */
-        fprintf(stderr, "tapi, det_call_target; calloc failed; could not allocate memory for "
+        fprintf(stderr, "det_call_target; calloc failed; could not allocate memory for "
                         "det_call_t*.\n");
         return 0x0;
     }
@@ -489,7 +489,7 @@ det_call_targets(void* source, const void* target) {
         cs_close(&handle);
         free(call);
         /* NOLINTNEXTLINE */
-        fprintf(stderr, "tapi det_call_target, cs_malloc failed; could not allocate memory for "
+        fprintf(stderr, "det_call_target; cs_malloc failed; could not allocate memory for "
                         "instructions.\n");
         return 0x0;
     }
@@ -564,7 +564,7 @@ det_call_target(void* source, const void* target) {
     det_call_t* call = calloc(1u, sizeof *call);
     if (call == 0x0) {
         /* NOLINTNEXTLINE */
-        fprintf(stderr, "tapi, det_call_target; calloc failed; could not allocate memory for "
+        fprintf(stderr, "det_call_target; calloc failed; could not allocate memory for "
                         "det_call_t*.\n");
         return 0x0;
     }
@@ -581,7 +581,7 @@ det_call_target(void* source, const void* target) {
         cs_close(&handle);
         free(call);
         /* NOLINTNEXTLINE */
-        fprintf(stderr, "tapi det_call_target, cs_malloc failed; could not allocate memory for "
+        fprintf(stderr, "det_call_target; cs_malloc failed; could not allocate memory for "
                         "instructions.\n");
         return 0x0;
     }
